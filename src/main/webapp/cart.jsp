@@ -102,7 +102,7 @@
                             <input type="hidden" name="action" value="remove"/>
                             <input type="hidden" name="cartItemId" value="<%=it.getCartItemId()%>"/>
 
-                            <button class="btn btn-outline-danger btn-sm rounded-circle" type="button" title="Xóa sản phẩm"
+                            <button class="btn btn-delete-item rounded-circle" type="button" title="Xóa sản phẩm"
                                     onclick="openDeleteModal(<%=it.getCartItemId()%>)">
                                 <i class="bi bi-trash"></i>
                             </button>
@@ -119,8 +119,8 @@
             <div class="col-lg-7">
                 <form method="post" action="<%=ctx%>/cart" id="clear-cart-form">
                     <input type="hidden" name="action" value="clear"/>
-                    <button class="btn btn-accent d-flex align-items-center" type="button" onclick="confirmClearCart()">
-                        <i class="bi bi-trash3 me-2"></i> Xoá toàn bộ giỏ hàng
+                    <button class="btn btn-accent-outline" type="button" onclick="confirmClearCart()">
+                        <i class="bi bi-trash3 me-1"></i> Xoá toàn bộ giỏ hàng
                     </button>
                 </form>
             </div>
@@ -141,7 +141,7 @@
                         <strong class="fs-3 text-danger fw-bolder" id="grandTotal"><%=String.format("%,.0f", subtotal)%>₫</strong>
                     </div>
                     <div class="mt-3 d-grid gap-2">
-                        <a class="btn btn-danger btn-lg checkout-btn fw-bold shadow-sm"
+                        <a class="btn btn-buy-now btn-lg checkout-btn fw-bold shadow-sm text-white w-100"
                            href="javascript:void(0);"
                            onclick="goToCheckout('<%=ctx%>/checkout')">
                             MUA NGAY
@@ -229,17 +229,15 @@
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow">
             <div class="modal-header bg-danger text-white">
-                <h5 class="modal-title fw-bold">Xác nhận xóa sạch giỏ hàng</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                <h5 class="modal-title fw-bold">Xác nhận</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body text-center py-4">
-                <i class="bi bi-exclamation-octagon text-danger" style="font-size: 3rem;"></i>
-                <p class="mt-3 fs-5">Bạn có chắc chắn muốn xóa <strong>toàn bộ</strong> sản phẩm không?</p>
-                <span class="text-muted small">Hành động này không thể hoàn tác.</span>
+                Bạn có chắc chắn muốn <b>xóa sạch</b> giỏ hàng không?
             </div>
             <div class="modal-footer border-0 justify-content-center">
-                <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Quay lại</button>
-                <button type="button" class="btn btn-danger rounded-pill px-4" onclick="submitClearCart()">Đồng ý xóa sạch</button>
+                <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Hủy</button>
+                <button type="button" class="btn btn-danger rounded-pill px-4" onclick="submitClearCart()">Đồng ý xóa</button>
             </div>
         </div>
     </div>
@@ -255,37 +253,110 @@
 </button>
 
 <style>
-    .product-detail-link:hover {
-        color: #dc3545 !important;
-        text-decoration: underline !important;
-    }
-    .cart-img-link:hover {
-        opacity: 0.8;
-        transition: 0.3s;
-    }
+    /* KHAI BÁO BIẾN DÙNG CHUNG */
     :root {
-        --accent-color: #ff5722;
-        --accent-hover: #e64a19;
+        --accent-color: #ee4d2d;      /* Màu đỏ cam chủ đạo */
+        --accent-hover: #d73211;      /* Màu khi di chuột qua */
+        --accent-light: #fff1f0;     /* Màu nền nhẹ khi hover */
+        --shadow-smooth: 0 8px 24px rgba(0,0,0,0.08);
     }
 
-    .btn-accent {
-        background-color: var(--accent-color);
-        color: white;
-        font-weight: 600;
-        padding: 10px 20px;
-        border-radius: 8px;
-        border: none;
+    /* 1. Cải thiện thẻ Table (Card container) - Giúp bớt thô */
+    .table-responsive {
+        border-radius: 12px !important;
+        overflow: hidden;
+        border: 1px solid #eee;
+        background: #fff;
         transition: all 0.3s ease;
     }
-    .btn-accent:hover {
-        background-color: var(--accent-hover);
-        color: white;
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(255, 87, 34, 0.3);
+
+    .table-responsive:hover {
+        box-shadow: var(--shadow-smooth) !important;
     }
 
-    #clearCartModal .modal-content {
+    /* 2. Cải thiện nút Xóa từng món (nút tròn nhỏ) */
+    .btn-delete-item {
+        color: #999;
+        border: 1px solid #eee;
+        background: #fff;
+        width: 36px;
+        height: 36px;
+        display: inline-flex; /* Sửa lại để căn giữa icon */
+        align-items: center;
+        justify-content: center;
+        transition: all 0.3s ease;
+    }
+
+    .btn-delete-item:hover {
+        background-color: var(--accent-light);
+        color: var(--accent-color);
+        border-color: var(--accent-color);
+        transform: rotate(90deg); /* Hiệu ứng xoay sinh động */
+    }
+
+    /* 3. Nút Xóa toàn bộ giỏ hàng (Accent Color) */
+    .btn-accent-outline {
+        color: var(--accent-color);
+        border: 1px solid var(--accent-color);
+        background: transparent;
+        font-weight: 600;
+        padding: 8px 16px;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+    }
+
+    .btn-accent-outline:hover {
+        background-color: var(--accent-color);
+        color: white;
+        transform: translateY(-2px); /* Hiệu ứng nổi lên */
+        box-shadow: 0 4px 12px rgba(238, 77, 45, 0.2);
+    }
+
+    /* 4. Nút MUA NGAY (Nút quan trọng nhất) */
+    .btn-buy-now {
+        background: linear-gradient(135deg, #ff7337 0%, var(--accent-color) 100%);
+        border: none;
+        color: white !important;
+        transition: all 0.3s ease;
+    }
+
+    .btn-buy-now:hover {
+        transform: scale(1.02);
+        box-shadow: 0 6px 15px rgba(238, 77, 45, 0.3) !important;
+    }
+
+    /* 5. Cải thiện ô nhập số lượng */
+    .qty-input {
+        border-radius: 6px;
+        border: 1px solid #ddd;
+        text-align: center;
+        font-weight: 600;
+        transition: all 0.2s;
+    }
+
+    .qty-input:focus {
+        border-color: var(--accent-color);
+        box-shadow: 0 0 0 0.2rem rgba(238, 77, 45, 0.1);
+        outline: none;
+    }
+
+    /* 6. Hiệu ứng Link sản phẩm */
+    .product-detail-link {
+        color: #333;
+        font-weight: 600;
+        text-decoration: none;
+        transition: color 0.2s;
+    }
+
+    .product-detail-link:hover {
+        color: var(--accent-color) !important;
+        text-decoration: underline !important;
+    }
+
+    /* 7. Modal mượt mà hơn */
+    .modal-content {
         border-radius: 15px;
+        border: none;
     }
 </style>
 
