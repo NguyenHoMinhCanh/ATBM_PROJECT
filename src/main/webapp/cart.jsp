@@ -412,6 +412,7 @@
     function submitClearCart() {
         document.getElementById('clear-cart-form').submit();
     }
+
 </script>
 </body>
 </html>
