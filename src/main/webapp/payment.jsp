@@ -107,6 +107,16 @@
         .payment-method-card:hover {
             border-color: #adb5bd !important;
         }
+        .custom-modal-btn {
+            min-width: 140px;
+            padding: 10px 20px;
+            font-weight: 600;
+            border-radius: 8px;
+        }
+
+        .modal-content {
+            border-radius: 15px;
+        }
     </style>
 </head>
 <body>
@@ -245,21 +255,77 @@
     </div>
 </div>
 
+<div class="modal fade" id="confirmOrderModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header border-0 pb-0 justify-content-center position-relative">
+                <h5 class="modal-title fw-bold text-uppercase" style="letter-spacing: 1px;">
+                    Xác nhận đơn hàng
+                </h5>
+                <button type="button" class="btn-close position-absolute end-0 me-3" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+
+            <div class="modal-body text-center py-4">
+                <div class="mb-3">
+                    <i class="bi bi-question-circle text-primary" style="font-size: 3rem;"></i>
+                </div>
+                <h6 class="fw-bold mb-3">Bạn muốn hoàn tất đặt hàng?</h6>
+                <p class="text-muted mb-0 px-3">
+                    Vui lòng kiểm tra kỹ <strong>thông tin nhận hàng</strong> và <strong>phương thức thanh toán</strong> để đảm bảo mọi thứ đã chính xác.
+                </p>
+            </div>
+
+            <div class="modal-footer border-0 pt-0 justify-content-center pb-4">
+                <button type="button" class="btn btn-outline-secondary custom-modal-btn me-2" data-bs-dismiss="modal">
+                    Kiểm tra lại
+                </button>
+                <button type="button" class="btn btn-primary custom-modal-btn" id="btnConfirmSubmit">
+                    Xác nhận
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <%@ include file="/WEB-INF/jspf/site_footer.jspf" %>
 
 <script>
     document.addEventListener('DOMContentLoaded', function () {
-        // 1. Validation logic
         const form = document.getElementById('checkoutForm');
-        form.addEventListener('submit', (e) => {
+        const btnConfirmSubmit = document.getElementById('btnConfirmSubmit');
+
+        // Khởi tạo Bootstrap Modal
+        const confirmModal = new bootstrap.Modal(document.getElementById('confirmOrderModal'));
+
+        // 1. Xử lý sự kiện Submit của Form
+        form.addEventListener('submit', function (e) {
+            // Ngăn chặn hành vi mặc định
+            e.preventDefault();
+            e.stopPropagation();
+
+            // Kiểm tra tính hợp lệ của các trường nhập liệu (Bootstrap Validation)
             if (!form.checkValidity()) {
-                e.preventDefault();
-                e.stopPropagation();
                 form.classList.add('was-validated');
+                // Cuộn lên phần tử lỗi đầu tiên để user dễ thấy
+                const firstInvalid = form.querySelector(':invalid');
+                if (firstInvalid) firstInvalid.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            } else {
+                // Nếu mọi thứ đã OK, hiện Modal xác nhận thay vì submit ngay lập tức
+                confirmModal.show();
             }
         });
 
-        // 2. Load Tỉnh/Thành
+        // 2. Xử lý khi người dùng nhấn "Xác nhận đặt hàng" trong Modal
+        btnConfirmSubmit.addEventListener('click', function() {
+            // Hiệu ứng loading để tăng tính chuyên nghiệp
+            btnConfirmSubmit.disabled = true;
+            btnConfirmSubmit.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Đang xử lý...';
+
+            // Gửi form thực sự lên server
+            form.submit();
+        });
+
+        // 3. Logic load Tỉnh/Thành (Giữ nguyên như cũ)
         const citySelect = document.getElementById('city');
         const savedCity = "<%= cityNormalized %>".trim();
 
@@ -272,13 +338,6 @@
                     if (p.name === savedCity) opt.selected = true;
                     citySelect.add(opt);
                 });
-            })
-            .catch(err => {
-                console.error("API Error:", err);
-                citySelect.parentElement.innerHTML = `
-                    <label class="form-label small text-muted">Tỉnh / Thành phố</label>
-                    <input type="text" class="form-control" name="city" value="${savedCity}" required>
-                `;
             });
     });
 </script>
