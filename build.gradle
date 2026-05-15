@@ -1,0 +1,130 @@
+plugins {
+    id 'java-library'
+    id 'maven-publish'
+    id "org.hidetake.ssh" version "2.11.2"
+    id 'war'
+}
+
+group = 'org.example'
+version = '1.0-SNAPSHOT'
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+ext {
+    junitVersion = '5.13.2'
+}
+
+/* ================= DEPENDENCIES ================= */
+dependencies {
+    // Tomcat 10 (Jakarta EE 10)
+    providedCompile 'jakarta.servlet:jakarta.servlet-api:6.1.0'
+
+    // JSTL (Tomcat 10 dùng Jakarta namespace)
+    implementation 'jakarta.servlet.jsp.jstl:jakarta.servlet.jsp.jstl-api:3.0.1'
+    implementation 'org.glassfish.web:jakarta.servlet.jsp.jstl:3.0.1'
+
+    // MySQL Connector
+    implementation 'com.mysql:mysql-connector-j:8.0.33'
+
+    // Mail
+    implementation 'com.sun.mail:jakarta.mail:2.0.1'
+
+    // Gson
+    implementation 'com.google.code.gson:gson:2.10.1'
+
+    // JUnit
+    testImplementation "org.junit.jupiter:junit-jupiter-api:${junitVersion}"
+    testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:${junitVersion}"
+}
+
+/* ================= WAR CONFIG ================= */
+war {
+    archiveFileName = 'ROOT.war'
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}
+
+test {
+    useJUnitPlatform()
+}
+
+/* ================= SSH CONFIG ================= */
+remotes {
+    host {
+        host = '192.168.197.129'
+        user = 'phong'
+        password = '12345'
+    }
+}
+
+ssh.settings {
+    knownHosts = allowAnyHosts
+}
+
+/* ================= CLEAN REMOTE ================= */
+task clean_remote {
+    doLast {
+        ssh.run {
+            session(remotes.host) {
+                execute 'sudo rm -rf /usr/deploy/ROOT.war || true'
+                execute 'mkdir -p /usr/deploy'
+            }
+        }
+    }
+}
+
+/* ================= UPLOAD WAR ================= */
+task docker_upload_file_to_server {
+    dependsOn war // Đảm bảo phải tạo ra file ROOT.war trước khi upload
+    dependsOn clean_remote
+
+    doLast {
+        ssh.run {
+            session(remotes.host) {
+                // Sử dụng layout.buildDirectory để tương thích mọi phiên bản Gradle
+                put from: "${layout.buildDirectory.get()}/libs/ROOT.war",
+                        into: "/usr/deploy/"
+            }
+        }
+    }
+}
+
+/* ================= RESTART TOMCAT ================= */
+task docker_app_start {
+    doLast {
+        ssh.run {
+            session(remotes.host) {
+                // Dừng và xóa container cũ để cập nhật code mới
+                execute 'docker stop tomcat10 || true'
+                execute 'docker rm tomcat10 || true'
+
+                // Khởi chạy Tomcat 10 với file ROOT.war vừa upload
+                execute '''
+                docker run -d \
+                --name tomcat10 \
+                -v /usr/deploy/ROOT.war:/usr/local/tomcat/webapps/ROOT.war \
+                -p 80:8080 \
+                --restart unless-stopped \
+                tomcat:10.1
+                '''
+            }
+        }
+    }
+}
+
+/* ================= DEPLOY PIPELINE (Cập nhật code nhanh) ================= */
+task docker_deploy {
+    // Quy trình: Clean -> Build WAR -> Upload -> Run Docker
+    dependsOn clean, war, docker_upload_file_to_server, docker_app_start
+
+    war.mustRunAfter clean
+    docker_upload_file_to_server.mustRunAfter war
+    docker_app_start.mustRunAfter docker_upload_file_to_server
+}
