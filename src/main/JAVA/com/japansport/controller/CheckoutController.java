@@ -3,15 +3,20 @@ package com.japansport.controller;
 import com.japansport.dao.CartDao;
 import com.japansport.dao.OrderDao;
 import com.japansport.dao.UserAddressDao;
+import com.japansport.dao.VoucherDao;
 import com.japansport.model.Cart;
 import com.japansport.model.User;
 import com.japansport.model.UserAddress;
+import com.japansport.model.Voucher;
+import com.japansport.service.VoucherService;
 
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.*;
 
 import java.io.IOException;
+import java.math.BigDecimal;
+import java.util.List;
 
 @WebServlet(urlPatterns = {"/checkout"})
 public class CheckoutController extends HttpServlet {
@@ -19,6 +24,8 @@ public class CheckoutController extends HttpServlet {
     private final CartDao cartDao = new CartDao();
     private final OrderDao orderDao = new OrderDao();
     private final UserAddressDao addressDao = new UserAddressDao();
+    private final VoucherService voucherService = new VoucherService();
+    private final VoucherDao voucherDao = new VoucherDao();
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
@@ -42,8 +49,34 @@ public class CheckoutController extends HttpServlet {
             } catch (Exception ignored) {}
             req.setAttribute("defaultAddress", addr);
 
+            // ===== XỬ LÝ VOUCHER =====
+            BigDecimal subtotal = BigDecimal.valueOf(cart.getSubtotal());
+            String voucherCode = (String) req.getSession().getAttribute("appliedVoucherCode");
+            Voucher appliedVoucher = null;
+            BigDecimal discountAmount = BigDecimal.ZERO;
+            BigDecimal finalTotal = subtotal;
+
+            if (voucherCode != null && !voucherCode.trim().isEmpty()) {
+                appliedVoucher = voucherService.applyVoucher(voucherCode, subtotal);
+                if (appliedVoucher != null) {
+                    discountAmount = voucherService.calculateDiscount(appliedVoucher, subtotal);
+                    finalTotal = subtotal.subtract(discountAmount);
+                } else {
+                    // Voucher hết hạn hoặc không còn hợp lệ → xóa khỏi session
+                    req.getSession().removeAttribute("appliedVoucherCode");
+                }
+            }
+
+            // Gợi ý voucher phù hợp với đơn hàng hiện tại
+            List<Voucher> suggestedVouchers = voucherDao.getApplicableVouchers(subtotal);
+
             req.setAttribute("cart", cart);
             req.setAttribute("cartItems", cart.getItems());
+            req.setAttribute("appliedVoucher", appliedVoucher);
+            req.setAttribute("discountAmount", discountAmount);
+            req.setAttribute("finalTotal", finalTotal);
+            req.setAttribute("voucherCode", voucherCode);
+            req.setAttribute("suggestedVouchers", suggestedVouchers);
             req.getRequestDispatcher("/payment.jsp").forward(req, resp);
         } catch (Exception e) {
             throw new ServletException(e);
