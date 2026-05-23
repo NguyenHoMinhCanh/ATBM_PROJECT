@@ -1222,6 +1222,17 @@
             if (colorHidden) colorHidden.value = selectedColor || '';
             if (sizeHidden)  sizeHidden.value  = selectedSize  || '';
 
+            // Nếu sản phẩm không có biến thể nào thì luôn enable nút
+            const VARS_LOCAL = Array.isArray(window.VARIANTS) ? window.VARIANTS : [];
+            if (VARS_LOCAL.length === 0) {
+                if (vidHidden) vidHidden.value = '';
+                setButtonsEnabled(true);
+                clampQty(9999);
+                showError('');
+                setHint('', '');
+                return;
+            }
+
             if (!selectedColor || !selectedSize) {
                 if (vidHidden) vidHidden.value = '';
                 setButtonsEnabled(false);
