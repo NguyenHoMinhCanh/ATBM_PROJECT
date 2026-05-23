@@ -1,9 +1,11 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ page import="java.util.*" %>
+<%@ page import="java.math.BigDecimal" %>
 <%@ page import="com.japansport.model.Cart" %>
 <%@ page import="com.japansport.model.CartItem" %>
 <%@ page import="com.japansport.model.User" %>
 <%@ page import="com.japansport.model.UserAddress" %>
+<%@ page import="com.japansport.model.Voucher" %>
 <%
     String ctx = request.getContextPath();
 
@@ -58,7 +60,23 @@
     double subtotal = cart.getSubtotal();
     int totalQty = cart.getTotalQty();
     String errorMessage = (String) request.getAttribute("errorMessage");
+
+    // ===== VOUCHER =====
+    Voucher appliedVoucher   = (Voucher)     request.getAttribute("appliedVoucher");
+    BigDecimal discountAmount = (BigDecimal) request.getAttribute("discountAmount");
+    BigDecimal finalTotal     = (BigDecimal) request.getAttribute("finalTotal");
+    List<Voucher> suggestedVouchers = (List<Voucher>) request.getAttribute("suggestedVouchers");
+
+    if (discountAmount == null) discountAmount = BigDecimal.ZERO;
+    if (finalTotal     == null) finalTotal     = BigDecimal.valueOf(subtotal);
+    if (suggestedVouchers == null) suggestedVouchers = new ArrayList<>();
+
+    String voucherSuccess = (String) session.getAttribute("voucherSuccess");
+    session.removeAttribute("voucherSuccess");
+    String voucherError = (String) session.getAttribute("voucherError");
+    session.removeAttribute("voucherError");
 %>
+
 
 <!DOCTYPE html>
 <html lang="vi">
@@ -230,14 +248,101 @@
                         </div>
                         <% } %>
                     </div>
+
                     <div class="divider my-3 border-bottom"></div>
-                    <div class="sum-line d-flex justify-content-between"><span>Tạm tính</span><strong><%=String.format("%,.0f", subtotal)%>₫</strong></div>
-                    <div class="sum-line d-flex justify-content-between"><span>Phí vận chuyển</span><span>0₫</span></div>
-                    <div class="sum-line d-flex justify-content-between"><span>Giảm giá</span><span>0₫</span></div>
+
+                    <%-- ===== VOUCHER SECTION ===== --%>
+                    <% if (voucherSuccess != null) { %>
+                    <div class="alert alert-success py-2 px-3 mb-2 small">
+                        <i class="bi bi-check-circle-fill me-1"></i><%=voucherSuccess%>
+                    </div>
+                    <% } %>
+                    <% if (voucherError != null) { %>
+                    <div class="alert alert-danger py-2 px-3 mb-2 small">
+                        <i class="bi bi-x-circle-fill me-1"></i><%=voucherError%>
+                    </div>
+                    <% } %>
+
+                    <% if (appliedVoucher != null) { %>
+                    <%-- Voucher đang áp dụng --%>
+                    <div class="voucher-applied-pay d-flex align-items-center justify-content-between mb-3 p-2 rounded-3">
+                        <div class="d-flex align-items-center gap-2">
+                            <i class="bi bi-ticket-perforated-fill text-success"></i>
+                            <div>
+                                <div class="fw-bold text-success small"><%=appliedVoucher.getCode()%></div>
+                                <div class="text-muted" style="font-size:0.75rem;"><%=appliedVoucher.getName()%></div>
+                            </div>
+                        </div>
+                        <form method="post" action="<%=ctx%>/cart" class="mb-0">
+                            <input type="hidden" name="action" value="removeVoucher"/>
+                            <button type="submit" class="btn btn-sm btn-outline-danger rounded-pill px-2 py-0"
+                                    style="font-size:0.75rem;" title="Bỏ voucher">
+                                <i class="bi bi-x"></i> Bỏ
+                            </button>
+                        </form>
+                    </div>
+                    <% } else { %>
+                    <%-- Form nhập mã voucher trên trang thanh toán --%>
+                    <div class="mb-2">
+                        <form method="post" action="<%=ctx%>/cart" class="d-flex gap-2" id="payVoucherForm">
+                            <input type="hidden" name="action" value="applyVoucher"/>
+                            <input type="text" id="payVoucherInput" name="voucherCode"
+                                   class="form-control form-control-sm text-uppercase"
+                                   placeholder="Mã giảm giá..."
+                                   maxlength="50" autocomplete="off"
+                                   style="border-radius:8px;letter-spacing:1px;font-weight:600;"/>
+                            <button type="submit" class="btn btn-sm btn-success px-3" style="white-space:nowrap;border-radius:8px;">
+                                Áp dụng
+                            </button>
+                        </form>
+                    </div>
+
+                    <%-- Gợi ý voucher phù hợp --%>
+                    <% if (!suggestedVouchers.isEmpty()) { %>
+                    <div class="mb-2">
+                        <div class="small text-muted mb-1"><i class="bi bi-lightbulb me-1 text-warning"></i>Voucher có thể dùng:</div>
+                        <% for (Voucher sv : suggestedVouchers) {
+                            String dDesc;
+                            if ("percent".equals(sv.getDiscountType())) {
+                                dDesc = sv.getDiscountValue().stripTrailingZeros().toPlainString() + "%";
+                            } else {
+                                dDesc = String.format("%,.0f₫", sv.getDiscountValue());
+                            }
+                        %>
+                        <div class="voucher-suggest-pay d-flex align-items-center justify-content-between px-2 py-1 mb-1 rounded"
+                             onclick="applyPayVoucher('<%=sv.getCode()%>')" title="Click để áp dụng">
+                            <div>
+                                <span class="fw-bold text-success" style="font-size:0.8rem;"><%=sv.getCode()%></span>
+                                <span class="badge bg-success ms-1" style="font-size:0.7rem;">-<%=dDesc%></span>
+                                <div class="text-muted" style="font-size:0.72rem;"><%=sv.getName()%></div>
+                            </div>
+                            <span class="text-success" style="font-size:0.75rem;cursor:pointer;">Dùng →</span>
+                        </div>
+                        <% } %>
+                    </div>
+                    <% } %>
+                    <% } %>
+                    <%-- ===== /VOUCHER SECTION ===== --%>
+
+                    <div class="divider my-2 border-bottom"></div>
+                    <div class="sum-line d-flex justify-content-between">
+                        <span>Tạm tính</span>
+                        <strong><%=String.format("%,.0f", subtotal)%>₫</strong>
+                    </div>
+                    <div class="sum-line d-flex justify-content-between">
+                        <span>Phí vận chuyển</span>
+                        <span>0₫</span>
+                    </div>
+                    <% if (appliedVoucher != null && discountAmount.compareTo(BigDecimal.ZERO) > 0) { %>
+                    <div class="sum-line d-flex justify-content-between text-success fw-semibold">
+                        <span><i class="bi bi-tag-fill me-1"></i>Giảm giá</span>
+                        <span>-<%=String.format("%,.0f", discountAmount)%>₫</span>
+                    </div>
+                    <% } %>
                     <div class="divider my-3 border-bottom"></div>
                     <div class="sum-line fs-5 d-flex justify-content-between">
                         <span><strong>Tổng cộng</strong></span>
-                        <strong class="text-primary"><%=String.format("%,.0f", subtotal)%>₫</strong>
+                        <strong class="text-primary"><%=String.format("%,.0f", finalTotal)%>₫</strong>
                     </div>
                 </div>
             </div>
@@ -246,6 +351,23 @@
 </div>
 
 <%@ include file="/WEB-INF/jspf/site_footer.jspf" %>
+
+<style>
+    .voucher-applied-pay {
+        background: linear-gradient(135deg, #f0fff4, #e6ffee);
+        border: 1.5px dashed #28a745;
+    }
+    .voucher-suggest-pay {
+        background: #f8fff8;
+        border: 1px dashed #9ed49e;
+        cursor: pointer;
+        transition: background 0.2s;
+    }
+    .voucher-suggest-pay:hover {
+        background: #eaffea;
+        border-color: #28a745;
+    }
+</style>
 
 <script>
     document.addEventListener('DOMContentLoaded', function () {
@@ -281,6 +403,17 @@
                 `;
             });
     });
+
+    // 3. Áp dụng voucher gợi ý trên trang thanh toán
+    function applyPayVoucher(code) {
+        if (!code) return;
+        const input = document.getElementById('payVoucherInput');
+        const form  = document.getElementById('payVoucherForm');
+        if (input && form) {
+            input.value = code.toUpperCase();
+            form.submit();
+        }
+    }
 </script>
 </body>
-</html>
+</html>
