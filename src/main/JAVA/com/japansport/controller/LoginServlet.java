@@ -91,11 +91,18 @@ public class LoginServlet extends HttpServlet {
             User user = userDao.login(email.trim().toLowerCase(), password);
 
             if (user != null) {
+                if (user.getActive() == 0) {
+                    request.setAttribute("errorMessage", "Tài khoản của bạn đã bị vô hiệu hóa. Vui lòng liên hệ hỗ trợ để được giúp đỡ.");
+                    request.getRequestDispatcher("/login.jsp").forward(request, response);
+                    return;
+                }
+
                 // chống session fixation
                 request.changeSessionId();
 
                 HttpSession session = request.getSession();
                 session.setAttribute("currentUser", user);
+                session.setAttribute("LOGIN_SUCCESS", "Đăng nhập thành công! Chào mừng " + user.getName());
 
                 // Xử lý cookie ghi nhớ email
                 Cookie rememberCookie = new Cookie("rememberEmail", "");

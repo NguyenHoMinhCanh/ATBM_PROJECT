@@ -8,6 +8,33 @@
     });
 </script>
 
+<%-- Xử lý hiển thị thông báo đăng nhập thành công --%>
+<%
+    String loginSuccessMsg = (String) session.getAttribute("LOGIN_SUCCESS");
+    if (loginSuccessMsg != null) {
+        session.removeAttribute("LOGIN_SUCCESS");
+%>
+<div class="toast-container position-fixed top-0 start-50 translate-middle-x p-3" style="z-index: 9999; margin-top: 10px;">
+    <div id="loginSuccessToast" class="toast align-items-center text-bg-success border-0 shadow" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="d-flex">
+            <div class="toast-body fw-bold fs-6">
+                <i class="bi bi-check-circle-fill me-2"></i> <%= loginSuccessMsg %>
+            </div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+    </div>
+</div>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const toastEl = document.getElementById('loginSuccessToast');
+        if (toastEl && typeof bootstrap !== 'undefined') {
+            const toast = new bootstrap.Toast(toastEl, { delay: 3000 });
+            toast.show();
+        }
+    });
+</script>
+<% } %>
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
