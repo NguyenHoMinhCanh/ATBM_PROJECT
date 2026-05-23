@@ -197,7 +197,7 @@ public class UserDao extends DAO implements IDAO<User> {
                 "FROM users u " +
                 "LEFT JOIN user_roles ur ON ur.user_id = u.id " +
                 "LEFT JOIN roles r ON r.id = ur.role_id " +
-                "WHERE u.email=? AND u.active=1 " +
+                "WHERE u.email=? " +
                 "ORDER BY CASE " +
                 "   WHEN r.code='ADMIN' THEN 1 " +
                 "   WHEN r.code='STAFF' THEN 2 " +
