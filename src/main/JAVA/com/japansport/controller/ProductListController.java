@@ -72,10 +72,10 @@ public class ProductListController extends HttpServlet {
 
         List<Product> allProducts;
 
-        // 1) keyword -> search
+        // 1) keyword -> search mở rộng: tên SP + tên brand + không dấu tiếng Việt
         if (keywordParam != null && !keywordParam.trim().isEmpty()) {
             String keyword = keywordParam.trim();
-            allProducts = productDao.searchByName(keyword);
+            allProducts = productDao.searchByKeywordFull(keyword);
             req.setAttribute("keyword", keyword);
         } else {
             // 2) category + sort / all + sort

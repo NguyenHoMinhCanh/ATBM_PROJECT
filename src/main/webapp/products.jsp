@@ -152,10 +152,10 @@
                 </ul>
             </div>
 
-            <!-- FORM LỌC (THƯƠNG HIỆU + MỨC GIÁ + LOẠI SẢN PHẨM) -->
-            <form method="get" action="<%= ctx %>/list-product">
+            <!-- FORM LỌC (THƯƠNG HIỆU + MỨC GIÁ + GIỚI TÍNH) -->
+            <form id="filterForm" method="get" action="<%= ctx %>/list-product">
 
-                <!-- giữ lại category, sort, keyword hiện tại -->
+                <!-- Giữ lại category, sort, keyword -->
                 <% if (selectedCategoryId != null && !selectedCategoryId.isEmpty()) { %>
                 <input type="hidden" name="categoryId" value="<%= selectedCategoryId %>">
                 <% } %>
@@ -166,60 +166,49 @@
                 <input type="hidden" name="keyword" value="<%= keywordAttr %>">
                 <% } %>
 
-
-                <%-- GIỚI TÍNH: chỉ hiện khi vào theo THỂ LOẠI hoặc THƯƠNG HIỆU --%>
+                <%-- GIỚI TÍNH --%>
                 <% if (showGenderFilter) { %>
                 <div class="widget-box mb-4">
                     <div class="widget-title">GIỚI TÍNH</div>
-
                     <label class="form-check">
-                        <input class="form-check-input" type="radio" name="gender" value=""
+                        <input class="form-check-input filter-auto" type="radio" name="gender" value=""
                             <%= (selectedGender == null) ? "checked" : "" %>>
                         <span class="form-check-label">Tất cả</span>
                     </label>
-
                     <label class="form-check">
-                        <input class="form-check-input" type="radio" name="gender" value="men"
+                        <input class="form-check-input filter-auto" type="radio" name="gender" value="men"
                             <%= "men".equalsIgnoreCase(selectedGender) ? "checked" : "" %>>
                         <span class="form-check-label">Giày nam</span>
                     </label>
-
                     <label class="form-check">
-                        <input class="form-check-input" type="radio" name="gender" value="women"
+                        <input class="form-check-input filter-auto" type="radio" name="gender" value="women"
                             <%= "women".equalsIgnoreCase(selectedGender) ? "checked" : "" %>>
                         <span class="form-check-label">Giày nữ</span>
                     </label>
-
                     <label class="form-check">
-                        <input class="form-check-input" type="radio" name="gender" value="unisex"
+                        <input class="form-check-input filter-auto" type="radio" name="gender" value="unisex"
                             <%= "unisex".equalsIgnoreCase(selectedGender) ? "checked" : "" %>>
                         <span class="form-check-label">Unisex</span>
                     </label>
                 </div>
                 <% } else { %>
-                <%-- Không hiện block giới tính, nhưng nếu đang có gender thì phải GIỮ lại để không mất filter --%>
                 <% if (selectedGender != null && !selectedGender.isEmpty()) { %>
                 <input type="hidden" name="gender" value="<%= selectedGender %>">
                 <% } %>
                 <% } %>
 
-
-                <!-- THƯƠNG HIỆU  -->
+                <!-- THƯƠNG HIỆU -->
                 <div class="widget-box mb-4">
                     <div class="widget-title">THƯƠNG HIỆU</div>
                     <div class="brand-list">
-                        <% if (brandList != null) {
-                            for (Brand b : brandList) { %>
+                        <% if (brandList != null) { for (Brand b : brandList) { %>
                         <label class="form-check">
-                            <input class="form-check-input"
-                                   type="checkbox"
-                                   name="brandId"
-                                   value="<%= b.getId() %>"
-                                <%= selectedBrandIdSet.contains(String.valueOf(b.getId())) ? "checked" : "" %>>
+                            <input class="form-check-input filter-auto"
+                                   type="checkbox" name="brandId" value="<%= b.getId() %>"
+                                   <%= selectedBrandIdSet.contains(String.valueOf(b.getId())) ? "checked" : "" %>>
                             <span class="form-check-label"><%= b.getName() %></span>
                         </label>
-                        <% }
-                        } else { %>
+                        <% } } else { %>
                         <p class="text-muted mb-0">Chưa có thương hiệu nào.</p>
                         <% } %>
                     </div>
@@ -229,64 +218,41 @@
                 <div class="widget-box mb-4">
                     <div class="widget-title">MỨC GIÁ</div>
                     <div class="brand-list">
-                        <label class="form-check">
-                            <input class="form-check-input" type="checkbox" name="price" value="0-500"
-                                <%= selectedPriceSet.contains("0-500") ? "checked" : "" %>>
-                            <span class="form-check-label">Giá dưới 500.000đ</span>
-                        </label>
-                        <label class="form-check">
-                            <input class="form-check-input" type="checkbox" name="price" value="500-1000"
-                                <%= selectedPriceSet.contains("500-1000") ? "checked" : "" %>>
-                            <span class="form-check-label">500.000đ - 1.000.000đ</span>
-                        </label>
-                        <label class="form-check">
-                            <input class="form-check-input" type="checkbox" name="price" value="1000-1500"
-                                <%= selectedPriceSet.contains("1000-1500") ? "checked" : "" %>>
-                            <span class="form-check-label">1.000.000đ - 1.500.000đ</span>
-                        </label>
-                        <label class="form-check">
-                            <input class="form-check-input" type="checkbox" name="price" value="1500-2000"
-                                <%= selectedPriceSet.contains("1500-2000") ? "checked" : "" %>>
-                            <span class="form-check-label">1.500.000đ - 2.000.000đ</span>
-                        </label>
-                        <label class="form-check">
-                            <input class="form-check-input" type="checkbox" name="price" value="2000-2500"
-                                <%= selectedPriceSet.contains("2000-2500") ? "checked" : "" %>>
-                            <span class="form-check-label">2.000.000đ - 2.500.000đ</span>
-                        </label>
-                        <label class="form-check">
-                            <input class="form-check-input" type="checkbox" name="price" value="2500-3000"
-                                <%= selectedPriceSet.contains("2500-3000") ? "checked" : "" %>>
-                            <span class="form-check-label">2.500.000đ - 3.000.000đ</span>
-                        </label>
-                        <label class="form-check">
-                            <input class="form-check-input" type="checkbox" name="price" value="3000+"
-                                <%= selectedPriceSet.contains("3000+") ? "checked" : "" %>>
-                            <span class="form-check-label">Giá trên 3.000.000đ</span>
-                        </label>
+                        <label class="form-check"><input class="form-check-input filter-auto" type="checkbox" name="price" value="0-500" <%= selectedPriceSet.contains("0-500") ? "checked" : "" %>><span class="form-check-label">Dưới 500.000đ</span></label>
+                        <label class="form-check"><input class="form-check-input filter-auto" type="checkbox" name="price" value="500-1000" <%= selectedPriceSet.contains("500-1000") ? "checked" : "" %>><span class="form-check-label">500K - 1.000.000đ</span></label>
+                        <label class="form-check"><input class="form-check-input filter-auto" type="checkbox" name="price" value="1000-1500" <%= selectedPriceSet.contains("1000-1500") ? "checked" : "" %>><span class="form-check-label">1 - 1.5 triệu</span></label>
+                        <label class="form-check"><input class="form-check-input filter-auto" type="checkbox" name="price" value="1500-2000" <%= selectedPriceSet.contains("1500-2000") ? "checked" : "" %>><span class="form-check-label">1.5 - 2 triệu</span></label>
+                        <label class="form-check"><input class="form-check-input filter-auto" type="checkbox" name="price" value="2000-2500" <%= selectedPriceSet.contains("2000-2500") ? "checked" : "" %>><span class="form-check-label">2 - 2.5 triệu</span></label>
+                        <label class="form-check"><input class="form-check-input filter-auto" type="checkbox" name="price" value="2500-3000" <%= selectedPriceSet.contains("2500-3000") ? "checked" : "" %>><span class="form-check-label">2.5 - 3 triệu</span></label>
+                        <label class="form-check"><input class="form-check-input filter-auto" type="checkbox" name="price" value="3000+" <%= selectedPriceSet.contains("3000+") ? "checked" : "" %>><span class="form-check-label">Trên 3 triệu</span></label>
                     </div>
                 </div>
 
-                <!-- LOẠI SẢN PHẨM (UI, chưa có cột type trong DB) -->
-                <div class="widget-box">
-                    <div class="widget-title">LOẠI SẢN PHẨM</div>
-                    <div class="brand-list">
-                        <!-- giữ nguyên các checkbox loại sản phẩm hiện có -->
-                    </div>
-                </div>
-
-                <button type="submit" class="btn btn-danger w-100 mt-3">
-                    Lọc sản phẩm
-                </button>
+                <!-- Nút xoá bộ lọc (chỉ hiện khi đang có filter) -->
+                <%
+                    boolean hasActiveFilter = !selectedBrandIdSet.isEmpty() || !selectedPriceSet.isEmpty()
+                            || (selectedGender != null && !selectedGender.isEmpty());
+                %>
+                <% if (hasActiveFilter) { %>
+                <a href="<%= ctx %>/list-product<%= (selectedCategoryId != null ? "?categoryId=" + selectedCategoryId : "") %>"
+                   class="btn btn-outline-secondary w-100 mt-2">
+                    <i class="bi bi-x-circle me-1"></i>Xoá bộ lọc
+                </a>
+                <% } %>
             </form>
 
         </aside>
 
         <!-- ===== Product list ===== -->
         <section class="col-lg-9">
-            <!-- sort line -->
+            <!-- Thông tin số kết quả -->
             <div class="d-flex justify-content-between align-items-center mb-3">
-                <h4 class="mb-0"><%= pageTitle.toUpperCase() %></h4>
+                <div>
+                    <h4 class="mb-0 d-inline"><%= pageTitle.toUpperCase() %></h4>
+                    <span class="text-muted ms-2" style="font-size:0.88rem;">
+                        (<%= totalProducts %> sản phẩm)
+                    </span>
+                </div>
                 <form method="get" action="<%= ctx %>/list-product" class="d-flex align-items-center gap-2">
                     <%-- Giữ lại categoryId nếu đang lọc theo danh mục --%>
                     <% if (selectedCategoryId != null) { %>
@@ -449,34 +415,40 @@
 
                         <!-- Previous -->
                         <li class="page-item <%= (currentPage <= 1) ? "disabled" : "" %>">
-                            <a class="page-link"
-                               href="<%= ctx %>/list-product?page=<%= currentPage - 1 %><%= baseQuery.toString() %>"
-                               aria-label="Previous">
-                                &laquo;
-                            </a>
+                            <a class="page-link" href="<%= ctx %>/list-product?page=<%= currentPage - 1 %><%= baseQuery.toString() %>" aria-label="Previous">&laquo;</a>
                         </li>
 
-                        <!-- Các số trang -->
-                        <% for (int i = 1; i <= totalPages; i++) { %>
-                        <li class="page-item <%= (i == currentPage) ? "active" : "" %>">
-                            <a class="page-link"
-                               href="<%= ctx %>/list-product?page=<%= i %><%= baseQuery.toString() %>">
-                                <%= i %>
-                            </a>
+                        <%-- Phân trang thông minh: hiện tối đa 7 trang, dùng "..." ở giữa --%>
+                        <%
+                            int rangeSize = 2; // số trang xung quanh trang hiện tại
+                            for (int pi = 1; pi <= totalPages; pi++) {
+                                boolean isFirst = (pi == 1);
+                                boolean isLast  = (pi == totalPages);
+                                boolean inRange = (pi >= currentPage - rangeSize && pi <= currentPage + rangeSize);
+
+                                if (!isFirst && !isLast && !inRange) {
+                                    // In dấu "..." nhưng chỉ 1 lần mỗi khoảng
+                                    boolean prevShown = (pi - 1 == 1)
+                                            || (pi - 1 >= currentPage - rangeSize);
+                                    if (!prevShown) {
+                        %>
+                        <li class="page-item disabled"><span class="page-link">…</span></li>
+                        <%      }
+                                    continue;
+                                }
+                        %>
+                        <li class="page-item <%= (pi == currentPage) ? "active" : "" %>">
+                            <a class="page-link" href="<%= ctx %>/list-product?page=<%= pi %><%= baseQuery.toString() %>"><%= pi %></a>
                         </li>
                         <% } %>
 
                         <!-- Next -->
                         <li class="page-item <%= (currentPage >= totalPages) ? "disabled" : "" %>">
-                            <a class="page-link"
-                               href="<%= ctx %>/list-product?page=<%= currentPage + 1 %><%= baseQuery.toString() %>"
-                               aria-label="Next">
-                                &raquo;
-                            </a>
+                            <a class="page-link" href="<%= ctx %>/list-product?page=<%= currentPage + 1 %><%= baseQuery.toString() %>" aria-label="Next">&raquo;</a>
                         </li>
                     </ul>
                 </nav>
-                    <% } %>
+                <% } %>
         </section>
     </div>
 </div>
@@ -547,14 +519,38 @@
     <i class="bi bi-arrow-up"></i>
 </button>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
 <script>
-
-
-    // Tooltips (giống index)
+    // Tooltips
     const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
     tooltipTriggerList.map(el => new bootstrap.Tooltip(el));
 
+    // ===== STT 29: Auto-submit bộ lọc khi tick checkbox/radio =====
+    // Dùng debounce nhỏ để tránh submit nhiều lần liên tiếp
+    (function() {
+        const form = document.getElementById('filterForm');
+        if (!form) return;
 
+        let submitTimer = null;
+
+        form.querySelectorAll('.filter-auto').forEach(function(el) {
+            el.addEventListener('change', function() {
+                clearTimeout(submitTimer);
+                submitTimer = setTimeout(function() {
+                    // Reset về trang 1 khi đổi bộ lọc
+                    let pageInput = form.querySelector('input[name="page"]');
+                    if (!pageInput) {
+                        pageInput = document.createElement('input');
+                        pageInput.type = 'hidden';
+                        pageInput.name = 'page';
+                        form.appendChild(pageInput);
+                    }
+                    pageInput.value = '1';
+                    form.submit();
+                }, 200);
+            });
+        });
+    })();
 </script>
 </body>
 </html>

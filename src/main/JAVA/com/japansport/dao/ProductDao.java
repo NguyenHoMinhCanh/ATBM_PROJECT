@@ -2,6 +2,7 @@ package com.japansport.dao;
 
 import com.japansport.model.Product;
 import com.japansport.model.Brand;
+import com.japansport.util.ViTextUtil;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -418,6 +419,57 @@ public class ProductDao extends DAO {
             throw new RuntimeException(e);
         }
     }
+
+    /**
+     * Tìm kiếm mở rộng: hỗ trợ tiếng Việt không dấu + khớp cả tên thương hiệu.
+     * Lấy tất cả SP active (có JOIN brands), rồi lọc phía Java.
+     * Phù hợp với số lượng SP vừa phải (vài trăm).
+     */
+    public List<Product> searchByKeywordFull(String keyword) {
+        List<Product> result = new ArrayList<>();
+        if (keyword == null || keyword.trim().isEmpty()) return result;
+
+        // Lấy hết SP active + tên brand để lọc
+        String sql = "SELECT p.id, p.name, p.description, p.price, p.old_price, p.image_url, " +
+                "p.gender, p.category_id, p.brand_id, p.active, p.created_at, p.updated_at, " +
+                "b.name AS brand_name " +
+                "FROM products p " +
+                "LEFT JOIN brands b ON b.id = p.brand_id AND b.active = 1 " +
+                "WHERE p.active = 1 " +
+                "ORDER BY p.updated_at DESC, p.id DESC";
+
+        try {
+            PreparedStatement ps = getPreparedStatement(sql);
+            ResultSet rs = ps.executeQuery();
+
+            String trimmed = keyword.trim();
+            while (rs.next()) {
+                Product p = mapRowToProduct(rs);
+                String brandName = rs.getString("brand_name");
+                if (brandName != null) {
+                    Brand b = new Brand();
+                    b.setId(rs.getInt("brand_id"));
+                    b.setName(brandName);
+                    p.setBrand(b);
+                }
+
+                // Khớp tên SP hoặc tên brand (cả có dấu lẫn không dấu)
+                boolean matchName  = ViTextUtil.containsIgnoreAccent(p.getName(), trimmed);
+                boolean matchBrand = p.getBrand() != null
+                        && ViTextUtil.containsIgnoreAccent(p.getBrand().getName(), trimmed);
+
+                if (matchName || matchBrand) {
+                    result.add(p);
+                }
+            }
+            return result;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            throw new RuntimeException(e);
+        }
+    }
+
+
 
     // === THỐNG KÊ ===
 
