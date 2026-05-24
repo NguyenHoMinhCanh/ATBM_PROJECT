@@ -245,13 +245,21 @@
 
         <!-- ===== Product list ===== -->
         <section class="col-lg-9">
-            <!-- Thông tin số kết quả -->
+            <!-- STT 34: Hiển thị số kết quả -->
+            <%
+                int fromItem = (totalProducts == 0) ? 0 : (currentPage - 1) * 16 + 1;
+                int toItem   = Math.min(currentPage * 16, totalProducts);
+            %>
             <div class="d-flex justify-content-between align-items-center mb-3">
                 <div>
                     <h4 class="mb-0 d-inline"><%= pageTitle.toUpperCase() %></h4>
+                    <% if (totalProducts > 0) { %>
                     <span class="text-muted ms-2" style="font-size:0.88rem;">
-                        (<%= totalProducts %> sản phẩm)
+                        &mdash; Đang hiển thị <%= fromItem %>–<%= toItem %> / <%= totalProducts %> sản phẩm
                     </span>
+                    <% } else { %>
+                    <span class="text-muted ms-2" style="font-size:0.88rem;">— Không tìm thấy sản phẩm nào</span>
+                    <% } %>
                 </div>
                 <form method="get" action="<%= ctx %>/list-product" class="d-flex align-items-center gap-2">
                     <%-- Giữ lại categoryId nếu đang lọc theo danh mục --%>
