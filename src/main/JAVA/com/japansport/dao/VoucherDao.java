@@ -26,6 +26,38 @@ public class VoucherDao {
         return list;
     }
 
+    /**
+     * Lấy danh sách voucher phù hợp với giá trị đơn hàng:
+     * - Còn hiệu lực (is_active = 1)
+     * - Trong thời gian áp dụng
+     * - Giá trị đơn hàng >= min_order_value
+     * - Còn lượt sử dụng
+     * Sắp xếp: discount_value DESC (gợi ý voucher có giảm giá cao nhất trước)
+     */
+    public List<Voucher> getApplicableVouchers(java.math.BigDecimal orderTotal) {
+        List<Voucher> list = new ArrayList<>();
+        String sql = "SELECT * FROM vouchers WHERE is_active = 1 " +
+                "AND (start_date IS NULL OR start_date <= NOW()) " +
+                "AND (end_date IS NULL OR end_date >= NOW()) " +
+                "AND (min_order_value IS NULL OR min_order_value <= ?) " +
+                "AND (usage_limit IS NULL OR used_count < usage_limit) " +
+                "ORDER BY discount_value DESC " +
+                "LIMIT 5";
+        try (Connection conn = DBConnect.getInstance().getConnect();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setBigDecimal(1, orderTotal);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    list.add(mapResultSetToVoucher(rs));
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+
+
     // lay voucher from id
     public Voucher getVoucherById (int id) {
         String sql = "select * from vouchers where id = ?";
