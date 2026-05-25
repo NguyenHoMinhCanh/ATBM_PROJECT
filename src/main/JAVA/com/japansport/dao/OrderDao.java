@@ -484,13 +484,19 @@ public class OrderDao extends DAO {
                 }
             }
 
-            if (status == null || !"PENDING".equalsIgnoreCase(status)) {
+            if (status == null) {
                 conn.rollback();
                 return -1;
             }
 
-            // Update status -> CANCEL (chỉ khi đang PENDING)
-            String upd = "UPDATE orders SET status='CANCEL', updated_at=CURRENT_TIMESTAMP WHERE id=? AND status='PENDING'";
+            String statusUpper = status.toUpperCase();
+            if (!"PENDING".equals(statusUpper) && !"PAID".equals(statusUpper) && !"SHIPPING".equals(statusUpper)) {
+                conn.rollback();
+                return -1;
+            }
+
+            // Update status -> CANCEL (cho các đơn hàng ở trạng thái hoạt động)
+            String upd = "UPDATE orders SET status='CANCEL', updated_at=CURRENT_TIMESTAMP WHERE id=? AND status IN ('PENDING', 'PAID', 'SHIPPING')";
             try (PreparedStatement ps = conn.prepareStatement(upd)) {
                 ps.setInt(1, orderId);
                 int affected = ps.executeUpdate();
