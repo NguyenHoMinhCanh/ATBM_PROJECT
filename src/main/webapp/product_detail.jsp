@@ -201,11 +201,10 @@
             <div class="product-zoom-wrap">
                 <!-- Ảnh chính -->
                 <div class="product-gallery">
-                    <div class="main-image mb-3">
+                    <div class="main-image mb-3" id="imgContainer" style="position:relative; cursor: crosshair; overflow: hidden; border-radius: 8px;">
                         <img id="mainImage" src="<%= initMainUrl %>" alt="<%= initMainAlt %>"
                              class="img-fluid w-100 border rounded">
-                        <div id="zoomPreview" class="zoom-preview" aria-hidden="true"></div>
-                        <div id="zoomLens" class="zoom-lens"></div>
+                        <div id="magnifierLens" class="magnifier-lens"></div>
                     </div>
 
                     <div class="d-flex align-items-center gap-2">
@@ -918,9 +917,27 @@
 
         // reset scroll thumbnail
         if (wrapper) wrapper.scrollLeft = 0;
+        
+        if (typeof window.updateThumbButtons === 'function') window.updateThumbButtons();
+        if (typeof window.initZoom === 'function') {
+            setTimeout(window.initZoom, 100);
+        }
     };
 
-    // các hàm đang được gọi bởi onclick trong HTML nhưng file hiện tại chưa định nghĩa
+    window.updateThumbButtons = function () {
+        const thumbs = document.querySelectorAll('.thumbnail');
+        if (thumbs.length === 0) return;
+        
+        let activeIdx = -1;
+        thumbs.forEach((t, i) => { if (t.classList.contains('active')) activeIdx = i; });
+        
+        const prevBtn = document.querySelector('.product-gallery .btn[onclick="prevThumb()"]');
+        const nextBtn = document.querySelector('.product-gallery .btn[onclick="nextThumb()"]');
+        
+        if (prevBtn) prevBtn.disabled = activeIdx <= 0;
+        if (nextBtn) nextBtn.disabled = activeIdx >= thumbs.length - 1 || activeIdx === -1;
+    };
+
     window.changeImage = function (thumbEl) {
         const main = document.getElementById('mainImage');
         if (!main || !thumbEl) return;
@@ -930,18 +947,105 @@
 
         document.querySelectorAll('.thumbnail').forEach(t => t.classList.remove('active'));
         thumbEl.classList.add('active');
+        
+        window.updateThumbButtons();
+        if (typeof window.initZoom === 'function') {
+            setTimeout(window.initZoom, 50); 
+        }
     };
 
     window.prevThumb = function () {
-        const wrapper = document.querySelector('.thumbnails-wrapper');
-        if (!wrapper) return;
-        wrapper.scrollLeft -= 160;
+        const thumbs = document.querySelectorAll('.thumbnail');
+        let activeIdx = -1;
+        thumbs.forEach((t, i) => { if (t.classList.contains('active')) activeIdx = i; });
+        if (activeIdx > 0) {
+            window.changeImage(thumbs[activeIdx - 1]);
+            const wrapper = document.querySelector('.thumbnails-wrapper');
+            if (wrapper) wrapper.scrollLeft = thumbs[activeIdx - 1].offsetLeft - wrapper.offsetLeft;
+        }
     };
 
     window.nextThumb = function () {
-        const wrapper = document.querySelector('.thumbnails-wrapper');
-        if (!wrapper) return;
-        wrapper.scrollLeft += 160;
+        const thumbs = document.querySelectorAll('.thumbnail');
+        let activeIdx = -1;
+        thumbs.forEach((t, i) => { if (t.classList.contains('active')) activeIdx = i; });
+        if (activeIdx >= 0 && activeIdx < thumbs.length - 1) {
+            window.changeImage(thumbs[activeIdx + 1]);
+            const wrapper = document.querySelector('.thumbnails-wrapper');
+            if (wrapper) wrapper.scrollLeft = thumbs[activeIdx + 1].offsetLeft - wrapper.offsetLeft;
+        }
+    };
+
+    window.initZoom = function() {
+        const container = document.getElementById('imgContainer') || document.querySelector('.main-image');
+        const img = document.getElementById('mainImage');
+        const lens = document.getElementById('magnifierLens');
+        if (!container || !img || !lens) return;
+
+        // Xóa sự kiện cũ bằng cách thay thế clone
+        const newContainer = container.cloneNode(true);
+        container.parentNode.replaceChild(newContainer, container);
+        
+        const newImg = newContainer.querySelector('#mainImage');
+        const newLens = newContainer.querySelector('#magnifierLens');
+        if (!newImg || !newLens) return;
+        
+        const zoomLevel = 2.5; // Độ phóng to
+        
+        // Gán cứng inline style cho lens để tránh lỗi cache CSS từ trình duyệt
+        newLens.style.position = 'absolute';
+        newLens.style.width = '150px';   // <-- BẠN CÓ THỂ ĐỔI KÍCH THƯỚC Ở ĐÂY
+        newLens.style.height = '150px';  // <-- BẠN CÓ THỂ ĐỔI KÍCH THƯỚC Ở ĐÂY
+        newLens.style.border = '3px solid #fff';
+        newLens.style.borderRadius = '50%';
+        newLens.style.backgroundColor = '#fff';
+        newLens.style.backgroundRepeat = 'no-repeat';
+        newLens.style.pointerEvents = 'none';
+        newLens.style.zIndex = '100';
+        newLens.style.boxShadow = '0 5px 15px rgba(0,0,0,0.3)';
+        newLens.style.display = 'none';
+        
+        newLens.style.backgroundImage = "url('" + newImg.src + "')";
+
+        function moveLens(e) {
+            newLens.style.display = 'block';
+            
+            const rect = newContainer.getBoundingClientRect();
+            let x = e.clientX - rect.left; 
+            let y = e.clientY - rect.top;  
+            
+            const lensW = 150; // <-- BẠN CÓ THỂ ĐỔI KÍCH THƯỚC Ở ĐÂY (NÊN GIỐNG Ở TRÊN)
+            const lensH = 150; // <-- BẠN CÓ THỂ ĐỔI KÍCH THƯỚC Ở ĐÂY (NÊN GIỐNG Ở TRÊN)
+
+            // Căn giữa theo con trỏ chuột
+            let lensX = x - (lensW / 2);
+            let lensY = y - (lensH / 2);
+
+            // Ràng buộc giới hạn để kính lúp không văng ra ngoài khung
+            lensX = Math.max(-lensW/2, Math.min(rect.width - lensW/2, lensX));
+            lensY = Math.max(-lensH/2, Math.min(rect.height - lensH/2, lensY));
+
+            newLens.style.left = lensX + 'px';
+            newLens.style.top = lensY + 'px';
+
+            // Kích thước background phóng to
+            const bgW = rect.width * zoomLevel;
+            const bgH = rect.height * zoomLevel;
+            newLens.style.backgroundSize = bgW + 'px ' + bgH + 'px';
+
+            // Tính toán offset
+            let bgPosX = -(x * zoomLevel - (lensW / 2));
+            let bgPosY = -(y * zoomLevel - (lensH / 2));
+
+            newLens.style.backgroundPosition = bgPosX + 'px ' + bgPosY + 'px';
+        }
+
+        newContainer.addEventListener('mousemove', moveLens);
+        newContainer.addEventListener('mouseenter', moveLens);
+
+        newContainer.addEventListener('mouseleave', function() {
+            newLens.style.display = 'none';
+        });
     };
 
     window.__pendingGalleryColor = window.__pendingGalleryColor || '';
@@ -1335,6 +1439,11 @@
             e.preventDefault();
             submitAddToCart(true);
         });
+        
+        if (typeof window.initZoom === 'function') {
+            window.initZoom();
+            window.updateThumbButtons();
+        }
     });
 </script>
 
