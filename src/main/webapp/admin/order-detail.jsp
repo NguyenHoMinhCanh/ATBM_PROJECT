@@ -22,7 +22,7 @@
 
 
     <c:if test="${param.error == 'badstatus'}">
-        <div class="alert alert-warning">Không thể hủy đơn khi trạng thái không còn là PENDING.</div>
+        <div class="alert alert-warning">Không thể thay đổi trạng thái hoặc hủy đơn hàng do luồng trạng thái không hợp lệ.</div>
     </c:if>
     <c:if test="${param.error == 'error'}">
         <div class="alert alert-danger">Có lỗi khi hủy đơn. Vui lòng thử lại.</div>
@@ -47,28 +47,67 @@
                     <hr class="my-3"/>
 
                     <h6 class="text-muted">Cập nhật trạng thái</h6>
-                    <form method="post" action="${ctx}/admin/orders" class="row g-2 align-items-end">
-                        <input type="hidden" name="action" value="updateStatus"/>
-                        <input type="hidden" name="id" value="${order.id}"/>
+                    <c:choose>
+                        <c:when test="${order.status == 'DONE' || order.status == 'CANCEL'}">
+                            <div class="alert alert-light text-center border-0 py-3 mb-0" style="background-color: #f8f9fa;">
+                                <c:choose>
+                                    <c:when test="${order.status == 'DONE'}">
+                                        <i class="bi bi-check-circle-fill text-success fs-3 d-block mb-2"></i>
+                                        <span class="fw-bold text-success">Đơn hàng đã hoàn tất</span>
+                                    </c:when>
+                                    <c:otherwise>
+                                        <i class="bi bi-x-circle-fill text-danger fs-3 d-block mb-2"></i>
+                                        <span class="fw-bold text-danger">Đơn hàng đã hủy</span>
+                                    </c:otherwise>
+                                </c:choose>
+                                <div class="text-muted small mt-1">Trạng thái cuối không thể thay đổi nữa.</div>
+                            </div>
+                        </c:when>
+                        <c:otherwise>
+                            <form method="post" action="${ctx}/admin/orders" class="row g-2 align-items-end">
+                                <input type="hidden" name="action" value="updateStatus"/>
+                                <input type="hidden" name="id" value="${order.id}"/>
 
-                        <div class="col-12">
-                            <label class="form-label mb-1">Trạng thái mới</label>
-                            <select class="form-select" name="status" required>
-                                <option value="PENDING" ${order.status == 'PENDING' ? 'selected' : ''}>PENDING - Chờ xử lý</option>
-                                <option value="PAID" ${order.status == 'PAID' ? 'selected' : ''}>PAID - Đã thanh toán</option>
-                                <option value="SHIPPING" ${order.status == 'SHIPPING' ? 'selected' : ''}>SHIPPING - Đang giao</option>
-                                <option value="DONE" ${order.status == 'DONE' ? 'selected' : ''}>DONE - Hoàn tất</option>
-                                <option value="CANCEL" ${order.status == 'CANCEL' ? 'selected' : ''}>CANCEL - Đã hủy</option>
-                            </select>
-                            <div class="form-text">Nếu chọn <strong>CANCEL</strong> thì hệ thống sẽ hoàn tồn kho (chỉ hủy được khi đơn đang <strong>PENDING</strong>).</div>
-                        </div>
+                                <div class="col-12">
+                                    <label class="form-label mb-1">Trạng thái mới</label>
+                                    <select class="form-select" name="status" required>
+                                        <c:if test="${order.status == 'PENDING'}">
+                                            <option value="PENDING" selected>PENDING - Chờ xử lý</option>
+                                            <option value="PAID">PAID - Đã thanh toán</option>
+                                            <option value="SHIPPING">SHIPPING - Đang giao</option>
+                                            <option value="CANCEL">CANCEL - Đã hủy</option>
+                                        </c:if>
+                                        <c:if test="${order.status == 'PAID'}">
+                                            <option value="PAID" selected>PAID - Đã thanh toán</option>
+                                            <option value="SHIPPING">SHIPPING - Đang giao</option>
+                                            <option value="CANCEL">CANCEL - Đã hủy</option>
+                                        </c:if>
+                                        <c:if test="${order.status == 'SHIPPING'}">
+                                            <option value="SHIPPING" selected>SHIPPING - Đang giao</option>
+                                            <option value="DONE">DONE - Hoàn tất</option>
+                                            <option value="CANCEL">CANCEL - Đã hủy</option>
+                                        </c:if>
+                                    </select>
+                                    <div class="form-text">
+                                        <c:choose>
+                                            <c:when test="${order.status == 'SHIPPING'}">
+                                                Chọn <strong>DONE</strong> để hoàn tất đơn hàng hoặc <strong>CANCEL</strong> để hủy giao hàng (hoàn kho).
+                                            </c:when>
+                                            <c:otherwise>
+                                                Nếu chọn <strong>CANCEL</strong> hệ thống sẽ hoàn tồn kho cho sản phẩm đã đặt.
+                                            </c:otherwise>
+                                        </c:choose>
+                                    </div>
+                                </div>
 
-                        <div class="col-12 d-grid">
-                            <button class="btn btn-primary" type="submit" onclick="return confirm('Cập nhật trạng thái đơn hàng?')">
-                                <i class="bi bi-save me-1"></i> Lưu trạng thái
-                            </button>
-                        </div>
-                    </form>
+                                <div class="col-12 d-grid">
+                                    <button class="btn btn-primary" type="submit" onclick="return confirm('Cập nhật trạng thái đơn hàng?')">
+                                        <i class="bi bi-save me-1"></i> Lưu trạng thái
+                                    </button>
+                                </div>
+                            </form>
+                        </c:otherwise>
+                    </c:choose>
                 </div>
             </div>
         </div>
@@ -117,15 +156,15 @@
             <div class="d-flex justify-content-end mt-3 gap-2">
 
                 <c:choose>
-                    <c:when test="${order.status == 'PENDING'}">
+                    <c:when test="${order.status == 'PENDING' || order.status == 'PAID' || order.status == 'SHIPPING'}">
                         <a href="${ctx}/admin/orders?action=cancel&id=${order.id}"
                            class="btn btn-outline-danger"
-                           onclick="return confirm('Hủy đơn hàng này?')">
+                           onclick="return confirm('Bạn chắc chắn muốn hủy đơn hàng này và hoàn kho?')">
                             <i class="bi bi-x-circle me-1"></i> Hủy đơn
                         </a>
                     </c:when>
                     <c:otherwise>
-                        <button class="btn btn-outline-secondary" disabled title="Chỉ hủy được khi PENDING">
+                        <button class="btn btn-outline-secondary" disabled title="Đơn hàng đã đóng">
                             <i class="bi bi-x-circle me-1"></i> Không thể hủy
                         </button>
                     </c:otherwise>

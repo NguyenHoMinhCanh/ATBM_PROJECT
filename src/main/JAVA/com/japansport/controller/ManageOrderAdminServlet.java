@@ -71,13 +71,58 @@ public class ManageOrderAdminServlet extends HttpServlet {
                 return;
             }
 
+            Order order = orderDao.adminGetById(id);
+            if (order == null) {
+                response.sendRedirect(request.getContextPath() + "/admin/orders?error=notfound");
+                return;
+            }
+
+            String currentStatus = order.getStatus();
+            if (currentStatus != null) {
+                currentStatus = currentStatus.trim().toUpperCase();
+            } else {
+                currentStatus = "PENDING";
+            }
+
+            // Ràng buộc luồng chuyển đổi trạng thái (State Machine Transitions)
+            // - Trạng thái cuối: DONE hoặc CANCEL không thể thay đổi nữa
+            if ("DONE".equals(currentStatus) || "CANCEL".equals(currentStatus)) {
+                response.sendRedirect(request.getContextPath() + "/admin/orders?action=detail&id=" + id + "&error=badstatus");
+                return;
+            }
+
+            // - PENDING có thể chuyển sang PENDING, PAID, SHIPPING, CANCEL
+            // - PAID có thể chuyển sang PAID, SHIPPING, CANCEL
+            // - SHIPPING có thể chuyển sang SHIPPING, DONE, CANCEL
+            boolean isValidTransition = false;
+            if (status.equals(currentStatus)) {
+                isValidTransition = true;
+            } else if ("PENDING".equals(currentStatus)) {
+                if (status.equals("PAID") || status.equals("SHIPPING") || status.equals("CANCEL")) {
+                    isValidTransition = true;
+                }
+            } else if ("PAID".equals(currentStatus)) {
+                if (status.equals("SHIPPING") || status.equals("CANCEL")) {
+                    isValidTransition = true;
+                }
+            } else if ("SHIPPING".equals(currentStatus)) {
+                if (status.equals("DONE") || status.equals("CANCEL")) {
+                    isValidTransition = true;
+                }
+            }
+
+            if (!isValidTransition) {
+                response.sendRedirect(request.getContextPath() + "/admin/orders?action=detail&id=" + id + "&error=badstatus");
+                return;
+            }
+
             boolean ok;
-            // Nếu admin chọn CANCEL thì dùng hàm cancel để hoàn tồn kho (chỉ cho khi đang PENDING)
+            // Nếu admin chọn CANCEL thì dùng hàm cancel để hoàn tồn kho (hỗ trợ PENDING, PAID, SHIPPING)
             if (status.equals("CANCEL")) {
                 int rc = orderDao.adminCancelOrder(id);
                 ok = (rc == 1);
                 if (!ok) {
-                    // -1: không còn PENDING, 0: notfound, -2: error
+                    // -1: không còn trạng thái hủy hợp lệ, 0: notfound, -2: error
                     if (rc == -1) {
                         response.sendRedirect(request.getContextPath() + "/admin/orders?action=detail&id=" + id + "&error=badstatus");
                         return;
