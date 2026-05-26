@@ -272,16 +272,17 @@
                         </div>
 
 
-                        <div class="mb-3">
-                            <div class="stars text-warning">
+                        <div class="mb-3 d-flex align-items-center">
+                            <div class="stars text-warning" id="topAvgStars">
                                 <i class="bi bi-star"></i>
                                 <i class="bi bi-star"></i>
                                 <i class="bi bi-star"></i>
                                 <i class="bi bi-star"></i>
                                 <i class="bi bi-star"></i>
                             </div>
+                            <span class="ms-2 text-muted small" id="topReviewCount">(0 đánh giá)</span>
                             <a href="assets/images/product1/product1_7.webp"
-                               class="text-primary text-decoration-none small ms-2">
+                               class="text-primary text-decoration-none small ms-3">
                                 <i class="bi bi-info-circle"></i> Hướng dẫn chọn size
                             </a>
                         </div>
@@ -554,8 +555,9 @@
                     <!-- ĐÁNH GIÁ -->
                     <div class="tab-pane fade" id="tab-review" role="tabpanel">
                         <%
-                            // Check login (an toàn – không phụ thuộc class User cụ thể)
-                            Object u = session.getAttribute("user");
+                            // Check login - LoginServlet set session key = "currentUser"
+                            Object u = session.getAttribute("currentUser");
+                            if (u == null) u = session.getAttribute("user");
                             if (u == null) u = session.getAttribute("account");
                             if (u == null) u = session.getAttribute("acc");
                             boolean loggedIn = (u != null);
@@ -565,7 +567,7 @@
                              data-product-id="<%= p.getId() %>"
                              data-api="<%= request.getContextPath() %>/api/reviews"
                              data-submit-api="<%= request.getContextPath() %>/api/reviews/add"
-                             data-logged-in="<%= (session.getAttribute("user") != null) ? "1" : "0" %>">
+                             data-logged-in="<%= loggedIn ? "1" : "0" %>">
                             <!-- 1) Tổng quan đánh giá -->
                             <div class="row g-4 align-items-stretch">
                                 <div class="col-lg-4">
@@ -696,9 +698,9 @@
                                                   placeholder="Tối thiểu 5 ký tự..." required></textarea>
                                     </div>
 
-                                    <div class="d-flex align-items-center gap-2">
+                                        <div class="d-flex align-items-center gap-2">
                                         <button type="submit" class="btn btn-danger">Gửi đánh giá</button>
-                                        <div class="small text-muted">Demo front-end (sau này nối DB sẽ lưu thật).</div>
+                                        <div class="small text-muted">Đánh giá sẽ được hệ thống duyệt trước khi hiển thị.</div>
                                     </div>
 
                                     <div class="mt-2" id="rvFormMsg"></div>
