@@ -599,6 +599,102 @@ public class OrderDao extends DAO {
         }
     }
 
+    /**
+     * Đếm tổng số đơn hàng thỏa điều kiện lọc (cho phân trang).
+     */
+    public int adminCountAll(String status, String keyword) {
+        StringBuilder sql = new StringBuilder("SELECT COUNT(*) AS total FROM orders o ");
+        sql.append("JOIN users u ON u.id = o.user_id ");
+        sql.append("JOIN user_addresses a ON a.id = o.address_id ");
+        sql.append("WHERE 1=1 ");
+
+        List<Object> params = new ArrayList<>();
+        if (status != null) {
+            sql.append(" AND o.status = ? ");
+            params.add(status);
+        }
+        if (keyword != null) {
+            sql.append(" AND (a.full_name LIKE ? OR a.phone LIKE ? OR u.email LIKE ? OR u.name LIKE ?) ");
+            String k = "%" + keyword + "%";
+            params.add(k); params.add(k); params.add(k); params.add(k);
+        }
+
+        try {
+            PreparedStatement ps = getPreparedStatement(sql.toString());
+            for (int i = 0; i < params.size(); i++) ps.setObject(i + 1, params.get(i));
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) return rs.getInt("total");
+            return 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return 0;
+        }
+    }
+
+    /**
+     * Lấy danh sách đơn hàng theo trang (phân trang).
+     * @param status trạng thái lọc (null = tất cả)
+     * @param keyword từ khóa tìm kiếm (null = tất cả)
+     * @param page trang hiện tại (bắt đầu từ 1)
+     * @param pageSize số bản ghi mỗi trang
+     */
+    public List<Order> adminGetPaged(String status, String keyword, int page, int pageSize) {
+        List<Order> list = new ArrayList<>();
+
+        StringBuilder sql = new StringBuilder();
+        sql.append("SELECT o.id, o.user_id, o.address_id, o.total_amount, o.status, o.created_at, o.updated_at, ");
+        sql.append("u.name AS user_name, u.email AS user_email, ");
+        sql.append("a.full_name, a.phone, a.address_line, a.city, a.district, a.ward ");
+        sql.append("FROM orders o ");
+        sql.append("JOIN users u ON u.id = o.user_id ");
+        sql.append("JOIN user_addresses a ON a.id = o.address_id ");
+        sql.append("WHERE 1=1 ");
+
+        List<Object> params = new ArrayList<>();
+        if (status != null) {
+            sql.append(" AND o.status = ? ");
+            params.add(status);
+        }
+        if (keyword != null) {
+            sql.append(" AND (a.full_name LIKE ? OR a.phone LIKE ? OR u.email LIKE ? OR u.name LIKE ?) ");
+            String k = "%" + keyword + "%";
+            params.add(k); params.add(k); params.add(k); params.add(k);
+        }
+
+        sql.append(" ORDER BY o.created_at DESC, o.id DESC");
+        sql.append(" LIMIT ? OFFSET ?");
+        params.add(pageSize);
+        params.add((page - 1) * pageSize);
+
+        try {
+            PreparedStatement ps = getPreparedStatement(sql.toString());
+            for (int i = 0; i < params.size(); i++) ps.setObject(i + 1, params.get(i));
+
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                Order o = new Order();
+                o.setId(rs.getInt("id"));
+                o.setUserId(rs.getInt("user_id"));
+                o.setAddressId(rs.getInt("address_id"));
+                o.setTotalAmount(rs.getDouble("total_amount"));
+                o.setStatus(rs.getString("status"));
+                o.setCreatedAt(rs.getTimestamp("created_at"));
+                o.setUpdatedAt(rs.getTimestamp("updated_at"));
+                o.setFullName(rs.getString("full_name"));
+                o.setPhone(rs.getString("phone"));
+                o.setAddressLine(rs.getString("address_line"));
+                o.setCity(rs.getString("city"));
+                o.setDistrict(rs.getString("district"));
+                o.setWard(rs.getString("ward"));
+                list.add(o);
+            }
+            return list;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return list;
+        }
+    }
+
     public Order adminGetById(int orderId) {
         String sql =
                 "SELECT o.id, o.user_id, o.address_id, o.total_amount, o.status, o.created_at, o.updated_at, " +
