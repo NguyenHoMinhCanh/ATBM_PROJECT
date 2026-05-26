@@ -526,7 +526,6 @@
     }
 </style>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
 
 <script>
     // Giá trị giảm từ server (đọc 1 lần khi load trang)
@@ -604,34 +603,33 @@
 
     // --- 3. MODAL XÁC NHẬN XÓA ITEM ---
     let currentDeleteId = null;
-    const deleteModalEl = document.getElementById('deleteConfirmModal');
     let deleteModal = null;
-    if (deleteModalEl) {
-        deleteModal = new bootstrap.Modal(deleteModalEl);
-    }
+    let clearCartModal = null;
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const deleteModalEl = document.getElementById('deleteConfirmModal');
+        if (deleteModalEl) deleteModal = new bootstrap.Modal(deleteModalEl);
+
+        const clearModalEl = document.getElementById('clearCartModal');
+        if (clearModalEl) clearCartModal = new bootstrap.Modal(clearModalEl);
+
+        const confirmBtn = document.getElementById('btnConfirmDelete');
+        if (confirmBtn) {
+            confirmBtn.addEventListener('click', function() {
+                if (currentDeleteId) {
+                    const form = document.getElementById('delete-form-' + currentDeleteId);
+                    if (form) form.submit();
+                }
+            });
+        }
+    });
 
     function openDeleteModal(cartItemId) {
         currentDeleteId = cartItemId;
         if (deleteModal) deleteModal.show();
     }
 
-    const confirmBtn = document.getElementById('btnConfirmDelete');
-    if (confirmBtn) {
-        confirmBtn.addEventListener('click', function() {
-            if (currentDeleteId) {
-                const form = document.getElementById('delete-form-' + currentDeleteId);
-                if (form) form.submit();
-            }
-        });
-    }
-
     // --- 4. MODAL XÓA TOÀN BỘ ---
-    let clearCartModal = null;
-    const clearModalEl = document.getElementById('clearCartModal');
-    if (clearModalEl) {
-        clearCartModal = new bootstrap.Modal(clearModalEl);
-    }
-
     function confirmClearCart() {
         if (clearCartModal) clearCartModal.show();
     }
