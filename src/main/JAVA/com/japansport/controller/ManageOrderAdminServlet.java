@@ -149,9 +149,27 @@ public class ManageOrderAdminServlet extends HttpServlet {
         if (status != null && status.isBlank()) status = null;
         if (keyword != null && keyword.isBlank()) keyword = null;
 
-        List<Order> orders = orderDao.adminGetAll(status, keyword);
+        // Phân trang
+        final int PAGE_SIZE = 10;
+        int page = 1;
+        try {
+            String p = request.getParameter("page");
+            if (p != null && !p.isBlank()) page = Math.max(1, Integer.parseInt(p));
+        } catch (NumberFormatException ignored) {}
+
+        int totalRecords = orderDao.adminCountAll(status, keyword);
+        int totalPages = (int) Math.ceil((double) totalRecords / PAGE_SIZE);
+        if (totalPages < 1) totalPages = 1;
+        if (page > totalPages) page = totalPages;
+
+        List<Order> orders = orderDao.adminGetPaged(status, keyword, page, PAGE_SIZE);
 
         request.setAttribute("orders", orders);
+        request.setAttribute("currentPage", page);
+        request.setAttribute("totalPages", totalPages);
+        request.setAttribute("totalRecords", totalRecords);
+        request.setAttribute("filterStatus", status);
+        request.setAttribute("filterKeyword", keyword);
 
         // show flash messages
         String success = request.getParameter("success");
@@ -159,7 +177,7 @@ public class ManageOrderAdminServlet extends HttpServlet {
         if (success != null) {
             switch (success) {
                 case "cancel":
-                    request.setAttribute("success", "Đã hủy đơn hàng");
+                    request.setAttribute("success", "Đã hủy đơn hàng thành công.");
                     break;
                 default:
                     request.setAttribute("success", success);
@@ -168,10 +186,10 @@ public class ManageOrderAdminServlet extends HttpServlet {
         if (error != null) {
             switch (error) {
                 case "notfound":
-                    request.setAttribute("error", "Không tìm thấy đơn hàng");
+                    request.setAttribute("error", "Không tìm thấy đơn hàng.");
                     break;
                 case "badstatus":
-                    request.setAttribute("error", "Chỉ hủy được đơn đang ở trạng thái PENDING");
+                    request.setAttribute("error", "Không thể thay đổi trạng thái đơn hàng này.");
                     break;
                 default:
                     request.setAttribute("error", error);
