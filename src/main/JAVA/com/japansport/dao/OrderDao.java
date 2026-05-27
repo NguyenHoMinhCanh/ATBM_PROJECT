@@ -462,6 +462,10 @@ public class OrderDao extends DAO {
      * @return 1: success; 0: not found; -1: invalid status; -2: error
      */
     public int adminCancelOrder(int orderId) {
+        return adminCancelOrder(orderId, 1, "Không có lý do cụ thể");
+    }
+
+    public int adminCancelOrder(int orderId, int adminUserId, String reason) {
         Connection conn = null;
         boolean oldAuto = true;
 
@@ -470,14 +474,19 @@ public class OrderDao extends DAO {
             oldAuto = conn.getAutoCommit();
             conn.setAutoCommit(false);
 
-            // Lock order row
-            String lockOrder = "SELECT status FROM orders WHERE id=? FOR UPDATE";
+            // Lock order row and get details
+            String lockOrder = "SELECT status, user_id, total_amount FROM orders WHERE id=? FOR UPDATE";
             String status = null;
+            int customerUserId = 0;
+            double totalAmount = 0.0;
             try (PreparedStatement ps = conn.prepareStatement(lockOrder)) {
                 ps.setInt(1, orderId);
                 try (ResultSet rs = ps.executeQuery()) {
-                    if (rs.next()) status = rs.getString("status");
-                    else {
+                    if (rs.next()) {
+                        status = rs.getString("status");
+                        customerUserId = rs.getInt("user_id");
+                        totalAmount = rs.getDouble("total_amount");
+                    } else {
                         conn.rollback();
                         return 0;
                     }
@@ -523,6 +532,26 @@ public class OrderDao extends DAO {
                             ps2.executeUpdate();
                         }
                     }
+                }
+            }
+
+            // Ghi log trạng thái
+            OrderStatusLogDao logDao = new OrderStatusLogDao();
+            logDao.insertLog(conn, orderId, status, "CANCEL", reason, adminUserId);
+
+            // Gửi thông báo cho khách hàng
+            NotificationDao notifDao = new NotificationDao();
+            String msg = "Đơn hàng #" + orderId + " của bạn đã bị hủy bởi quản trị viên. Lý do: " + reason;
+            notifDao.insertNotification(conn, customerUserId, "Đơn hàng bị hủy", msg, "/order-detail?id=" + orderId);
+
+            // Nếu đã thanh toán (PAID hoặc SHIPPING), tạo yêu cầu hoàn tiền
+            if ("PAID".equals(statusUpper) || "SHIPPING".equals(statusUpper)) {
+                String refundSql = "INSERT INTO refund_requests (order_id, amount, status, note) VALUES (?, ?, 'PENDING', ?)";
+                try (PreparedStatement ps = conn.prepareStatement(refundSql)) {
+                    ps.setInt(1, orderId);
+                    ps.setDouble(2, totalAmount);
+                    ps.setString(3, "Đơn hàng bị hủy ở trạng thái " + statusUpper + ". Lý do: " + reason);
+                    ps.executeUpdate();
                 }
             }
 
@@ -736,16 +765,71 @@ public class OrderDao extends DAO {
     }
 
     public boolean adminUpdateStatus(int orderId, String status) {
-        // status hợp lệ tuỳ bạn định nghĩa, ở đây chấp nhận chuỗi bất kỳ để bạn test nhanh
-        String sql = "UPDATE orders SET status = ? WHERE id = ?";
+        return adminUpdateStatus(orderId, status, 1, "Cập nhật bởi hệ thống");
+    }
+
+    public boolean adminUpdateStatus(int orderId, String status, int adminUserId, String reason) {
+        Connection conn = null;
+        boolean oldAuto = true;
+
         try {
-            PreparedStatement ps = getPreparedStatement(sql);
-            ps.setString(1, status);
-            ps.setInt(2, orderId);
-            return ps.executeUpdate() > 0;
-        } catch (SQLException e) {
+            conn = getConnection();
+            oldAuto = conn.getAutoCommit();
+            conn.setAutoCommit(false);
+
+            // Lock order row and get current status + user_id
+            String lockOrder = "SELECT status, user_id FROM orders WHERE id=? FOR UPDATE";
+            String currentStatus = null;
+            int customerUserId = 0;
+            try (PreparedStatement ps = conn.prepareStatement(lockOrder)) {
+                ps.setInt(1, orderId);
+                try (ResultSet rs = ps.executeQuery()) {
+                    if (rs.next()) {
+                        currentStatus = rs.getString("status");
+                        customerUserId = rs.getInt("user_id");
+                    } else {
+                        conn.rollback();
+                        return false;
+                    }
+                }
+            }
+
+            if (currentStatus == null) {
+                conn.rollback();
+                return false;
+            }
+
+            // Update status
+            String sql = "UPDATE orders SET status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?";
+            try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                ps.setString(1, status);
+                ps.setInt(2, orderId);
+                int affected = ps.executeUpdate();
+                if (affected != 1) {
+                    conn.rollback();
+                    return false;
+                }
+            }
+
+            // Ghi log trạng thái
+            OrderStatusLogDao logDao = new OrderStatusLogDao();
+            logDao.insertLog(conn, orderId, currentStatus, status, reason, adminUserId);
+
+            // Gửi thông báo cho khách hàng
+            NotificationDao notifDao = new NotificationDao();
+            String statusVi = com.japansport.model.OrderStatusLog.statusToVi(status);
+            String msg = "Đơn hàng #" + orderId + " của bạn đã chuyển sang trạng thái: " + statusVi + ". Lý do: " + reason;
+            notifDao.insertNotification(conn, customerUserId, "Cập nhật đơn hàng", msg, "/order-detail?id=" + orderId);
+
+            conn.commit();
+            return true;
+        } catch (Exception e) {
             e.printStackTrace();
+            try { if (conn != null) conn.rollback(); } catch (Exception ignored) {}
             return false;
+        } finally {
+            try { if (conn != null) conn.setAutoCommit(oldAuto); } catch (Exception ignored) {}
+            try { if (conn != null) conn.close(); } catch (Exception ignored) {}
         }
     }
 
@@ -859,5 +943,28 @@ public class OrderDao extends DAO {
             e.printStackTrace();
             return list;
         }
+    }
+
+    /**
+     * Lấy trạng thái refund của đơn hàng.
+     * @return map chứa 'status', 'amount', 'note' hoặc null nếu không có refund.
+     */
+    public java.util.Map<String, Object> getRefundRequest(int orderId) {
+        String sql = "SELECT status, amount, note FROM refund_requests WHERE order_id = ?";
+        try (PreparedStatement ps = getPreparedStatement(sql)) {
+            ps.setInt(1, orderId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    java.util.Map<String, Object> map = new java.util.HashMap<>();
+                    map.put("status", rs.getString("status"));
+                    map.put("amount", rs.getDouble("amount"));
+                    map.put("note", rs.getString("note"));
+                    return map;
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 }
