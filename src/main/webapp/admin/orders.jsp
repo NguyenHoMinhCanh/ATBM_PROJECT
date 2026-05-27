@@ -67,7 +67,7 @@
             <input type="hidden" name="page" value="1" id="pageInput"/>
 
             <%-- Tìm kiếm --%>
-            <div class="col-md-5 col-12">
+            <div class="col-md-4 col-12">
                 <label class="form-label mb-1 small fw-semibold text-muted">Tìm kiếm</label>
                 <div class="input-group">
                     <span class="input-group-text bg-light border-end-0">
@@ -117,11 +117,16 @@
                 </div>
             </div>
 
-            <%-- Nút tìm --%>
-            <div class="col-md-2 col-12">
-                <button type="submit" class="btn btn-primary w-100">
-                    <i class="bi bi-funnel me-1"></i> Tìm kiếm
-                </button>
+            <%-- Nút tìm và Làm mới --%>
+            <div class="col-md-3 col-12">
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="bi bi-funnel me-1"></i> Tìm kiếm
+                    </button>
+                    <a href="${ctx}/admin/orders?action=list" class="btn btn-outline-secondary d-flex align-items-center justify-content-center" style="white-space: nowrap;" title="Làm mới toàn bộ bộ lọc và danh sách">
+                        <i class="bi bi-arrow-clockwise me-1"></i> Làm mới
+                    </a>
+                </div>
             </div>
         </form>
     </div>
@@ -271,5 +276,59 @@
         </c:if>
     </div>
 </div>
+
+<style>
+@keyframes pulse-bell {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.2); }
+    100% { transform: scale(1); }
+}
+.pulse-bell {
+    animation: pulse-bell 1.2s infinite;
+    display: inline-block;
+    color: #dc3545;
+}
+</style>
+
+<!-- Floating notification block for new orders -->
+<div id="newOrderAlert" class="alert alert-warning alert-dismissible shadow-lg border-start border-4 border-warning" style="display: none; position: fixed; bottom: 20px; right: 20px; z-index: 1060; min-width: 320px; border-radius: 8px;">
+    <div class="d-flex align-items-center">
+        <i class="bi bi-bell-fill fs-4 me-2 pulse-bell"></i>
+        <div>
+            <strong class="d-block">Có đơn hàng mới!</strong>
+            <span class="small text-muted">Hệ thống vừa nhận thêm đơn hàng mới.</span>
+            <a href="javascript:void(0)" onclick="reloadOrderList();" class="btn btn-sm btn-warning d-block mt-2 text-dark fw-bold">
+                <i class="bi bi-arrow-clockwise"></i> Làm mới danh sách
+            </a>
+        </div>
+        <button type="button" class="btn-close" style="top: 8px; right: 8px;" onclick="document.getElementById('newOrderAlert').style.display='none';"></button>
+    </div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const initialCount = parseInt("${totalRecords}") || 0;
+    
+    function checkNewOrders() {
+        fetch("${ctx}/admin/orders?action=count")
+            .then(res => res.json())
+            .then(data => {
+                if (data && typeof data.count !== "undefined") {
+                    if (data.count > initialCount) {
+                        document.getElementById("newOrderAlert").style.display = "block";
+                    }
+                }
+            })
+            .catch(err => console.error("Error checking new orders:", err));
+    }
+    
+    window.reloadOrderList = function() {
+        window.location.href = "${ctx}/admin/orders?action=list";
+    }
+
+    // Check every 10 seconds
+    setInterval(checkNewOrders, 10000);
+});
+</script>
 
 <%@ include file="/admin/includes/_admin_layout_close.jspf" %>

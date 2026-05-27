@@ -31,7 +31,7 @@
 
 
 
-<header class="bg-white py-3">
+<header class="bg-white py-3" style="position: relative;">
     <div class="container">
         <div class="row g-3 align-items-center">
             <div class="col-lg-3 col-md-4">
@@ -62,6 +62,126 @@
                     <button class="btn header-icon-btn" data-bs-toggle="tooltip" title="Gọi điện">
                         <i class="bi bi-telephone"></i>
                     </button>
+
+                    <!-- Notification Dropdown -->
+                    <c:if test="${not empty sessionScope.currentUser}">
+                        <div class="dropdown d-inline-block">
+                            <button class="btn header-icon-btn position-relative" type="button" id="notifDropdownBtn" data-bs-toggle="dropdown" aria-expanded="false" title="Thông báo">
+                                <i class="bi bi-bell"></i>
+                                <span id="notifBadge" class="badge bg-danger position-absolute top-0 start-100 translate-middle z-3" style="display:none; font-size: 0.65rem; padding: 0.25em 0.45em;">0</span>
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end shadow p-0" aria-labelledby="notifDropdownBtn" style="width: 320px; max-height: 400px; overflow-y: auto; border: none; border-radius: 8px; z-index: 9999 !important;">
+                                <li class="p-3 border-bottom d-flex justify-content-between align-items-center bg-light">
+                                    <h6 class="mb-0 fw-bold" style="font-size: 0.95rem;">Thông báo</h6>
+                                    <button class="btn btn-sm btn-link text-decoration-none p-0" id="markAllReadBtn" style="font-size: 0.8rem; color: #dc3545;">Đánh dấu đã đọc</button>
+                                </li>
+                                <div id="notifList" class="list-group list-group-flush" style="font-size: 0.85rem;">
+                                    <div class="text-center text-muted py-4">Chưa có thông báo</div>
+                                </div>
+                            </ul>
+                        </div>
+
+                        <script>
+                        document.addEventListener("DOMContentLoaded", function() {
+                            const badge = document.getElementById("notifBadge");
+                            const list = document.getElementById("notifList");
+                            const markAllBtn = document.getElementById("markAllReadBtn");
+
+                            function fetchNotifications() {
+                                fetch("${ctx}/api/notifications")
+                                    .then(res => res.json())
+                                    .then(data => {
+                                        if (data.ok) {
+                                            // Update Badge
+                                            if (data.unreadCount > 0) {
+                                                badge.textContent = data.unreadCount;
+                                                badge.style.display = "inline-block";
+                                            } else {
+                                                badge.style.display = "none";
+                                            }
+
+                                            // Render List
+                                            if (data.notifications && data.notifications.length > 0) {
+                                                let html = "";
+                                                data.notifications.forEach(n => {
+                                                    const unreadStyle = !n.isRead ? "background-color: #f8f9fa; border-left: 3px solid #dc3545;" : "";
+                                                    const linkUrl = n.link ? "${ctx}" + n.link : "#";
+                                                    html += '<a href="' + linkUrl + '" data-id="' + n.id + '" class="list-group-item list-group-item-action p-3 position-relative" style="' + unreadStyle + '">' +
+                                                            '  <div class="d-flex justify-content-between align-items-center mb-1">' +
+                                                            '    <strong class="text-dark">' + escapeHtml(n.title) + '</strong>' +
+                                                            '    <small class="text-muted" style="font-size: 0.7rem;">' + n.createdAt + '</small>' +
+                                                            '  </div>' +
+                                                            '  <p class="mb-0 text-secondary small" style="line-height: 1.4; font-size: 0.8rem;">' + escapeHtml(n.message) + '</p>' +
+                                                            '</a>';
+                                                });
+                                                list.innerHTML = html;
+
+
+                                            } else {
+                                                list.innerHTML = '<div class="text-center text-muted py-4 small">Chưa có thông báo nào</div>';
+                                            }
+                                        }
+                                    })
+                                    .catch(err => console.error("Error fetching notifications:", err));
+                            }
+
+                            function escapeHtml(text) {
+                                if (!text) return "";
+                                return text
+                                    .replace(/&/g, "&amp;")
+                                    .replace(/</g, "&lt;")
+                                    .replace(/>/g, "&gt;")
+                                    .replace(/"/g, "&quot;")
+                                    .replace(/'/g, "&#039;");
+                            }
+
+                            if (markAllBtn) {
+                                markAllBtn.addEventListener("click", function(e) {
+                                    e.preventDefault();
+                                    fetch("${ctx}/api/notifications?action=markAllRead", { method: "POST" })
+                                        .then(res => res.json())
+                                        .then(data => {
+                                            if (data.ok) {
+                                                fetchNotifications();
+                                            }
+                                        });
+                                });
+                             }
+
+                             // Handle click on individual notifications (delegated listener)
+                             if (list) {
+                                 list.addEventListener("click", function(e) {
+                                     const item = e.target.closest(".list-group-item");
+                                     if (!item) return;
+
+                                     const href = item.getAttribute("href");
+                                     const notifId = item.getAttribute("data-id");
+
+                                     if (!href || href === "#") return;
+
+                                     e.preventDefault();
+
+                                     // If notification has data-id, mark it as read before redirecting
+                                     if (notifId) {
+                                         fetch("${ctx}/api/notifications?action=markRead&id=" + notifId, { method: "POST" })
+                                             .then(() => {
+                                                 window.location.href = href;
+                                             })
+                                             .catch(() => {
+                                                 window.location.href = href;
+                                             });
+                                     } else {
+                                         window.location.href = href;
+                                     }
+                                 });
+                             }
+
+                             fetchNotifications();
+                             // Poll every 60 seconds
+                             setInterval(fetchNotifications, 60000);
+                         });
+                        </script>
+                    </c:if>
 
                     <!-- FIX: bỏ kiểu button bọc <a> (HTML sai) -->
                     <a href="${ctx}/account" class="btn header-icon-btn" data-bs-toggle="tooltip" title="Tài khoản">

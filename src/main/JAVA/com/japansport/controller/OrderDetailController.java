@@ -46,6 +46,10 @@ public class OrderDetailController extends HttpServlet {
             return;
         }
 
+        // Tự động đánh dấu thông báo liên quan đến đơn hàng này là đã đọc
+        com.japansport.dao.NotificationDao notificationDao = new com.japansport.dao.NotificationDao();
+        notificationDao.markReadByLink(u.getId(), "/order-detail?id=" + id);
+
         List<OrderItem> items = orderDao.getOrderItems(order.getId());
 
         req.setAttribute("order", order);

@@ -3,6 +3,9 @@ package com.japansport.controller;
 import com.japansport.dao.OrderDao;
 import com.japansport.model.Order;
 import com.japansport.model.OrderItem;
+import com.japansport.model.User;
+import com.japansport.model.OrderStatusLog;
+import com.japansport.dao.OrderStatusLogDao;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.*;
@@ -28,6 +31,12 @@ public class ManageOrderAdminServlet extends HttpServlet {
         if (action == null) action = "list";
 
         switch (action) {
+            case "count":
+                response.setContentType("application/json");
+                response.setCharacterEncoding("UTF-8");
+                int total = orderDao.adminCountAll(null, null);
+                response.getWriter().write("{\"count\":" + total + "}");
+                return;
             case "cancel":
                 cancelOrder(request, response);
                 break;
@@ -56,13 +65,20 @@ public class ManageOrderAdminServlet extends HttpServlet {
         if ("updateStatus".equals(action)) {
             int id = Integer.parseInt(request.getParameter("id"));
             String status = request.getParameter("status");
+            String reason = request.getParameter("reason");
 
             if (status == null || status.isBlank()) {
                 response.sendRedirect(request.getContextPath() + "/admin/orders?action=detail&id=" + id + "&error=badstatus");
                 return;
             }
 
+            if (reason == null || reason.isBlank()) {
+                response.sendRedirect(request.getContextPath() + "/admin/orders?action=detail&id=" + id + "&error=missingreason");
+                return;
+            }
+
             status = status.trim().toUpperCase();
+            reason = reason.trim();
 
             // Validate status theo enum đang dùng trong Order.getStatusVi()
             if (!status.equals("PENDING") && !status.equals("PAID") && !status.equals("SHIPPING")
@@ -116,10 +132,13 @@ public class ManageOrderAdminServlet extends HttpServlet {
                 return;
             }
 
+            User currentUser = (User) request.getSession().getAttribute("currentUser");
+            int adminUserId = (currentUser != null) ? currentUser.getId() : 1;
+
             boolean ok;
             // Nếu admin chọn CANCEL thì dùng hàm cancel để hoàn tồn kho (hỗ trợ PENDING, PAID, SHIPPING)
             if (status.equals("CANCEL")) {
-                int rc = orderDao.adminCancelOrder(id);
+                int rc = orderDao.adminCancelOrder(id, adminUserId, reason);
                 ok = (rc == 1);
                 if (!ok) {
                     // -1: không còn trạng thái hủy hợp lệ, 0: notfound, -2: error
@@ -131,7 +150,7 @@ public class ManageOrderAdminServlet extends HttpServlet {
                     return;
                 }
             } else {
-                ok = orderDao.adminUpdateStatus(id, status);
+                ok = orderDao.adminUpdateStatus(id, status, adminUserId, reason);
             }
 
             response.sendRedirect(request.getContextPath() + "/admin/orders?action=detail&id=" + id + (ok ? "&success=1" : "&error=error"));
@@ -242,8 +261,15 @@ public class ManageOrderAdminServlet extends HttpServlet {
 
         List<OrderItem> items = orderDao.getOrderItems(id);
 
+        OrderStatusLogDao logDao = new OrderStatusLogDao();
+        List<OrderStatusLog> statusLogs = logDao.getLogsByOrderId(id);
+
+        java.util.Map<String, Object> refundRequest = orderDao.getRefundRequest(id);
+
         request.setAttribute("order", order);
         request.setAttribute("items", items);
+        request.setAttribute("statusLogs", statusLogs);
+        request.setAttribute("refundRequest", refundRequest);
         request.setAttribute("pageTitle", "Chi tiết đơn hàng #" + id);
         request.getRequestDispatcher("/admin/order-detail.jsp").forward(request, response);
     }

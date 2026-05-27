@@ -24,6 +24,9 @@
     <c:if test="${param.error == 'badstatus'}">
         <div class="alert alert-warning">Không thể thay đổi trạng thái hoặc hủy đơn hàng do luồng trạng thái không hợp lệ.</div>
     </c:if>
+    <c:if test="${param.error == 'missingreason'}">
+        <div class="alert alert-danger">Vui lòng nhập lý do thay đổi trạng thái đơn hàng.</div>
+    </c:if>
     <c:if test="${param.error == 'error'}">
         <div class="alert alert-danger">Có lỗi khi hủy đơn. Vui lòng thử lại.</div>
     </c:if>
@@ -42,7 +45,16 @@
                     <div class="mb-2"><strong>Địa chỉ:</strong> ${order.fullAddress}</div>
                     <div class="mb-2"><strong>Trạng thái:</strong> ${order.statusVi} <span class="text-muted">(${order.status})</span></div>
                     <div class="mb-2"><strong>Ngày tạo:</strong> ${order.createdAt}</div>
-                    <div class="mb-0"><strong>Tổng tiền:</strong> <fmt:formatNumber value="${order.totalAmount}" pattern="#,###"/>đ</div>
+                    <div class="mb-2"><strong>Tổng tiền:</strong> <fmt:formatNumber value="${order.totalAmount}" pattern="#,###"/>đ</div>
+
+                    <c:if test="${not empty refundRequest}">
+                        <div class="alert alert-warning py-2 mb-0 mt-3 small">
+                            <i class="bi bi-exclamation-triangle-fill me-1 text-warning"></i>
+                            <strong>Yêu cầu hoàn tiền đang chờ:</strong><br/>
+                            Số tiền: <strong class="text-danger"><fmt:formatNumber value="${refundRequest.amount}" pattern="#,###"/>đ</strong><br/>
+                            Ghi chú: ${refundRequest.note}
+                        </div>
+                    </c:if>
 
                     <hr class="my-3"/>
 
@@ -64,12 +76,12 @@
                             </div>
                         </c:when>
                         <c:otherwise>
-                            <form method="post" action="${ctx}/admin/orders" class="row g-2 align-items-end">
+                            <form method="post" action="${ctx}/admin/orders" class="row g-3">
                                 <input type="hidden" name="action" value="updateStatus"/>
                                 <input type="hidden" name="id" value="${order.id}"/>
 
                                 <div class="col-12">
-                                    <label class="form-label mb-1">Trạng thái mới</label>
+                                    <label class="form-label mb-1 fw-bold">Trạng thái mới</label>
                                     <select class="form-select" name="status" required>
                                         <c:if test="${order.status == 'PENDING'}">
                                             <option value="PENDING" selected>PENDING - Chờ xử lý</option>
@@ -91,13 +103,18 @@
                                     <div class="form-text">
                                         <c:choose>
                                             <c:when test="${order.status == 'SHIPPING'}">
-                                                Chọn <strong>DONE</strong> để hoàn tất đơn hàng hoặc <strong>CANCEL</strong> để hủy giao hàng (hoàn kho).
+                                                Chọn <strong>DONE</strong> để hoàn tất hoặc <strong>CANCEL</strong> để hủy (hoàn kho).
                                             </c:when>
                                             <c:otherwise>
-                                                Nếu chọn <strong>CANCEL</strong> hệ thống sẽ hoàn tồn kho cho sản phẩm đã đặt.
+                                                Nếu chọn <strong>CANCEL</strong> hệ thống sẽ hoàn tồn kho.
                                             </c:otherwise>
                                         </c:choose>
                                     </div>
+                                </div>
+
+                                <div class="col-12">
+                                    <label class="form-label mb-1 fw-bold">Lý do thay đổi <span class="text-danger">*</span></label>
+                                    <textarea class="form-control" name="reason" rows="3" placeholder="Nhập lý do thay đổi trạng thái bắt buộc..." required></textarea>
                                 </div>
 
                                 <div class="col-12 d-grid">
@@ -153,24 +170,48 @@
                 </div>
             </div>
 
-            <div class="d-flex justify-content-end mt-3 gap-2">
-
-                <c:choose>
-                    <c:when test="${order.status == 'PENDING' || order.status == 'PAID' || order.status == 'SHIPPING'}">
-                        <a href="${ctx}/admin/orders?action=cancel&id=${order.id}"
-                           class="btn btn-outline-danger"
-                           onclick="return confirm('Bạn chắc chắn muốn hủy đơn hàng này và hoàn kho?')">
-                            <i class="bi bi-x-circle me-1"></i> Hủy đơn
-                        </a>
-                    </c:when>
-                    <c:otherwise>
-                        <button class="btn btn-outline-secondary" disabled title="Đơn hàng đã đóng">
-                            <i class="bi bi-x-circle me-1"></i> Không thể hủy
-                        </button>
-                    </c:otherwise>
-                </c:choose>
-
             </div>
+        </div>
+    </div>
+
+    <!-- Timeline Lịch sử thay đổi trạng thái -->
+    <div class="card mt-4">
+        <div class="card-body">
+            <h5 class="card-title mb-4 text-secondary"><i class="bi bi-clock-history me-1 text-primary"></i> Lịch sử thay đổi trạng thái</h5>
+            <c:choose>
+                <c:when test="${not empty statusLogs}">
+                    <div class="position-relative ps-4 ms-2" style="border-left: 2px solid #dee2e6;">
+                        <c:forEach items="${statusLogs}" var="log">
+                            <div class="mb-4 position-relative">
+                                <!-- Marker Dot -->
+                                <div class="position-absolute rounded-circle bg-primary" 
+                                     style="width: 12px; height: 12px; left: -31px; top: 6px; border: 2px solid #fff;"></div>
+                                
+                                <div class="fw-bold">
+                                    <span class="badge bg-secondary">${log.fromStatusVi}</span> 
+                                    <i class="bi bi-arrow-right mx-1 small text-muted"></i> 
+                                    <span class="badge bg-primary">${log.toStatusVi}</span>
+                                </div>
+                                <div class="small text-muted mt-1">
+                                    <span>Người thực hiện: <strong>${log.changedByName}</strong></span>
+                                    <span class="mx-2">|</span>
+                                    <span>Vào lúc: <fmt:formatDate value="${log.changedAt}" pattern="dd-MM-yyyy HH:mm:ss"/></span>
+                                </div>
+                                <c:if test="${not empty log.reason}">
+                                    <div class="mt-2 p-2 bg-light rounded text-dark small" style="border-left: 3px solid #0d6efd;">
+                                        <strong>Lý do:</strong> ${log.reason}
+                                    </div>
+                                </c:if>
+                            </div>
+                        </c:forEach>
+                    </div>
+                </c:when>
+                <c:otherwise>
+                    <div class="text-muted text-center py-2 small">Chưa có lịch sử thay đổi trạng thái cho đơn hàng này.</div>
+                </c:otherwise>
+            </c:choose>
+        </div>
+    </div>
         </div>
     </div>
 </div>
