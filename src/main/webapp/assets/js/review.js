@@ -160,8 +160,10 @@
 
                 // Nếu review đang pending thì hiện badge "Chờ duyệt"
                 let statusBadge = "";
-                if (status === "pending") {
+                let pendingNote = "";
+                if (status.toUpperCase() === "PENDING") {
                     statusBadge = `<span class="badge bg-warning text-dark ms-2">Chờ duyệt</span>`;
+                    pendingNote = `<div class="text-muted small fst-italic mt-1"><i class="bi bi-info-circle me-1"></i>Đánh giá này đang chờ duyệt, chưa được tính vào điểm trung bình.</div>`;
                 }
 
                 return `
@@ -176,7 +178,8 @@
                 <div class="text-muted small" style="color:#6c757d;">${rating}/5</div>
               </div>
             </div>
-            <div class="mt-2">${escapeHtml(comment)}</div>
+            <div class="mt-2" style="white-space:pre-line;">${escapeHtml(comment)}</div>
+            ${pendingNote}
           </div>
         `;
             })
@@ -511,6 +514,9 @@
                     if (json.ok) {
                         if (msgEl) msgEl.innerHTML = `<div class="text-success small"><i class="bi bi-check-circle me-1"></i>${escapeHtml(json.message)}</div>`;
                         rvForm.reset();
+                        // Clear Quill editor nếu có
+                        const quillEl = document.querySelector('#rvQuillEditor .ql-editor');
+                        if (quillEl) quillEl.innerHTML = '';
                         initStarPicker(); // Reset lại giao diện sao
                         // Tải lại reviews sau 1.5 giây
                         setTimeout(() => loadReviews(), 1500);

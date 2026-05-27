@@ -151,6 +151,12 @@
                                         • Đơn giá: <span class="money" data-money="${it.unitPrice}"></span>
                                         • Tạm tính: <span class="money" data-money="${it.subtotal}"></span>
                                     </div>
+                                    <c:if test="${st == 'DONE'}">
+                                        <a href="${ctx}/product?id=${it.productId}#tab-review"
+                                           class="btn btn-sm btn-outline-warning rounded-pill mt-2">
+                                            <i class="bi bi-star me-1"></i>Đánh giá sản phẩm
+                                        </a>
+                                    </c:if>
                                 </div>
                             </div>
                         </c:forEach>
