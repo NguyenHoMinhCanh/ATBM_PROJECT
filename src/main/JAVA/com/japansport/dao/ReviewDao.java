@@ -140,15 +140,16 @@ public class ReviewDao extends DAO {
         return new PageResult<>(items, page, pageSize, total);
     }
 
-    public boolean insertPending(int productId, int userId, int rating, String comment) {
+    public boolean insertReview(int productId, int userId, int rating, String comment, String status) {
         try {
             String sql = "INSERT INTO reviews(product_id, user_id, rating, comment, status, created_at) " +
-                    "VALUES(?,?,?,?, 'PENDING', NOW())";
+                    "VALUES(?,?,?,?, ?, NOW())";
             PreparedStatement ps = getPreparedStatement(sql);
             ps.setInt(1, productId);
             ps.setInt(2, userId);
             ps.setInt(3, rating);
             ps.setString(4, comment);
+            ps.setString(5, status);
             return ps.executeUpdate() > 0;
         } catch (SQLException e) {
             e.printStackTrace();
@@ -169,6 +170,63 @@ public class ReviewDao extends DAO {
             return rs.next();
         } catch (Exception e) {
             return true;
+        }
+    }
+
+    // ===== ADMIN METHODS =====
+
+    public List<Review> adminGetAll(String status) {
+        List<Review> list = new ArrayList<>();
+        try {
+            String sql = "SELECT r.*, u.name AS user_name, p.name AS product_name FROM reviews r " +
+                    "LEFT JOIN users u ON r.user_id = u.id " +
+                    "LEFT JOIN products p ON r.product_id = p.id ";
+            if (status != null && !status.isEmpty()) {
+                sql += " WHERE r.status = ? ";
+            }
+            sql += " ORDER BY CASE WHEN r.status = 'PENDING' THEN 1 ELSE 2 END, r.created_at DESC";
+            
+            PreparedStatement ps = getPreparedStatement(sql);
+            if (status != null && !status.isEmpty()) {
+                ps.setString(1, status);
+            }
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                Review r = mapRow(rs);
+                // Vì mapRow không có productName, ta set thủ công cho admin
+                try {
+                    r.setProductName(rs.getString("product_name"));
+                } catch (SQLException ignore) {}
+                list.add(r);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+
+    public boolean adminUpdateStatus(int reviewId, String status) {
+        try {
+            String sql = "UPDATE reviews SET status=? WHERE id=?";
+            PreparedStatement ps = getPreparedStatement(sql);
+            ps.setString(1, status);
+            ps.setInt(2, reviewId);
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    public boolean adminDelete(int reviewId) {
+        try {
+            String sql = "DELETE FROM reviews WHERE id=?";
+            PreparedStatement ps = getPreparedStatement(sql);
+            ps.setInt(1, reviewId);
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
         }
     }
 }

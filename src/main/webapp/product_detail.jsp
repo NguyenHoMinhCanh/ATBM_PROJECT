@@ -681,6 +681,7 @@
                                 <form id="rvForm" class="border rounded-3 p-3 d-none">
                                     <input type="hidden" name="productId" value="<%= p.getId() %>"/>
                                     <input type="hidden" name="rating" id="rvRatingInput" value="5"/>
+                                    <input type="hidden" name="comment" id="rvCommentHidden" value=""/>
 
                                     <div class="d-flex align-items-center gap-2 mb-2">
                                         <div class="fw-bold">Đánh giá của bạn:</div>
@@ -694,11 +695,10 @@
                                     </div>
 
                                     <div class="mb-3">
-                                        <textarea class="form-control" name="comment" rows="4"
-                                                  placeholder="Tối thiểu 5 ký tự..." required></textarea>
+                                        <div id="rvQuillEditor" style="min-height:120px;"></div>
                                     </div>
 
-                                        <div class="d-flex align-items-center gap-2">
+                                    <div class="d-flex align-items-center gap-2">
                                         <button type="submit" class="btn btn-danger">Gửi đánh giá</button>
                                         <div class="small text-muted">Đánh giá sẽ được hệ thống duyệt trước khi hiển thị.</div>
                                     </div>
@@ -1449,8 +1449,64 @@
     });
 </script>
 
-<script src="<%=request.getContextPath()%>/assets/js/review.js"></script>
+<script src="<%=request.getContextPath()%>/assets/js/review.js?v=<%= System.currentTimeMillis() %>"></script>
 
+<!-- Quill Rich Text Editor -->
+<link href="https://cdn.quilljs.com/1.3.7/quill.snow.css" rel="stylesheet">
+<script src="https://cdn.quilljs.com/1.3.7/quill.min.js"></script>
+<script>
+(function() {
+    // Khởi tạo Quill khi form review hiện ra
+    var quillInstance = null;
+    var editorEl = document.getElementById('rvQuillEditor');
+
+    // Dùng MutationObserver để phát hiện khi form được hiện (d-none bị gỡ)
+    var rvForm = document.getElementById('rvForm');
+    if (rvForm && editorEl) {
+        var observer = new MutationObserver(function() {
+            if (!rvForm.classList.contains('d-none') && !quillInstance) {
+                quillInstance = new Quill('#rvQuillEditor', {
+                    theme: 'snow',
+                    placeholder: 'Nhập nội dung đánh giá của bạn...',
+                    modules: {
+                        toolbar: [
+                            ['bold', 'italic', 'underline'],
+                            [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                            ['clean']
+                        ]
+                    }
+                });
+            }
+        });
+        observer.observe(rvForm, { attributes: true, attributeFilter: ['class'] });
+    }
+
+    // Trước khi submit, đẩy nội dung Quill vào hidden input
+    if (rvForm) {
+        rvForm.addEventListener('submit', function() {
+            var hidden = document.getElementById('rvCommentHidden');
+            if (quillInstance && hidden) {
+                // Lấy text thuần (không HTML) để Backend không cần sanitize
+                hidden.value = quillInstance.getText().trim();
+            }
+        }, true); // capture phase để chạy trước handler trong review.js
+    }
+
+    // Tự động mở tab đánh giá nếu URL có #tab-review
+    if (window.location.hash === '#tab-review') {
+        document.addEventListener('DOMContentLoaded', function() {
+            var reviewTab = document.querySelector('button[data-bs-target="#tab-review"]');
+            if (reviewTab) {
+                setTimeout(function() {
+                    reviewTab.click();
+                    var section = document.getElementById('reviewSection');
+                    if (section) section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }, 300);
+            }
+        });
+    }
+})();
+</script>
 
 </body>
 </html>

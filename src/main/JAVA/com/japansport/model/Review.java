@@ -13,6 +13,9 @@ public class Review {
 
     // join users.name
     private String userName;
+    
+    // join products.name
+    private String productName;
 
     public int getId() {
         return id;
@@ -76,5 +79,13 @@ public class Review {
 
     public void setUserName(String userName) {
         this.userName = userName;
+    }
+
+    public String getProductName() {
+        return productName;
+    }
+
+    public void setProductName(String productName) {
+        this.productName = productName;
     }
 }
