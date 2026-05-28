@@ -156,7 +156,7 @@
                                     </div>
 
                                     <div class="text-end">
-                                        <div class="fw-bold money" data-money="${o.totalAmount}"></div>
+                                        <div class="fw-bold money fs-4 text-danger" data-money="${o.totalAmount}"></div>
                                         <a class="btn btn-outline-danger rounded-pill btn-sm mt-2"
                                            href="${ctx}/order-detail?id=${o.id}">
                                             Xem chi tiết <i class="bi bi-arrow-right ms-1"></i>
@@ -188,7 +188,36 @@
 
 <%@ include file="/WEB-INF/jspf/site_footer.jspf" %>
 
+<style>
+    .order-card {
+        background: #fff;
+        border: 1px solid #eaeaea;
+        border-radius: 12px;
+        padding: 20px;
+        margin-bottom: 16px;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+        transition: all 0.3s ease;
+    }
+    .order-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 15px rgba(0,0,0,0.1);
+        border-color: #dc3545;
+    }
 
+    .badge-status {
+        padding: 6px 14px;
+        border-radius: 20px;
+        font-weight: 600;
+        font-size: 0.85rem;
+        display: inline-block;
+        margin-top: 5px;
+    }
+    .badge-pending { background-color: #fd7e14; color: #fff; }
+    .badge-paid { background-color: #0dcaf0; color: #000; }
+    .badge-shipping { background-color: #0d6efd; color: #fff; }
+    .badge-done { background-color: #198754; color: #fff; }
+    .badge-cancel { background-color: #dc3545; color: #fff; }
+</style>
 
 <script>
     function qs(sel) {
