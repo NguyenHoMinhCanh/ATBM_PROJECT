@@ -1862,3 +1862,16 @@ CREATE TABLE `product_promotions` (
 ) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci;
 
 SET FOREIGN_KEY_CHECKS = 1;
+
+-- Tạo bảng thông báo
+CREATE TABLE `notifications` (
+                                 `id` int NOT NULL AUTO_INCREMENT,
+                                 `user_id` int NOT NULL COMMENT 'ID người dùng nhận thông báo',
+                                 `message` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+                                 `is_read` tinyint(1) DEFAULT 0 COMMENT '0: chưa đọc, 1: đã đọc',
+                                 `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
+                                 PRIMARY KEY (`id`) USING BTREE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+ALTER TABLE notifications ADD COLUMN link VARCHAR(255) DEFAULT NULL COMMENT 'Đường dẫn khi click vào thông báo';
+ALTER TABLE notifications ADD COLUMN title VARCHAR(255) AFTER user_id;
