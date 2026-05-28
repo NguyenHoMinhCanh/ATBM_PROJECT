@@ -162,18 +162,31 @@
                                             Xem chi tiết <i class="bi bi-arrow-right ms-1"></i>
                                         </a>
 
-                                        <c:if test="${st == 'PENDING'}">
-                                            <form method="post" action="${ctx}/order-cancel" class="mt-2"
-                                                  onsubmit="return confirm('Bạn chắc chắn muốn hủy đơn #${o.id} ?');">
-                                                <input type="hidden" name="id" value="${o.id}"/>
-                                                <input type="hidden" name="redirect" value="/orders"/>
-                                                <input type="hidden" name="csrf" value="${sessionScope.CSRF_TOKEN}"/>
+                                        <c:choose>
+                                            <%-- 1. Nếu đang CHỜ XỬ LÝ -> Hiện nút Hủy đơn --%>
+                                            <c:when test="${st == 'PENDING'}">
+                                                <form method="post" action="${ctx}/order-cancel" class="mt-2"
+                                                      onsubmit="return confirm('Bạn chắc chắn muốn hủy đơn #${o.id} ?');">
+                                                    <input type="hidden" name="id" value="${o.id}"/>
+                                                    <input type="hidden" name="redirect" value="/orders"/>
+                                                    <input type="hidden" name="csrf" value="${sessionScope.CSRF_TOKEN}"/>
 
-                                                <button type="submit" class="btn btn-outline-danger rounded-pill btn-sm">
-                                                    <i class="bi bi-x-circle me-1"></i> Hủy đơn
-                                                </button>
-                                            </form>
-                                        </c:if>
+                                                    <button type="submit" class="btn btn-outline-danger rounded-pill btn-sm">
+                                                        <i class="bi bi-x-circle me-1"></i> Hủy đơn
+                                                    </button>
+                                                </form>
+                                            </c:when>
+
+                                            <%-- 2. Nếu ĐÃ GIAO hoặc ĐÃ HỦY -> Hiện nút Mua lại --%>
+                                            <c:when test="${st == 'DONE' || st == 'CANCEL'}">
+                                                <form method="post" action="${ctx}/reorder" class="mt-2">
+                                                    <input type="hidden" name="orderId" value="${o.id}"/>
+                                                    <button type="submit" class="btn btn-warning rounded-pill btn-sm fw-bold text-dark">
+                                                        <i class="bi bi-cart-plus me-1"></i> Mua lại
+                                                    </button>
+                                                </form>
+                                            </c:when>
+                                        </c:choose>
 
                                     </div>
                                 </div>

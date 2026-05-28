@@ -37,19 +37,31 @@
                     <i class="bi bi-bag me-1"></i> Mua thêm
                 </a>
 
-                <c:if test="${order.status == 'PENDING'}">
-                    <form method="post" action="${ctx}/order-cancel"
-                          style="display:inline-block;"
-                          onsubmit="return confirm('Bạn chắc chắn muốn hủy đơn #${order.id} ?');">
-                        <input type="hidden" name="id" value="${order.id}"/>
-                        <input type="hidden" name="redirect" value="/order-detail?id=${order.id}"/>
-                        <input type="hidden" name="csrf" value="${sessionScope.CSRF_TOKEN}"/>
+                <c:choose>
+                    <%-- 1. Nếu đang CHỜ XỬ LÝ -> Hiện nút Hủy đơn --%>
+                    <c:when test="${order.status == 'PENDING'}">
+                        <form method="post" action="${ctx}/order-cancel" style="display:inline-block;"
+                              onsubmit="return confirm('Bạn chắc chắn muốn hủy đơn #${order.id} ?');">
+                            <input type="hidden" name="id" value="${order.id}"/>
+                            <input type="hidden" name="redirect" value="/order-detail?id=${order.id}"/>
+                            <input type="hidden" name="csrf" value="${sessionScope.CSRF_TOKEN}"/>
 
-                        <button type="submit" class="btn btn-outline-danger rounded-pill">
-                            <i class="bi bi-x-circle me-1"></i> Hủy đơn
-                        </button>
-                    </form>
-                </c:if>
+                            <button type="submit" class="btn btn-outline-danger rounded-pill">
+                                <i class="bi bi-x-circle me-1"></i> Hủy đơn
+                            </button>
+                        </form>
+                    </c:when>
+
+                    <%-- 2. Nếu ĐÃ GIAO hoặc ĐÃ HỦY -> Hiện nút Mua lại --%>
+                    <c:when test="${order.status == 'DONE' || order.status == 'CANCEL'}">
+                        <form method="post" action="${ctx}/reorder" style="display:inline-block;">
+                            <input type="hidden" name="orderId" value="${order.id}"/>
+                            <button type="submit" class="btn btn-warning rounded-pill fw-bold text-dark">
+                                <i class="bi bi-cart-plus me-1"></i> Mua lại đơn này
+                            </button>
+                        </form>
+                    </c:when>
+                </c:choose>
 
             </div>
         </div>
