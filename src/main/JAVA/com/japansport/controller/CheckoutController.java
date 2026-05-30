@@ -1,6 +1,7 @@
 package com.japansport.controller;
 
 import com.japansport.dao.CartDao;
+import com.japansport.dao.NotificationDAO;
 import com.japansport.dao.OrderDao;
 import com.japansport.dao.UserAddressDao;
 import com.japansport.dao.VoucherDao;
@@ -27,6 +28,7 @@ public class CheckoutController extends HttpServlet {
     private final UserAddressDao addressDao = new UserAddressDao();
     private final VoucherService voucherService = new VoucherService();
     private final VoucherDao voucherDao = new VoucherDao();
+    private final NotificationDAO notifDao = new NotificationDAO();
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
@@ -126,9 +128,13 @@ public class CheckoutController extends HttpServlet {
                     u.getId(), fullName, phone, addressLine, city, district, ward, payMethod, note
             );
 
-            // 3. GỌI HÀM GỬI EMAIL TẠI ĐÂY
-            final double finalAmountForEmail = finalTotal;
+            // Trigger: gửi thông báo in-app cho User
+            try {
+                notifDao.pushOrderNotification(u.getId(), orderId, "PENDING");
+            } catch (Exception ignored) {} // không để lỗi notification hỏng checkout
 
+            // Gửi email xác nhận đơn hàng (async, không block)
+            final double finalAmountForEmail = finalTotal;
             new Thread(() -> {
                 MailUtil.sendOrderConfirmationEmail(
                         email,

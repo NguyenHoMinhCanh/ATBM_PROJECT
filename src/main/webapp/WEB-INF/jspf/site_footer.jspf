@@ -2,96 +2,159 @@
 <%@ taglib uri="jakarta.tags.core" prefix="c" %>
 <c:set var="ctx" value="${pageContext.request.contextPath}" />
 
-<footer class="bg-dark text-light py-5">
+<footer class="bg-dark text-light pt-5 pb-3 mt-5" id="footer-contact">
     <div class="container">
-        <div class="row g-4">
+        <!-- Đăng ký nhận tin -->
+        <div class="row mb-5 pb-4 border-bottom border-secondary align-items-center">
+            <div class="col-lg-6 mb-3 mb-lg-0">
+                <h4 class="fw-bold mb-1"><i class="bi bi-envelope-paper me-2 text-danger"></i> Đăng Ký Nhận Tin</h4>
+                <p class="text-muted mb-0 small">Nhận thông tin cập nhật về ưu đãi mới nhất và khuyến mãi đặc biệt.</p>
+            </div>
+            <div class="col-lg-6">
+                <form action="#" method="post" class="d-flex">
+                    <input type="email" class="form-control me-2 py-2" placeholder="Nhập địa chỉ email của bạn..." required>
+                    <button type="submit" class="btn btn-danger px-4 fw-bold text-nowrap">Đăng Ký</button>
+                </form>
+            </div>
+        </div>
 
-            <!-- THÔNG TIN = các mục navbar -->
+        <div class="row g-4">
+            <!-- CỘT 1: THÔNG TIN CHUNG & BỘ CÔNG THƯƠNG -->
             <div class="col-lg-3 col-md-6">
-                <h5 class="text-uppercase mb-3">THÔNG TIN</h5>
-                <ul class="list-unstyled">
-                    <li class="mb-2"><a href="${ctx}/home" class="text-light text-decoration-none">Trang chủ</a></li>
-                    <li class="mb-2"><a href="${ctx}/list-product?gender=men" class="text-light text-decoration-none">Giày nam</a></li>
-                    <li class="mb-2"><a href="${ctx}/list-product?gender=women" class="text-light text-decoration-none">Giày nữ</a></li>
-                    <li class="mb-2"><a href="${ctx}/news" class="text-light text-decoration-none">Tin tức</a></li>
-                    <li class="mb-2"><a href="${ctx}/list-product" class="text-light text-decoration-none">Thể loại</a></li>
-                    <li class="mb-2"><a href="${ctx}/list-product" class="text-light text-decoration-none">Thương hiệu</a></li>
-                    <li class="mb-2"><a href="${ctx}/list-product?sale=1" class="text-light text-decoration-none">Khuyến mãi</a></li>
-                    <li class="mb-2"><a href="#" class="text-light text-decoration-none">Liên hệ</a></li>
+                <h5 class="text-uppercase mb-3 fw-bold border-start border-danger border-3 ps-2">Về JapanSport</h5>
+                <p class="small text-muted mb-3 text-justify">
+                    Hệ thống phân phối giày thể thao chính hãng hàng đầu Việt Nam. Tự hào mang đến những sản phẩm chất lượng nhất.
+                </p>
+                <div class="mb-3">
+                    <p class="small mb-1"><i class="bi bi-geo-alt-fill text-danger me-2"></i> Lotus 4, Vinhome Gardenia, Hàm Nghi, HN</p>
+                    <p class="small mb-1"><i class="bi bi-telephone-fill text-danger me-2"></i> 0984843218</p>
+                    <p class="small mb-1"><i class="bi bi-envelope-fill text-danger me-2"></i> cskh@japansport.vn</p>
+                </div>
+                <!-- Logo Bộ Công Thương -->
+                <div class="mt-4">
+                    <a href="#">
+                        <img src="${ctx}/assets/images/bo-cong-thuong.png" alt="Đã thông báo Bộ Công Thương" style="max-width: 140px;" onerror="this.src='https://laptoptcc.com/wp-content/uploads/2018/06/logo-bct-2.png'">
+                    </a>
+                </div>
+            </div>
+
+            <!-- CỘT 2: DANH MỤC & THÔNG TIN -->
+            <div class="col-lg-3 col-md-6">
+                <h5 class="text-uppercase mb-3 fw-bold border-start border-danger border-3 ps-2">Danh Mục Sản Phẩm</h5>
+                <c:set var="cats" value="${applicationScope.APP_MENU_CATEGORIES}" />
+                <ul class="list-unstyled footer-links">
+                    <c:choose>
+                        <c:when test="${not empty cats}">
+                            <c:forEach var="cate" items="${cats}" end="5">
+                                <li class="mb-2"><a href="${ctx}/list-product?categoryId=${cate.id}" class="text-light text-decoration-none small hover-red"><i class="bi bi-chevron-right small text-danger me-1"></i>${cate.name}</a></li>
+                            </c:forEach>
+                        </c:when>
+                        <c:otherwise>
+                            <li class="mb-2"><a href="${ctx}/list-product" class="text-light text-decoration-none small hover-red"><i class="bi bi-chevron-right small text-danger me-1"></i>Tất cả sản phẩm</a></li>
+                            <li class="mb-2"><a href="${ctx}/list-product?gender=men" class="text-light text-decoration-none small hover-red"><i class="bi bi-chevron-right small text-danger me-1"></i>Giày nam</a></li>
+                            <li class="mb-2"><a href="${ctx}/list-product?gender=women" class="text-light text-decoration-none small hover-red"><i class="bi bi-chevron-right small text-danger me-1"></i>Giày nữ</a></li>
+                        </c:otherwise>
+                    </c:choose>
+                    <li class="mb-2"><a href="${ctx}/list-product?sale=1" class="text-light text-decoration-none small hover-red"><i class="bi bi-chevron-right small text-danger me-1"></i>Khuyến mãi</a></li>
+                    <li class="mb-2"><a href="${ctx}/news" class="text-light text-decoration-none small hover-red"><i class="bi bi-chevron-right small text-danger me-1"></i>Tin tức</a></li>
                 </ul>
             </div>
 
-            <!-- DANH MỤC SẢN PHẨM = các thể loại (categories) -->
+            <!-- CỘT 3: CHÍNH SÁCH -->
             <div class="col-lg-3 col-md-6">
-                <h5 class="text-uppercase mb-3">DANH MỤC SẢN PHẨM</h5>
-
-                <c:set var="cats" value="${applicationScope.APP_MENU_CATEGORIES}" />
-                <c:choose>
-                    <c:when test="${not empty cats}">
-                        <ul class="list-unstyled">
-                            <c:forEach var="cate" items="${cats}">
-                                <li class="mb-2">
-                                    <a href="${ctx}/list-product?categoryId=${cate.id}"
-                                       class="text-light text-decoration-none">${cate.name}</a>
-                                </li>
-                            </c:forEach>
-                        </ul>
-                    </c:when>
-                    <c:otherwise>
-                        <ul class="list-unstyled">
-                            <li class="mb-2"><a href="${ctx}/list-product" class="text-light text-decoration-none">Tất cả sản phẩm</a></li>
-                        </ul>
-                    </c:otherwise>
-                </c:choose>
-            </div>
-
-            <!-- CHÍNH SÁCH = giống ảnh, lấy từ DB (policies) -->
-            <div class="col-lg-3 col-md-6">
-                <h5 class="text-uppercase mb-3">CHÍNH SÁCH</h5>
-                <ul class="list-unstyled">
-                    <li class="mb-2"><a href="${ctx}/news" class="text-light text-decoration-none">Tin tức</a></li>
-
+                <h5 class="text-uppercase mb-3 fw-bold border-start border-danger border-3 ps-2">Hỗ Trợ Khách Hàng</h5>
+                <ul class="list-unstyled footer-links">
                     <c:set var="pols" value="${applicationScope.APP_MENU_POLICIES}" />
                     <c:choose>
                         <c:when test="${not empty pols}">
                             <c:forEach var="p" items="${pols}" end="7">
                                 <li class="mb-2">
-                                    <a href="${ctx}/policy?slug=${p.slug}" class="text-light text-decoration-none">
-                                            ${p.title}
+                                    <a href="${ctx}/policy?slug=${p.slug}" class="text-light text-decoration-none small hover-red">
+                                        <i class="bi bi-chevron-right small text-danger me-1"></i>${p.title}
                                     </a>
                                 </li>
                             </c:forEach>
                         </c:when>
                         <c:otherwise>
-                            <li class="mb-2"><a href="${ctx}/policy?slug=chinh-sach-van-chuyen" class="text-light text-decoration-none">Chính sách vận chuyển</a></li>
-                            <li class="mb-2"><a href="${ctx}/policy?slug=chinh-sach-doi-tra" class="text-light text-decoration-none">Chính sách đổi trả</a></li>
-                            <li class="mb-2"><a href="${ctx}/policy?slug=huong-dan-dat-hang" class="text-light text-decoration-none">Hướng dẫn đặt hàng</a></li>
-                            <li class="mb-2"><a href="${ctx}/policy?slug=thong-tin-thanh-toan" class="text-light text-decoration-none">Thông tin thanh toán</a></li>
-                            <li class="mb-2"><a href="${ctx}/policy?slug=thong-tin-ve-japanbaby" class="text-light text-decoration-none">Thông tin về JAPANBABY</a></li>
-                            <li class="mb-2"><a href="${ctx}/policy?slug=chinh-sach-kiem-hang" class="text-light text-decoration-none">Chính sách kiểm hàng</a></li>
-                            <li class="mb-2"><a href="${ctx}/policy?slug=chinh-sach-bao-mat" class="text-light text-decoration-none">Chính sách bảo mật</a></li>
+                            <li class="mb-2"><a href="${ctx}/policy?slug=chinh-sach-van-chuyen" class="text-light text-decoration-none small hover-red"><i class="bi bi-chevron-right small text-danger me-1"></i>Chính sách vận chuyển</a></li>
+                            <li class="mb-2"><a href="${ctx}/policy?slug=chinh-sach-doi-tra" class="text-light text-decoration-none small hover-red"><i class="bi bi-chevron-right small text-danger me-1"></i>Chính sách đổi trả</a></li>
+                            <li class="mb-2"><a href="${ctx}/policy?slug=huong-dan-dat-hang" class="text-light text-decoration-none small hover-red"><i class="bi bi-chevron-right small text-danger me-1"></i>Hướng dẫn đặt hàng</a></li>
+                            <li class="mb-2"><a href="${ctx}/policy?slug=thong-tin-thanh-toan" class="text-light text-decoration-none small hover-red"><i class="bi bi-chevron-right small text-danger me-1"></i>Thông tin thanh toán</a></li>
+                            <li class="mb-2"><a href="${ctx}/policy?slug=chinh-sach-kiem-hang" class="text-light text-decoration-none small hover-red"><i class="bi bi-chevron-right small text-danger me-1"></i>Chính sách kiểm hàng</a></li>
                         </c:otherwise>
                     </c:choose>
                 </ul>
             </div>
 
-            <!-- FACEBOOK -->
+            <!-- CỘT 4: MẠNG XÃ HỘI & APP -->
             <div class="col-lg-3 col-md-6">
-                <h5 class="text-uppercase mb-3">FACEBOOK</h5>
-                <div class="bg-secondary rounded p-3 mb-3"
-                     style="height:120px;display:flex;align-items:center;justify-content:center;">
-                    <i class="bi bi-facebook fs-1 text-primary"></i>
+                <h5 class="text-uppercase mb-3 fw-bold border-start border-danger border-3 ps-2">Tải Ứng Dụng</h5>
+                <div class="d-flex align-items-center mb-4">
+                    <div class="me-2 p-1 bg-white rounded">
+                        <img src="${ctx}/assets/images/qr-code.png" alt="QR Code" style="width: 70px; height: 70px;" onerror="this.src='https://upload.wikimedia.org/wikipedia/commons/d/d0/QR_code_for_mobile_English_Wikipedia.svg'">
+                    </div>
+                    <div class="d-flex flex-column gap-2">
+                        <a href="#"><img src="${ctx}/assets/images/app-store.png" alt="App Store" style="height: 30px;" onerror="this.src='https://developer.apple.com/assets/elements/badges/download-on-the-app-store.svg'"></a>
+                        <a href="#"><img src="${ctx}/assets/images/google-play.png" alt="Google Play" style="height: 30px;" onerror="this.src='https://upload.wikimedia.org/wikipedia/commons/7/78/Google_Play_Store_badge_EN.svg'"></a>
+                    </div>
                 </div>
-                <div>
-                    <h6 class="fw-bold">Hộ kinh doanh JAPANBABY</h6>
-                    <p class="small mb-1">MST: 0108569593</p>
-                    <p class="small">Đơn vị: UBND Quận Nam Từ Liêm cấp ngày 17/07/2018 (Sửa đổi ngày 05/11/2023)</p>
+
+                <h5 class="text-uppercase mb-3 fw-bold border-start border-danger border-3 ps-2">Kết Nối Với Chúng Tôi</h5>
+                <div class="d-flex gap-2 mb-3">
+                    <a href="#" class="social-icon bg-primary text-white"><i class="bi bi-facebook"></i></a>
+                    <a href="#" class="social-icon text-white" style="background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);"><i class="bi bi-instagram"></i></a>
+                    <a href="#" class="social-icon bg-danger text-white"><i class="bi bi-youtube"></i></a>
+                    <a href="#" class="social-icon bg-dark text-white border border-light"><i class="bi bi-tiktok"></i></a>
+                </div>
+                
+                <div class="text-muted small">
+                    <p class="mb-1 fw-bold">Hộ kinh doanh JAPANBABY</p>
+                    <p class="mb-0">MST: 0108569593</p>
                 </div>
             </div>
+        </div>
 
+        <!-- LOGO THANH TOÁN & VẬN CHUYỂN -->
+        <div class="row mt-5 pt-4 border-top border-secondary text-center text-md-start align-items-center">
+            <div class="col-md-6 mb-3 mb-md-0">
+                <p class="mb-2 small fw-bold text-uppercase text-muted">Phương Thức Thanh Toán</p>
+                <div class="d-flex flex-wrap gap-2 justify-content-center justify-content-md-start align-items-center payment-icons">
+                    <i class="bi bi-credit-card-2-front fs-2 text-primary" title="Visa"></i>
+                    <i class="bi bi-credit-card fs-2 text-danger" title="MasterCard"></i>
+                    <i class="bi bi-cash-stack fs-2 text-success" title="COD"></i>
+                    <span class="fs-6 fw-bold text-primary mx-2">VNPay</span>
+                    <span class="fs-6 fw-bold text-info mx-2">MoMo</span>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <p class="mb-2 small fw-bold text-uppercase text-muted">Đối Tác Vận Chuyển</p>
+                <div class="d-flex flex-wrap gap-3 justify-content-center justify-content-md-start align-items-center shipping-icons text-white-50">
+                    <span class="fw-bold">Giao Hàng Nhanh</span>
+                    <span class="fw-bold">Viettel Post</span>
+                    <span class="fw-bold">GHTK</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- COPYRIGHT -->
+        <div class="row mt-4 pt-3 border-top border-secondary">
+            <div class="col-12 text-center">
+                <p class="small text-muted mb-0">&copy; 2024 JapanSport. Bản quyền thuộc về Hộ kinh doanh JAPANBABY. Thiết kế & Vận hành bởi JapanSport Team.</p>
+            </div>
         </div>
     </div>
 </footer>
+
+<style>
+    .hover-red { transition: color 0.2s ease, padding-left 0.2s ease; display: inline-block; }
+    .hover-red:hover { color: var(--primary-red) !important; padding-left: 5px; }
+    .social-icon { 
+        display: inline-flex; align-items: center; justify-content: center; 
+        width: 36px; height: 36px; border-radius: 50%; text-decoration: none;
+        transition: transform 0.2s ease;
+    }
+    .social-icon:hover { transform: translateY(-3px); }
+</style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
 <script>
@@ -117,5 +180,194 @@
         }
         document.addEventListener('DOMContentLoaded', updateCartCountFromServer);
         window.updateCartCountFromServer = updateCartCountFromServer;
+    })();
+
+    /* ---- Mini Cart: Portal pattern (move ra body, tính to\u1ea1 \u0111\u1ed9 realtime) ---- */
+    (function () {
+        document.addEventListener('DOMContentLoaded', function () {
+            const trigger = document.getElementById('cartIconBtn');
+            const popup   = document.getElementById('miniCartPopup');
+            if (!trigger || !popup) return;
+
+            // B\u01b0\u1edbc 1: Move popup ra <body> \u2014 tho\u00e1t kh\u1ecfi m\u1ecdi stacking context
+            document.body.appendChild(popup);
+
+            const POPUP_W = 320;
+            let hideTimer = null;
+
+            function reposition() {
+                const rect = trigger.getBoundingClientRect();
+                // Top = ngay d\u01b0\u1edbi icon (th\u00eam 8px gap)
+                popup.style.top  = (rect.bottom + 8) + 'px';
+                // Left = canh m\u00e9p ph\u1ea3i c\u1ee7a popup v\u1edbi m\u00e9p ph\u1ea3i c\u1ee7a icon
+                popup.style.left = Math.max(4, rect.right - POPUP_W) + 'px';
+            }
+
+            function openPopup() {
+                clearTimeout(hideTimer);
+                reposition();
+                popup.classList.add('is-visible');
+            }
+
+            function closePopup() {
+                hideTimer = setTimeout(function () {
+                    popup.classList.remove('is-visible');
+                }, 160);
+            }
+
+            // Hover v\u00e0o icon -> m\u1edf
+            trigger.parentElement.addEventListener('mouseenter', openPopup);
+            trigger.parentElement.addEventListener('mouseleave', closePopup);
+
+            // Hover v\u00e0o popup -> gi\u1eef l\u1ea1i
+            popup.addEventListener('mouseenter', function () { clearTimeout(hideTimer); });
+            popup.addEventListener('mouseleave', closePopup);
+
+            // C\u1eadp nh\u1eadt v\u1ecb tr\u00ed khi scroll (sticky header d\u1ecbch v\u1ecb tr\u00ed)
+            window.addEventListener('scroll', function () {
+                if (popup.classList.contains('is-visible')) reposition();
+            }, { passive: true });
+
+            window.addEventListener('resize', function () {
+                if (popup.classList.contains('is-visible')) reposition();
+            });
+        });
+    })();
+
+    /* ---- Notification Bell: Portal + Polling ---- */
+    (function () {
+        const CTX = '${pageContext.request.contextPath}';
+
+        document.addEventListener('DOMContentLoaded', function () {
+            const btn     = document.getElementById('notifIconBtn');
+            const popup   = document.getElementById('notifPopup');
+            const badge   = document.getElementById('notifBadge');
+            const list    = document.getElementById('notifList');
+            const markBtn = document.getElementById('notifMarkAllBtn');
+
+            if (!btn || !popup) return;
+
+            // Portal: move popup ra <body>
+            document.body.appendChild(popup);
+
+            const POPUP_W = 360;
+            let hideTimer = null;
+            let isLoaded  = false;
+
+            function reposition() {
+                const rect = btn.getBoundingClientRect();
+                popup.style.top  = (rect.bottom + 8) + 'px';
+                popup.style.left = Math.max(4, rect.right - POPUP_W) + 'px';
+            }
+
+            /* --- Render danh sách từ API --- */
+            function renderList(items) {
+                if (!items || items.length === 0) {
+                    list.innerHTML = '<div class="text-center py-4 text-muted small">' +
+                        '<i class="bi bi-bell-slash" style="font-size:2rem;opacity:0.3;"></i>' +
+                        '<p class="mt-2 mb-0">Chưa có thông báo</p></div>';
+                    return;
+                }
+                list.innerHTML = items.map(function (n) {
+                    var cls = n.isRead ? 'read' : 'unread';
+                    return '<a href="' + CTX + (n.link || '#') + '" class="notif-item ' + cls + '" data-id="' + n.id + '">' +
+                        '<span class="notif-dot"></span>' +
+                        '<span class="notif-icon-wrap"><i class="bi ' + (n.icon || 'bi-bell') + '"></i></span>' +
+                        '<span class="notif-body">' +
+                            '<div class="notif-title">' + n.title + '</div>' +
+                            '<div class="notif-content">' + (n.content || '') + '</div>' +
+                            '<div class="notif-time">' + (n.createdAt || '') + '</div>' +
+                        '</span>' +
+                    '</a>';
+                }).join('');
+            }
+
+            /* --- Cập nhật badge số đỏ --- */
+            function updateBadge(count) {
+                if (!badge) return;
+                badge.textContent = count > 99 ? '99+' : count;
+                badge.style.display = count > 0 ? 'inline-block' : 'none';
+            }
+
+            /* --- Polling: chỉ lấy số chưa đọc --- */
+            function pollCount() {
+                fetch(CTX + '/api/notifications?action=count')
+                    .then(function (r) { return r.ok ? r.json() : { unread: 0 }; })
+                    .then(function (d) { updateBadge(Number(d.unread || 0)); })
+                    .catch(function () {});
+            }
+
+            /* --- Load list khi mở popup lần đầu --- */
+            function loadList() {
+                list.innerHTML = '<div class="text-center py-3 text-muted small">Đang tải...</div>';
+                fetch(CTX + '/api/notifications?action=list')
+                    .then(function (r) { return r.ok ? r.json() : { unread: 0, items: [] }; })
+                    .then(function (d) {
+                        updateBadge(Number(d.unread || 0));
+                        renderList(d.items);
+                        isLoaded = true;
+                    })
+                    .catch(function () {
+                        list.innerHTML = '<div class="text-center py-3 text-muted small">Không tải được thông báo.</div>';
+                    });
+            }
+
+            /* --- Open / Close popup --- */
+            function openPopup() {
+                clearTimeout(hideTimer);
+                reposition();
+                popup.classList.add('is-visible');
+                if (!isLoaded) loadList();
+            }
+
+            function closePopup() {
+                hideTimer = setTimeout(function () {
+                    popup.classList.remove('is-visible');
+                }, 160);
+            }
+
+            btn.parentElement.addEventListener('mouseenter', openPopup);
+            btn.parentElement.addEventListener('mouseleave', closePopup);
+            popup.addEventListener('mouseenter', function () { clearTimeout(hideTimer); });
+            popup.addEventListener('mouseleave', closePopup);
+
+            /* --- Click item → đánh dấu đã đọc rồi navigate --- */
+            list.addEventListener('click', function (e) {
+                var item = e.target.closest('.notif-item');
+                if (!item) return;
+                var nid = item.dataset.id;
+                if (nid && item.classList.contains('unread')) {
+                    fetch(CTX + '/api/notifications?action=markOne&id=' + nid, { method: 'POST' });
+                    item.classList.remove('unread');
+                    item.classList.add('read');
+                    item.querySelector('.notif-dot').style.background = 'transparent';
+                }
+                // để href tự navigate
+            });
+
+            /* --- Nút "Đánh dấu đã đọc" --- */
+            if (markBtn) {
+                markBtn.addEventListener('click', function () {
+                    fetch(CTX + '/api/notifications?action=markAll', { method: 'POST' })
+                        .then(function () {
+                            updateBadge(0);
+                            isLoaded = false;
+                            loadList();
+                        });
+                });
+            }
+
+            /* --- Cập nhật vị trí khi scroll/resize --- */
+            window.addEventListener('scroll', function () {
+                if (popup.classList.contains('is-visible')) reposition();
+            }, { passive: true });
+            window.addEventListener('resize', function () {
+                if (popup.classList.contains('is-visible')) reposition();
+            });
+
+            /* --- Polling: gọi ngay lúc load, rồi mỗi 45 giây --- */
+            pollCount();
+            setInterval(pollCount, 45000);
+        });
     })();
 </script>

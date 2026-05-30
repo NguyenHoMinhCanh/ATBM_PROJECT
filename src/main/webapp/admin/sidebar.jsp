@@ -31,6 +31,9 @@
             <li><a class="s-item" href="${pageContext.request.contextPath}/admin/orders">
                 <i class="bi bi-receipt me-2"></i>Đơn hàng
             </a></li>
+            <li><a class="s-item" href="${pageContext.request.contextPath}/admin/reviews">
+                <i class="bi bi-star me-2"></i>Đánh giá
+            </a></li>
 
             <li><a class="s-item" href="${pageContext.request.contextPath}/admin/news">
                 <i class="bi bi-newspaper me-2"></i>Tin tức

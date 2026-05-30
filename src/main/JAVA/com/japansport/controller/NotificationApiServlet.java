@@ -1,6 +1,6 @@
 package com.japansport.controller;
 
-import com.japansport.dao.NotificationDao;
+import com.japansport.dao.NotificationDAO;
 import com.japansport.model.Notification;
 import com.japansport.model.User;
 
@@ -14,13 +14,22 @@ import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.List;
 
+/**
+ * NotificationApiServlet - REST-style API cho tính năng chuông thông báo.
+ *
+ * GET  /api/notifications?action=count   → { "unread": 3 }
+ * GET  /api/notifications?action=list    → { "unread": 3, "items": [...] }
+ * POST /api/notifications?action=markAll → { "ok": true }
+ * POST /api/notifications?action=markOne&id=5 → { "ok": true }
+ */
 @WebServlet(name = "NotificationApiServlet", urlPatterns = {"/api/notifications"})
 public class NotificationApiServlet extends HttpServlet {
 
-    private final NotificationDao notificationDao = new NotificationDao();
-    private static final SimpleDateFormat DF = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+    private final NotificationDAO notifDao = new NotificationDAO();
+    private static final SimpleDateFormat DATE_FMT = new SimpleDateFormat("dd/MM HH:mm");
 
-    private static String jsonEscape(String s) {
+    // ===== Utility: escape JSON string =====
+    private static String esc(String s) {
         if (s == null) return "";
         return s.replace("\\", "\\\\")
                 .replace("\"", "\\\"")
@@ -29,79 +38,106 @@ public class NotificationApiServlet extends HttpServlet {
                 .replace("\t", "\\t");
     }
 
+    private static void writeJson(HttpServletResponse resp, String json) throws IOException {
+        resp.setContentType("application/json;charset=UTF-8");
+        resp.setCharacterEncoding("UTF-8");
+        resp.getWriter().write(json);
+    }
+
+    // ===== GET =====
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
-        resp.setCharacterEncoding("UTF-8");
-        resp.setContentType("application/json;charset=UTF-8");
 
-        User u = (User) req.getSession().getAttribute("currentUser");
-        if (u == null) {
-            resp.getWriter().write("{\"ok\":false,\"message\":\"Chưa đăng nhập\"}");
+        User user = (User) req.getSession().getAttribute("currentUser");
+        if (user == null) {
+            writeJson(resp, "{\"unread\":0,\"items\":[]}");
             return;
         }
 
-        int userId = u.getId();
-        int unreadCount = notificationDao.getUnreadCount(userId);
-        List<Notification> list = notificationDao.getNotifications(userId, 20);
+        String action = req.getParameter("action");
+        if (action == null) action = "count";
 
-        StringBuilder sb = new StringBuilder();
-        sb.append("{\"ok\":true");
-        sb.append(",\"unreadCount\":").append(unreadCount);
-        sb.append(",\"notifications\":[");
-        for (int i = 0; i < list.size(); i++) {
-            Notification n = list.get(i);
-            if (i > 0) sb.append(",");
-            String dateStr = (n.getCreatedAt() == null) ? "" : DF.format(n.getCreatedAt());
-            sb.append("{");
-            sb.append("\"id\":").append(n.getId()).append(",");
-            sb.append("\"userId\":").append(n.getUserId()).append(",");
-            sb.append("\"title\":\"").append(jsonEscape(n.getTitle())).append("\",");
-            sb.append("\"message\":\"").append(jsonEscape(n.getMessage())).append("\",");
-            sb.append("\"link\":\"").append(jsonEscape(n.getLink())).append("\",");
-            sb.append("\"isRead\":").append(n.isRead()).append(",");
-            sb.append("\"createdAt\":\"").append(jsonEscape(dateStr)).append("\"");
-            sb.append("}");
+        switch (action) {
+
+            case "count": {
+                int unread = notifDao.countUnread(user.getId());
+                writeJson(resp, "{\"unread\":" + unread + "}");
+                break;
+            }
+
+            case "list": {
+                int unread = notifDao.countUnread(user.getId());
+                List<Notification> list = notifDao.getRecent(user.getId(), 10);
+
+                StringBuilder sb = new StringBuilder();
+                sb.append("{\"unread\":").append(unread).append(",\"items\":[");
+
+                for (int i = 0; i < list.size(); i++) {
+                    Notification n = list.get(i);
+                    String createdAt = (n.getCreatedAt() == null) ? "" : DATE_FMT.format(n.getCreatedAt());
+                    if (i > 0) sb.append(",");
+                    sb.append("{");
+                    sb.append("\"id\":").append(n.getId()).append(",");
+                    sb.append("\"type\":\"").append(esc(n.getType())).append("\",");
+                    sb.append("\"icon\":\"").append(esc(n.getTypeIcon())).append("\",");
+                    sb.append("\"title\":\"").append(esc(n.getTitle())).append("\",");
+                    sb.append("\"content\":\"").append(esc(n.getContent())).append("\",");
+                    sb.append("\"link\":\"").append(esc(n.getLink())).append("\",");
+                    sb.append("\"isRead\":").append(n.isRead()).append(",");
+                    sb.append("\"createdAt\":\"").append(esc(createdAt)).append("\"");
+                    sb.append("}");
+                }
+
+                sb.append("]}");
+                writeJson(resp, sb.toString());
+                break;
+            }
+
+            default:
+                resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                writeJson(resp, "{\"ok\":false,\"message\":\"Unknown action\"}");
         }
-        sb.append("]}");
-
-        resp.getWriter().write(sb.toString());
     }
 
+    // ===== POST =====
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
-        resp.setCharacterEncoding("UTF-8");
-        resp.setContentType("application/json;charset=UTF-8");
 
-        User u = (User) req.getSession().getAttribute("currentUser");
-        if (u == null) {
-            resp.getWriter().write("{\"ok\":false,\"message\":\"Chưa đăng nhập\"}");
+        User user = (User) req.getSession().getAttribute("currentUser");
+        if (user == null) {
+            resp.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            writeJson(resp, "{\"ok\":false,\"message\":\"Unauthorized\"}");
             return;
         }
 
-        int userId = u.getId();
         String action = req.getParameter("action");
+        if (action == null) action = "";
 
-        if ("markAllRead".equals(action)) {
-            notificationDao.markAllRead(userId);
-            resp.getWriter().write("{\"ok\":true}");
-            return;
-        } else if ("markRead".equals(action)) {
-            String notifIdStr = req.getParameter("id");
-            if (notifIdStr != null && !notifIdStr.isBlank()) {
-                try {
-                    int notificationId = Integer.parseInt(notifIdStr);
-                    notificationDao.markRead(notificationId, userId);
-                    resp.getWriter().write("{\"ok\":true}");
-                    return;
-                } catch (NumberFormatException e) {
-                    resp.getWriter().write("{\"ok\":false,\"message\":\"ID không hợp lệ\"}");
-                    return;
-                }
+        switch (action) {
+
+            case "markAll": {
+                notifDao.markAllRead(user.getId());
+                writeJson(resp, "{\"ok\":true}");
+                break;
             }
-        }
 
-        resp.getWriter().write("{\"ok\":false,\"message\":\"Thao tác không hợp lệ\"}");
+            case "markOne": {
+                try {
+                    int notifId = Integer.parseInt(req.getParameter("id"));
+                    notifDao.markOneRead(notifId, user.getId());
+                    writeJson(resp, "{\"ok\":true}");
+                } catch (NumberFormatException e) {
+                    resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                    writeJson(resp, "{\"ok\":false,\"message\":\"Invalid id\"}");
+                }
+                break;
+            }
+
+            default:
+                resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                writeJson(resp, "{\"ok\":false,\"message\":\"Unknown action\"}");
+        }
     }
 }
