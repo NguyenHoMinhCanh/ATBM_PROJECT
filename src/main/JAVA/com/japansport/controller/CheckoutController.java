@@ -1,6 +1,7 @@
 package com.japansport.controller;
 
 import com.japansport.dao.CartDao;
+import com.japansport.dao.NotificationDAO;
 import com.japansport.dao.OrderDao;
 import com.japansport.dao.UserAddressDao;
 import com.japansport.dao.VoucherDao;
@@ -26,6 +27,7 @@ public class CheckoutController extends HttpServlet {
     private final UserAddressDao addressDao = new UserAddressDao();
     private final VoucherService voucherService = new VoucherService();
     private final VoucherDao voucherDao = new VoucherDao();
+    private final NotificationDAO notifDao = new NotificationDAO();
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
@@ -106,6 +108,12 @@ public class CheckoutController extends HttpServlet {
             int orderId = orderDao.placeOrderFromCart(
                     u.getId(), fullName, phone, addressLine, city, district, ward, payMethod, note
             );
+
+            // Trigger: gửi thông báo "Đặt hàng thành công" cho User
+            try {
+                notifDao.pushOrderNotification(u.getId(), orderId, "PENDING");
+            } catch (Exception ignored) {} // không để lỗi notification hỏng checkout
+
             HttpSession session = req.getSession();
             session.setAttribute("FLASH_MSG", "Đặt hàng thành công. Mã đơn #" + orderId);
             session.setAttribute("FLASH_TYPE", "success");

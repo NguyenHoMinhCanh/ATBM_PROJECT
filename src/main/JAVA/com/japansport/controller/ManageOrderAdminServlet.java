@@ -1,5 +1,6 @@
 package com.japansport.controller;
 
+import com.japansport.dao.NotificationDAO;
 import com.japansport.dao.OrderDao;
 import com.japansport.model.Order;
 import com.japansport.model.OrderItem;
@@ -14,10 +15,12 @@ import java.util.List;
 public class ManageOrderAdminServlet extends HttpServlet {
 
     private OrderDao orderDao;
+    private NotificationDAO notifDao;
 
     @Override
     public void init() {
         orderDao = new OrderDao();
+        notifDao = new NotificationDAO();
     }
 
     @Override
@@ -87,6 +90,16 @@ public class ManageOrderAdminServlet extends HttpServlet {
                 }
             } else {
                 ok = orderDao.adminUpdateStatus(id, status);
+            }
+
+            // Trigger: gửi thông báo cho User khi Admin đổi trạng thái thành công
+            if (ok) {
+                try {
+                    Order updatedOrder = orderDao.adminGetById(id);
+                    if (updatedOrder != null) {
+                        notifDao.pushOrderNotification(updatedOrder.getUserId(), id, status);
+                    }
+                } catch (Exception ignored) {} // không để lỗi notification ảnh hưởng admin
             }
 
             response.sendRedirect(request.getContextPath() + "/admin/orders?action=detail&id=" + id + (ok ? "&success=1" : "&error=error"));
