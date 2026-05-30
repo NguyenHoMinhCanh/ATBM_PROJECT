@@ -29,129 +29,225 @@
     </div>
 </c:if>
 
-
-
-<header class="bg-white py-3">
-    <div class="container">
-        <div class="row g-3 align-items-center">
-            <div class="col-lg-3 col-md-4">
-                <div class="d-flex align-items-center">
-                    <a href="index.jsp">
-                        <img src="assets/images/logo.webp" alt="JapanSport" class="logo-header me-2">
-                    </a>
-                </div>
-            </div>
-
-            <div class="col-lg-5 col-md-4">
-                <form action="search" method="get">
-                    <div class="input-group">
-                        <input type="text" class="form-control" name="q" placeholder="Bạn muốn tìm gì?...">
-                        <button class="btn btn-danger" type="submit">
-                            <i class="bi bi-search"></i>
-                        </button>
+<!-- === WRAPPER ĐỂ STICKY HEADER === -->
+<div class="sticky-top shadow-sm header-wrapper" style="z-index: 1020;">
+    <header class="bg-white py-3">
+        <div class="container">
+            <div class="row g-3 align-items-center">
+                <div class="col-lg-3 col-md-4">
+                    <div class="d-flex align-items-center">
+                        <a href="${ctx}/home">
+                            <img src="${ctx}/assets/images/logo.webp" alt="JapanSport" class="logo-header me-2">
+                        </a>
                     </div>
-                </form>
-            </div>
+                </div>
 
-            <div class="col-lg-4 col-md-4">
-                <div class="d-flex justify-content-end align-items-center">
-                    <a href="tel:0984843218" class="btn btn-outline-danger me-2 d-none d-lg-inline">
-                        Tư vấn bán hàng <strong class="ms-2">0984843218</strong>
-                    </a>
+                <div class="col-lg-5 col-md-4 position-relative">
+                    <form action="${ctx}/search" method="get">
+                        <div class="input-group search-container">
+                            <input type="text" class="form-control search-input" name="q" placeholder="Bạn muốn tìm gì?..." autocomplete="off">
+                            <button class="btn btn-danger search-btn-custom" type="submit">
+                                <i class="bi bi-search"></i>
+                            </button>
+                        </div>
+                    </form>
+                    <!-- Từ khóa thịnh hành -->
+                    <div class="mt-1 d-none d-lg-flex gap-2 trending-keywords">
+                        <a href="${ctx}/search?q=Nike" class="text-decoration-none text-muted small">Giày Nike</a>
+                        <a href="${ctx}/search?q=Adidas" class="text-decoration-none text-muted small">Adidas UltraBoost</a>
+                        <a href="${ctx}/search?q=Chạy+bộ" class="text-decoration-none text-muted small">Giày chạy bộ</a>
+                        <a href="${ctx}/list-product?sale=1" class="text-decoration-none text-danger small fw-bold">Sale 50%</a>
+                    </div>
+                </div>
 
-                    <button class="btn header-icon-btn" data-bs-toggle="tooltip" title="Gọi điện">
-                        <i class="bi bi-telephone"></i>
-                    </button>
+                <div class="col-lg-4 col-md-4">
+                    <div class="d-flex justify-content-end align-items-center gap-2">
+                        <a href="tel:0984843218" class="btn btn-outline-danger me-2 d-none d-lg-inline rounded-pill px-3 fw-medium">
+                            <i class="bi bi-telephone me-1"></i> 0984843218
+                        </a>
 
-                    <!-- FIX: bỏ kiểu button bọc <a> (HTML sai) -->
-                    <a href="${ctx}/account" class="btn header-icon-btn" data-bs-toggle="tooltip" title="Tài khoản">
-                        <i class="bi bi-person"></i>
-                    </a>
+                        <!-- Tài khoản -->
+                        <div class="dropdown account-dropdown d-inline-block">
+                            <c:choose>
+                                <c:when test="${not empty sessionScope.currentUser}">
+                                    <a href="#" class="d-flex align-items-center text-decoration-none account-btn" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                        <div class="header-icon-btn d-inline-flex align-items-center justify-content-center border border-danger bg-white text-danger">
+                                            <c:choose>
+                                                <c:when test="${not empty sessionScope.currentUser.avatar}">
+                                                    <img src="${ctx}/${sessionScope.currentUser.avatar}" alt="Avatar" class="rounded-circle w-100 h-100 object-fit-cover">
+                                                </c:when>
+                                                <c:otherwise>
+                                                    <i class="bi bi-person-check-fill fs-5"></i>
+                                                </c:otherwise>
+                                            </c:choose>
+                                        </div>
+                                        <div class="ms-2 d-none d-lg-block text-start lh-1 text-dark">
+                                            <small class="text-muted d-block" style="font-size: 0.7rem;">Xin chào,</small>
+                                            <span class="fw-bold" style="font-size: 0.85rem;">${sessionScope.currentUser.name}</span>
+                                        </div>
+                                    </a>
+                                    <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0">
+                                        <li><a class="dropdown-item py-2" href="${ctx}/account"><i class="bi bi-person me-2 text-muted"></i>Tài khoản của tôi</a></li>
+                                        <li><a class="dropdown-item py-2" href="${ctx}/orders"><i class="bi bi-bag-check me-2 text-muted"></i>Đơn mua</a></li>
+                                        <li><hr class="dropdown-divider"></li>
+                                        <li><a class="dropdown-item py-2 text-danger" href="${ctx}/logout"><i class="bi bi-box-arrow-right me-2"></i>Đăng xuất</a></li>
+                                    </ul>
+                                </c:when>
+                                <c:otherwise>
+                                    <a href="${ctx}/login" class="btn header-icon-btn position-relative" data-bs-toggle="tooltip" title="Đăng nhập">
+                                        <i class="bi bi-person"></i>
+                                    </a>
+                                </c:otherwise>
+                            </c:choose>
+                        </div>
 
-                    <!-- FIX: giỏ hàng phải là btn + position-relative để badge bám đúng -->
-                    <a href="${ctx}/cart" class="btn header-icon-btn position-relative" data-bs-toggle="tooltip" title="Giỏ hàng">
-                        <i class="bi bi-cart"></i>
-                        <span
-                                id="cartCount"
-                                class="badge bg-danger position-absolute top-0 start-100 translate-middle z-3"
-                                style="display:none;"
-                        >0</span>
-                    </a>
+                        <!-- Icon Chuông Thông Báo (chỉ hiện khi đã đăng nhập) -->
+                        <c:if test="${not empty sessionScope.currentUser}">
+                            <div class="notif-popup-wrap">
+                                <button class="btn header-icon-btn position-relative" id="notifIconBtn" aria-label="Thông báo">
+                                    <i class="bi bi-bell"></i>
+                                    <span id="notifBadge" class="badge bg-danger position-absolute top-0 start-100 translate-middle z-3 border border-2 border-white rounded-circle px-2 py-1" style="display:none; font-size: 0.75rem;">0</span>
+                                </button>
+                            </div>
+                            <!-- Popup thông báo — JS sẽ move ra body -->
+                            <div id="notifPopup" class="notif-popup shadow-lg border-0">
+                                <div class="notif-popup-header d-flex justify-content-between align-items-center px-3 py-2 border-bottom">
+                                    <span class="fw-bold small">Thông Báo</span>
+                                    <button class="btn btn-link btn-sm p-0 text-muted text-decoration-none small" id="notifMarkAllBtn">Đánh dấu đã đọc</button>
+                                </div>
+                                <div id="notifList" class="notif-list">
+                                    <div class="text-center py-4 text-muted small">
+                                        <i class="bi bi-bell-slash" style="font-size: 2rem; opacity: 0.3;"></i>
+                                        <p class="mt-2 mb-0">Chưa có thông báo</p>
+                                    </div>
+                                </div>
+                                <div class="notif-popup-footer border-top text-center py-2">
+                                    <a href="${ctx}/orders" class="text-decoration-none text-danger small fw-medium">Xem tất cả đơn hàng →</a>
+                                </div>
+                            </div>
+                        </c:if>
+
+                        <!-- Giỏ hàng: Hover = Mini Cart, Click = Đến trang Cart -->
+                        <div class="cart-popup-wrap">
+                            <a href="${ctx}/cart" class="btn header-icon-btn position-relative" id="cartIconBtn">
+                                <i class="bi bi-cart"></i>
+                                <span id="cartCount" class="badge bg-danger position-absolute top-0 start-100 translate-middle z-3 border border-2 border-white rounded-circle px-2 py-1" style="display:none; font-size: 0.75rem;">0</span>
+                            </a>
+                        </div>
+                        <!-- Popup này sẽ được JS move vào body (Portal pattern) -->
+                        <div id="miniCartPopup" class="mini-cart-popup p-0 shadow-lg border-0">
+                            <div class="bg-light px-3 py-2 border-bottom fw-bold text-muted small">
+                                <i class="bi bi-cart3 me-1"></i> Sản phẩm mới thêm
+                            </div>
+                            <div id="miniCartContent" class="p-3 text-center">
+                                <i class="bi bi-cart3 text-muted" style="font-size: 3rem; opacity: 0.3;"></i>
+                                <p class="text-muted mb-0 small mt-2">Chưa có sản phẩm</p>
+                            </div>
+                            <div class="p-2 border-top bg-light">
+                                <a href="${ctx}/cart" class="btn btn-danger btn-sm w-100 fw-bold">Xem Giỏ Hàng</a>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
-</header>
+    </header>
 
-<nav class="navbar navbar-expand-lg navbar-custom navbar-dark">
-    <div class="container">
-        <button class="navbar-toggler border-0" type="button"
-                data-bs-toggle="collapse"
-                data-bs-target="#navbarNav"
-                aria-controls="navbarNav"
-                aria-expanded="false"
-                aria-label="Toggle navigation">
-            <span class="navbar-toggler-icon"></span>
-        </button>
+    <nav class="navbar navbar-expand-lg navbar-custom navbar-dark">
+        <div class="container">
+            <button class="navbar-toggler border-0" type="button"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#navbarNav"
+                    aria-controls="navbarNav"
+                    aria-expanded="false"
+                    aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
 
-        <div class="collapse navbar-collapse" id="navbarNav">
-            <ul class="navbar-nav w-100 justify-content-around">
-                <li class="nav-item">
-                    <a class="nav-link" href="${ctx}/home">TRANG CHỦ</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="${ctx}/list-product?gender=men">GIÀY NAM</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="${ctx}/list-product?gender=women">GIÀY NỮ</a>
-                </li>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav w-100 justify-content-around">
+                    <li class="nav-item">
+                        <a class="nav-link" href="${ctx}/home">TRANG CHỦ</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="${ctx}/list-product?gender=men">GIÀY NAM</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="${ctx}/list-product?gender=women">GIÀY NỮ</a>
+                    </li>
 
-                <li class="nav-item">
-                    <a class="nav-link" href="${ctx}/news">TIN TỨC</a>
-                </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="${ctx}/news">TIN TỨC</a>
+                    </li>
 
-                <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle" href="#" id="categoryDropdown"
-                       role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                        THỂ LOẠI
-                    </a>
-                    <ul class="dropdown-menu" aria-labelledby="categoryDropdown">
-                        <c:forEach var="cate" items="${categoryList}">
-                            <li>
-                                <a class="dropdown-item" href="${ctx}/list-product?categoryId=${cate.id}">
-                                        ${cate.name}
-                                </a>
-                            </li>
-                        </c:forEach>
-                    </ul>
-                </li>
+                    <!-- MEGA MENU THỂ LOẠI -->
+                    <li class="nav-item dropdown position-static">
+                        <a class="nav-link dropdown-toggle" href="#" id="categoryDropdown"
+                           role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-grid-fill me-1"></i> THỂ LOẠI
+                        </a>
+                        <div class="dropdown-menu mega-menu w-100 shadow-lg border-0 mt-0" aria-labelledby="categoryDropdown">
+                            <div class="container-fluid p-4">
+                                <div class="row g-4">
+                                    <div class="col-lg-8">
+                                        <h6 class="text-uppercase fw-bold mb-3 border-bottom pb-2">Danh Mục Sản Phẩm</h6>
+                                        <div class="row g-3">
+                                            <c:forEach var="cate" items="${categoryList}">
+                                                <div class="col-md-4 col-sm-6">
+                                                    <a class="dropdown-item rounded py-2 px-3 d-flex align-items-center fw-medium" href="${ctx}/list-product?categoryId=${cate.id}">
+                                                        <i class="bi bi-caret-right-fill text-danger me-2 small"></i> ${cate.name}
+                                                    </a>
+                                                </div>
+                                            </c:forEach>
+                                        </div>
+                                    </div>
+                                    <div class="col-lg-4 d-none d-lg-block">
+                                        <div class="mega-menu-banner rounded overflow-hidden position-relative h-100">
+                                            <img src="${ctx}/assets/images/index/DMNB1.jpg" alt="Banner" class="img-fluid w-100 h-100 object-fit-cover" style="min-height: 200px;" onerror="this.src='https://via.placeholder.com/400x300.png?text=Collection'">
+                                            <div class="position-absolute bottom-0 start-0 w-100 p-3 bg-gradient-dark text-white text-center">
+                                                <p class="mb-1 fw-bold">Bộ sưu tập mới nhất</p>
+                                                <a href="${ctx}/list-product" class="btn btn-sm btn-outline-light rounded-pill">Khám phá ngay</a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </li>
 
-                <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle" href="#" id="brandDropdown"
-                       role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                        THƯƠNG HIỆU
-                    </a>
-                    <ul class="dropdown-menu" aria-labelledby="brandDropdown">
-                        <c:forEach var="brand" items="${brandList}">
-                            <li>
-                                <a class="dropdown-item" href="${ctx}/list-product?brandId=${brand.id}">
-                                        ${brand.name}
-                                </a>
-                            </li>
-                        </c:forEach>
-                    </ul>
-                </li>
+                    <!-- MEGA MENU THƯƠNG HIỆU -->
+                    <li class="nav-item dropdown position-static">
+                        <a class="nav-link dropdown-toggle" href="#" id="brandDropdown"
+                           role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-star-fill me-1"></i> THƯƠNG HIỆU
+                        </a>
+                        <div class="dropdown-menu mega-menu w-100 shadow-lg border-0 mt-0" aria-labelledby="brandDropdown">
+                            <div class="container-fluid p-4">
+                                <h6 class="text-uppercase fw-bold mb-3 border-bottom pb-2 text-center">Các Thương Hiệu Hàng Đầu</h6>
+                                <div class="row g-3 justify-content-center">
+                                    <c:forEach var="brand" items="${brandList}">
+                                        <div class="col-lg-2 col-md-3 col-4 text-center">
+                                            <a class="dropdown-item d-block rounded p-3 text-center brand-item" href="${ctx}/list-product?brandId=${brand.id}">
+                                                <div class="fw-bold text-dark text-uppercase">${brand.name}</div>
+                                            </a>
+                                        </div>
+                                    </c:forEach>
+                                </div>
+                            </div>
+                        </div>
+                    </li>
 
-                <li class="nav-item">
-                    <a class="nav-link" href="#">KHUYẾN MÃI</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="#">LIÊN HỆ</a>
-                </li>
-            </ul>
+                    <li class="nav-item">
+                        <a class="nav-link text-warning fw-bold" href="${ctx}/list-product?sale=1"><i class="bi bi-lightning-fill"></i> KHUYẾN MÃI</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="${ctx}/home#footer-contact">LIÊN HỆ</a>
+                    </li>
+                </ul>
+            </div>
         </div>
-    </div>
-</nav>
+    </nav>
+</div> <!-- End Wrapper Sticky -->
 
 <%-- Xử lý hiển thị thông báo đăng nhập thành công --%>
 <%
@@ -179,3 +275,18 @@
     });
 </script>
 <% } %>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const header = document.querySelector('.header-wrapper');
+        if (header) {
+            window.addEventListener('scroll', function() {
+                if (window.scrollY > 50) {
+                    header.classList.add('scrolled');
+                } else {
+                    header.classList.remove('scrolled');
+                }
+            });
+        }
+    });
+</script>
