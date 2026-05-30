@@ -37,48 +37,86 @@
                     <i class="bi bi-bag me-1"></i> Mua thêm
                 </a>
 
-                <c:if test="${order.status == 'PENDING'}">
-                    <form method="post" action="${ctx}/order-cancel"
-                          style="display:inline-block;"
-                          onsubmit="return confirm('Bạn chắc chắn muốn hủy đơn #${order.id} ?');">
-                        <input type="hidden" name="id" value="${order.id}"/>
-                        <input type="hidden" name="redirect" value="/order-detail?id=${order.id}"/>
-                        <input type="hidden" name="csrf" value="${sessionScope.CSRF_TOKEN}"/>
+                <c:choose>
+                    <%-- 1. Nếu đang CHỜ XỬ LÝ -> Hiện nút Hủy đơn --%>
+                    <c:when test="${order.status == 'PENDING'}">
+                        <form method="post" action="${ctx}/order-cancel" style="display:inline-block;"
+                              onsubmit="return confirm('Bạn chắc chắn muốn hủy đơn #${order.id} ?');">
+                            <input type="hidden" name="id" value="${order.id}"/>
+                            <input type="hidden" name="redirect" value="/order-detail?id=${order.id}"/>
+                            <input type="hidden" name="csrf" value="${sessionScope.CSRF_TOKEN}"/>
 
-                        <button type="submit" class="btn btn-outline-danger rounded-pill">
-                            <i class="bi bi-x-circle me-1"></i> Hủy đơn
-                        </button>
-                    </form>
-                </c:if>
+                            <button type="submit" class="btn btn-outline-danger rounded-pill">
+                                <i class="bi bi-x-circle me-1"></i> Hủy đơn
+                            </button>
+                        </form>
+                    </c:when>
+
+                    <%-- 2. Nếu ĐÃ GIAO hoặc ĐÃ HỦY -> Hiện nút Mua lại --%>
+                    <c:when test="${order.status == 'DONE' || order.status == 'CANCEL'}">
+                        <form method="post" action="${ctx}/reorder" style="display:inline-block;">
+                            <input type="hidden" name="orderId" value="${order.id}"/>
+                            <button type="submit" class="btn btn-warning rounded-pill fw-bold text-dark">
+                                <i class="bi bi-cart-plus me-1"></i> Mua lại đơn này
+                            </button>
+                        </form>
+                    </c:when>
+                </c:choose>
 
             </div>
         </div>
 
         <!-- Stepper trạng thái -->
         <c:set var="st" value="${order.status}"/>
-        <div class="stepper mb-3">
-            <div class="step ${st=='PENDING' || st=='PAID' || st=='SHIPPING' || st=='DONE' ? 'active' : ''}">
-                <span class="dot"></span>
-                <div class="t">Tạo đơn</div>
-                <div class="d">Đã ghi nhận</div>
-            </div>
-            <div class="step ${st=='PAID' || st=='SHIPPING' || st=='DONE' ? 'active' : ''}">
-                <span class="dot"></span>
-                <div class="t">Xử lý</div>
-                <div class="d">Chuẩn bị hàng</div>
-            </div>
-            <div class="step ${st=='SHIPPING' || st=='DONE' ? 'active' : ''}">
-                <span class="dot"></span>
-                <div class="t">Vận chuyển</div>
-                <div class="d">Đang giao</div>
-            </div>
-            <div class="step ${st=='DONE' ? 'active' : ''}">
-                <span class="dot"></span>
-                <div class="t">Hoàn tất</div>
-                <div class="d">Đã nhận</div>
-            </div>
-        </div>
 
+        <div class="stepper-wrapper ${st == 'CANCEL' ? 'is-cancel' : ''}">
+            <c:choose>
+                <%-- Trạng thái: ĐÃ HỦY --%>
+                <c:when test="${st == 'CANCEL'}">
+                    <div class="step active">
+                        <div class="icon-box"><i class="bi bi-receipt"></i></div>
+                        <div class="text">Tạo đơn</div>
+                        <div class="date"><c:out value="${order.createdAt}"/></div>
+                    </div>
+                    <div class="step cancel">
+                        <div class="icon-box"><i class="bi bi-x-circle"></i></div>
+                        <div class="text">Đã hủy</div>
+                        <div class="date"><c:out value="${order.updatedAt}"/></div>
+                    </div>
+                </c:when>
+
+                <%-- Trạng thái: BÌNH THƯỜNG --%>
+                <c:otherwise>
+                    <!-- Bước 1: Tạo đơn -->
+                    <div class="step ${st=='PENDING' || st=='PAID' || st=='SHIPPING' || st=='DONE' ? 'active' : ''}">
+                        <div class="icon-box"><i class="bi bi-receipt"></i></div>
+                        <div class="text">Tạo đơn</div>
+                        <div class="date"><c:out value="${order.createdAt}"/></div>
+                    </div>
+
+                    <!-- Bước 2: Đã thanh toán / Xử lý -->
+                    <div class="step ${st=='PAID' || st=='SHIPPING' || st=='DONE' ? 'active' : ''}">
+                        <div class="icon-box"><i class="bi bi-wallet2"></i></div>
+                        <div class="text">Đã xác nhận</div>
+                        <div class="date">${st=='PAID' || st=='SHIPPING' || st=='DONE' ? order.updatedAt : ''}</div>
+                    </div>
+
+                    <!-- Bước 3: Đang giao -->
+                    <div class="step ${st=='SHIPPING' || st=='DONE' ? 'active' : ''}">
+                        <div class="icon-box"><i class="bi bi-truck"></i></div>
+                        <div class="text">Đang giao</div>
+                        <div class="date">${st=='SHIPPING' || st=='DONE' ? order.updatedAt : ''}</div>
+                    </div>
+
+                    <!-- Bước 4: Hoàn tất -->
+                    <div class="step ${st=='DONE' ? 'active' : ''}">
+                        <div class="icon-box"><i class="bi bi-box-seam"></i></div>
+                        <div class="text">Hoàn tất</div>
+                        <div class="date">${st=='DONE' ? order.updatedAt : ''}</div>
+                    </div>
+                </c:otherwise>
+            </c:choose>
+        </div>
         <div class="row g-3">
             <!-- Info -->
             <div class="col-lg-5">
@@ -160,9 +198,9 @@
                                 </div>
                             </div>
                         </c:forEach>
-                        <div class="pt-3 d-flex justify-content-between">
-                            <div class="text-muted">Tổng cộng</div>
-                            <div class="fw-bold money" data-money="${order.totalAmount}"></div>
+                        <div class="pt-3 d-flex justify-content-between align-items-center">
+                            <div class="text-muted fs-5">Tổng cộng</div>
+                            <div class="fw-bold money fs-4 text-danger" data-money="${order.totalAmount}"></div>
                         </div>
                     </div>
                 </div>
@@ -182,8 +220,59 @@
 
 <%@ include file="/WEB-INF/jspf/site_footer.jspf" %>
 
+<style>
+    .stepper-wrapper {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 2rem;
+        position: relative;
+        padding: 0 20px;
+        margin-top: 1.5rem;
+    }
+    .stepper-wrapper::before {
+        content: "";
+        position: absolute;
+        top: 25px;
+        left: 10%;
+        width: 80%;
+        height: 4px;
+        background-color: #e0e0e0;
+        z-index: 1;
+    }
+    .step {
+        position: relative;
+        z-index: 2;
+        text-align: center;
+        flex: 1;
+    }
+    .step .icon-box {
+        width: 50px;
+        height: 50px;
+        background-color: #e0e0e0;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 10px;
+        font-size: 1.5rem;
+        color: white;
+        border: 4px solid #fff;
+        transition: all 0.3s;
+    }
+    .step .text { font-size: 0.95rem; color: #6c757d; font-weight: bold; }
+    .step .date { font-size: 0.8rem; color: #adb5bd; margin-top: 4px; }
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+    /* Đổi màu khi Active (Xanh lá) */
+    .step.active .icon-box { background-color: #198754; }
+    .step.active .text { color: #198754; }
+
+    /* Đổi màu khi Hủy (Đỏ) */
+    .step.cancel .icon-box { background-color: #dc3545; }
+    .step.cancel .text { color: #dc3545; }
+
+    /* Rút ngắn thanh kẻ ngang nếu đơn bị hủy */
+    .stepper-wrapper.is-cancel::before { width: 50%; left: 25%; }
+</style>
 <script>
     function qs(sel){ return document.querySelector(sel); }
     function getCart(){

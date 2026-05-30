@@ -156,24 +156,37 @@
                                     </div>
 
                                     <div class="text-end">
-                                        <div class="fw-bold money" data-money="${o.totalAmount}"></div>
+                                        <div class="fw-bold money fs-4 text-danger" data-money="${o.totalAmount}"></div>
                                         <a class="btn btn-outline-danger rounded-pill btn-sm mt-2"
                                            href="${ctx}/order-detail?id=${o.id}">
                                             Xem chi tiết <i class="bi bi-arrow-right ms-1"></i>
                                         </a>
 
-                                        <c:if test="${st == 'PENDING'}">
-                                            <form method="post" action="${ctx}/order-cancel" class="mt-2"
-                                                  onsubmit="return confirm('Bạn chắc chắn muốn hủy đơn #${o.id} ?');">
-                                                <input type="hidden" name="id" value="${o.id}"/>
-                                                <input type="hidden" name="redirect" value="/orders"/>
-                                                <input type="hidden" name="csrf" value="${sessionScope.CSRF_TOKEN}"/>
+                                        <c:choose>
+                                            <%-- 1. Nếu đang CHỜ XỬ LÝ -> Hiện nút Hủy đơn --%>
+                                            <c:when test="${st == 'PENDING'}">
+                                                <form method="post" action="${ctx}/order-cancel" class="mt-2"
+                                                      onsubmit="return confirm('Bạn chắc chắn muốn hủy đơn #${o.id} ?');">
+                                                    <input type="hidden" name="id" value="${o.id}"/>
+                                                    <input type="hidden" name="redirect" value="/orders"/>
+                                                    <input type="hidden" name="csrf" value="${sessionScope.CSRF_TOKEN}"/>
 
-                                                <button type="submit" class="btn btn-outline-danger rounded-pill btn-sm">
-                                                    <i class="bi bi-x-circle me-1"></i> Hủy đơn
-                                                </button>
-                                            </form>
-                                        </c:if>
+                                                    <button type="submit" class="btn btn-outline-danger rounded-pill btn-sm">
+                                                        <i class="bi bi-x-circle me-1"></i> Hủy đơn
+                                                    </button>
+                                                </form>
+                                            </c:when>
+
+                                            <%-- 2. Nếu ĐÃ GIAO hoặc ĐÃ HỦY -> Hiện nút Mua lại --%>
+                                            <c:when test="${st == 'DONE' || st == 'CANCEL'}">
+                                                <form method="post" action="${ctx}/reorder" class="mt-2">
+                                                    <input type="hidden" name="orderId" value="${o.id}"/>
+                                                    <button type="submit" class="btn btn-warning rounded-pill btn-sm fw-bold text-dark">
+                                                        <i class="bi bi-cart-plus me-1"></i> Mua lại
+                                                    </button>
+                                                </form>
+                                            </c:when>
+                                        </c:choose>
 
                                     </div>
                                 </div>
@@ -188,8 +201,37 @@
 
 <%@ include file="/WEB-INF/jspf/site_footer.jspf" %>
 
+<style>
+    .order-card {
+        background: #fff;
+        border: 1px solid #eaeaea;
+        border-radius: 12px;
+        padding: 20px;
+        margin-bottom: 16px;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+        transition: all 0.3s ease;
+    }
+    .order-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 15px rgba(0,0,0,0.1);
+        border-color: #dc3545;
+    }
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+    .badge-status {
+        padding: 6px 14px;
+        border-radius: 20px;
+        font-weight: 600;
+        font-size: 0.85rem;
+        display: inline-block;
+        margin-top: 5px;
+    }
+    .badge-pending { background-color: #fd7e14; color: #fff; }
+    .badge-paid { background-color: #0dcaf0; color: #000; }
+    .badge-shipping { background-color: #0d6efd; color: #fff; }
+    .badge-done { background-color: #198754; color: #fff; }
+    .badge-cancel { background-color: #dc3545; color: #fff; }
+</style>
+
 <script>
     function qs(sel) {
         return document.querySelector(sel);

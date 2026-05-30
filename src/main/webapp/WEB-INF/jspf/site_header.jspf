@@ -51,6 +51,16 @@
                             </button>
                         </div>
                     </form>
+
+                <div class="col-lg-5 col-md-4 position-relative">
+                    <form action="${ctx}/search" method="get">
+                        <div class="input-group search-container">
+                            <input type="text" class="form-control search-input" name="q" placeholder="Bạn muốn tìm gì?..." autocomplete="off">
+                            <button class="btn btn-danger search-btn-custom" type="submit">
+                                <i class="bi bi-search"></i>
+                            </button>
+                        </div>
+                    </form>
                     <!-- Từ khóa thịnh hành -->
                     <div class="mt-1 d-none d-lg-flex gap-2 trending-keywords">
                         <a href="${ctx}/search?q=Nike" class="text-decoration-none text-muted small">Giày Nike</a>
@@ -66,6 +76,7 @@
                             <i class="bi bi-telephone me-1"></i> 0984843218
                         </a>
 
+<<<<<<< HEAD
                         <!-- Tài khoản -->
                         <div class="dropdown account-dropdown d-inline-block">
                             <c:choose>

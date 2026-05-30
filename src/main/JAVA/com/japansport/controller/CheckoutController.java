@@ -10,6 +10,7 @@ import com.japansport.model.User;
 import com.japansport.model.UserAddress;
 import com.japansport.model.Voucher;
 import com.japansport.service.VoucherService;
+import com.japansport.util.MailUtil;
 
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -95,6 +96,8 @@ public class CheckoutController extends HttpServlet {
 
         req.setCharacterEncoding("UTF-8");
 
+        // 1. Lấy dữ liệu từ form
+        String email = req.getParameter("email");
         String fullName = req.getParameter("fullName");
         String phone = req.getParameter("phone");
         String addressLine = req.getParameter("addressLine");
@@ -105,19 +108,50 @@ public class CheckoutController extends HttpServlet {
         String note = req.getParameter("note");
 
         try {
+            // Lấy giỏ hàng TRƯỚC KHI thanh toán để tính tổng tiền truyền vào email
+            Cart cart = cartDao.getActiveCart(u.getId());
+            double subtotal = cart.getSubtotal();
+
+            // Xử lý tính toán giảm giá (nếu có dùng Voucher) để ra số tiền cuối cùng
+            String voucherCode = (String) req.getSession().getAttribute("appliedVoucherCode");
+            double finalTotal = subtotal;
+            if (voucherCode != null && !voucherCode.trim().isEmpty()) {
+                Voucher appliedVoucher = voucherService.applyVoucher(voucherCode, BigDecimal.valueOf(subtotal));
+                if (appliedVoucher != null) {
+                    BigDecimal discount = voucherService.calculateDiscount(appliedVoucher, BigDecimal.valueOf(subtotal));
+                    finalTotal = subtotal - discount.doubleValue();
+                }
+            }
+
+            // 2. Thực hiện lưu đơn hàng vào database
             int orderId = orderDao.placeOrderFromCart(
                     u.getId(), fullName, phone, addressLine, city, district, ward, payMethod, note
             );
 
-            // Trigger: gửi thông báo "Đặt hàng thành công" cho User
+            // Trigger: gửi thông báo in-app cho User
             try {
                 notifDao.pushOrderNotification(u.getId(), orderId, "PENDING");
             } catch (Exception ignored) {} // không để lỗi notification hỏng checkout
+
+            // Gửi email xác nhận đơn hàng (async, không block)
+            final double finalAmountForEmail = finalTotal;
+            new Thread(() -> {
+                MailUtil.sendOrderConfirmationEmail(
+                        email,
+                        fullName,
+                        String.valueOf(orderId),
+                        finalAmountForEmail
+                );
+            }).start();
+
+            // Xóa session voucher sau khi dùng xong
+            req.getSession().removeAttribute("appliedVoucherCode");
 
             HttpSession session = req.getSession();
             session.setAttribute("FLASH_MSG", "Đặt hàng thành công. Mã đơn #" + orderId);
             session.setAttribute("FLASH_TYPE", "success");
             resp.sendRedirect(req.getContextPath() + "/order-detail?id=" + orderId);
+
         } catch (Exception e) {
             req.setAttribute("errorMessage", "Đặt hàng thất bại: " + e.getMessage());
             doGet(req, resp);

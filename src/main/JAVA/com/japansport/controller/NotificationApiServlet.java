@@ -60,14 +60,12 @@ public class NotificationApiServlet extends HttpServlet {
 
         switch (action) {
 
-            // Chỉ trả về số chưa đọc — dùng cho polling badge icon
             case "count": {
                 int unread = notifDao.countUnread(user.getId());
                 writeJson(resp, "{\"unread\":" + unread + "}");
                 break;
             }
 
-            // Trả về danh sách + số chưa đọc — dùng khi hover/click mở popup
             case "list": {
                 int unread = notifDao.countUnread(user.getId());
                 List<Notification> list = notifDao.getRecent(user.getId(), 10);
@@ -119,14 +117,12 @@ public class NotificationApiServlet extends HttpServlet {
 
         switch (action) {
 
-            // Đánh dấu tất cả đã đọc — gọi khi user mở popup chuông
             case "markAll": {
                 notifDao.markAllRead(user.getId());
                 writeJson(resp, "{\"ok\":true}");
                 break;
             }
 
-            // Đánh dấu 1 thông báo đã đọc — gọi khi user click vào 1 item
             case "markOne": {
                 try {
                     int notifId = Integer.parseInt(req.getParameter("id"));

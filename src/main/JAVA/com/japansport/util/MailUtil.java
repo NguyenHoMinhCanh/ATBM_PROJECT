@@ -88,4 +88,80 @@ public class MailUtil {
                 .replace("<", "&lt;")
                 .replace(">", "&gt;");
     }
+
+    public static void sendOrderConfirmationEmail(String toEmail, String customerName, String orderId, double totalAmount) {
+        String host = AppConfig.get("SMTP_HOST", "");
+        int port = AppConfig.getInt("SMTP_PORT", 587);
+
+        String user = AppConfig.get("SMTP_USER", "");
+        String pass = AppConfig.get("SMTP_PASS", "");
+        String from = AppConfig.get("SMTP_FROM", user);
+
+        boolean tls = AppConfig.getBool("SMTP_TLS", true);
+        boolean ssl = AppConfig.getBool("SMTP_SSL", false);
+        boolean debug = AppConfig.getBool("MAIL_DEBUG", false);
+
+        if (host.isBlank() || user.isBlank() || pass.isBlank()) {
+            System.err.println("SMTP chưa cấu hình đủ, không thể gửi mail xác nhận đơn hàng.");
+            return;
+        }
+
+        Properties props = new Properties();
+        props.put("mail.smtp.host", host);
+        props.put("mail.smtp.port", String.valueOf(port));
+        props.put("mail.smtp.auth", "true");
+        props.put("mail.smtp.connectiontimeout", "10000");
+        props.put("mail.smtp.timeout", "10000");
+        props.put("mail.smtp.writetimeout", "10000");
+        props.put("mail.smtp.ssl.protocols", "TLSv1.2 TLSv1.3");
+
+        if (ssl) {
+            props.put("mail.smtp.ssl.enable", "true");
+            props.put("mail.smtp.ssl.trust", host);
+        } else if (tls) {
+            props.put("mail.smtp.starttls.enable", "true");
+            props.put("mail.smtp.starttls.required", "true");
+            props.put("mail.smtp.ssl.trust", host);
+        }
+
+        Session session = Session.getInstance(props, new Authenticator() {
+            @Override protected PasswordAuthentication getPasswordAuthentication() {
+                return new PasswordAuthentication(user, pass);
+            }
+        });
+        session.setDebug(debug);
+
+        try {
+            MimeMessage msg = new MimeMessage(session);
+            msg.setFrom(new InternetAddress(from, "JapanSport", "UTF-8"));
+            msg.setRecipients(Message.RecipientType.TO, InternetAddress.parse(toEmail, false));
+            msg.setSubject("Cảm ơn bạn đã đặt hàng tại Japan Sport! (Mã ĐH: " + orderId + ")", "UTF-8");
+
+            // Xử lý an toàn HTML để chống XSS
+            String safeName = escapeHtml(customerName);
+            String safeOrderId = escapeHtml(orderId);
+            String formattedTotal = String.format("%,.0f", totalAmount) + "₫";
+
+            String html = ""
+                    + "<div style='font-family:Arial,sans-serif;font-size:14px; line-height: 1.6; color: #333;'>"
+                    + "<h2 style='color: #ee4d2d;'>Xác nhận đơn hàng</h2>"
+                    + "<p>Xin chào <strong>" + safeName + "</strong>,</p>"
+                    + "<p>Cảm ơn bạn đã tin tưởng và mua sắm tại Japan Sport. Đơn hàng của bạn đã được hệ thống ghi nhận thành công.</p>"
+                    + "<div style='background-color: #f8f9fa; padding: 15px; border-radius: 8px; margin: 20px 0;'>"
+                    + "  <p style='margin: 0 0 10px 0;'><strong>Mã đơn hàng:</strong> " + safeOrderId + "</p>"
+                    + "  <p style='margin: 0 0 10px 0;'><strong>Tổng thanh toán:</strong> <span style='color: #ee4d2d; font-size: 16px; font-weight: bold;'>" + formattedTotal + "</span></p>"
+                    + "</div>"
+                    + "<p>Chúng tôi sẽ sớm liên hệ lại với bạn để tiến hành giao hàng. Vui lòng giữ liên lạc qua số điện thoại đã đăng ký.</p>"
+                    + "<br>"
+                    + "<p>Trân trọng,<br><strong>Đội ngũ Japan Sport</strong></p>"
+                    + "</div>";
+
+            msg.setContent(html, "text/html; charset=UTF-8");
+            Transport.send(msg);
+
+        } catch (Exception e) {
+            System.err.println("Gửi email xác nhận đơn hàng thất bại: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
 }

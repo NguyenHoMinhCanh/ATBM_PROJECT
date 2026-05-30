@@ -462,6 +462,10 @@ public class OrderDao extends DAO {
      * @return 1: success; 0: not found; -1: invalid status; -2: error
      */
     public int adminCancelOrder(int orderId) {
+        return adminCancelOrder(orderId, 1, "Không có lý do cụ thể");
+    }
+
+    public int adminCancelOrder(int orderId, int adminUserId, String reason) {
         Connection conn = null;
         boolean oldAuto = true;
 
@@ -470,27 +474,38 @@ public class OrderDao extends DAO {
             oldAuto = conn.getAutoCommit();
             conn.setAutoCommit(false);
 
-            // Lock order row
-            String lockOrder = "SELECT status FROM orders WHERE id=? FOR UPDATE";
+            // Lock order row and get details
+            String lockOrder = "SELECT status, user_id, total_amount FROM orders WHERE id=? FOR UPDATE";
             String status = null;
+            int customerUserId = 0;
+            double totalAmount = 0.0;
             try (PreparedStatement ps = conn.prepareStatement(lockOrder)) {
                 ps.setInt(1, orderId);
                 try (ResultSet rs = ps.executeQuery()) {
-                    if (rs.next()) status = rs.getString("status");
-                    else {
+                    if (rs.next()) {
+                        status = rs.getString("status");
+                        customerUserId = rs.getInt("user_id");
+                        totalAmount = rs.getDouble("total_amount");
+                    } else {
                         conn.rollback();
                         return 0;
                     }
                 }
             }
 
-            if (status == null || !"PENDING".equalsIgnoreCase(status)) {
+            if (status == null) {
                 conn.rollback();
                 return -1;
             }
 
-            // Update status -> CANCEL (chỉ khi đang PENDING)
-            String upd = "UPDATE orders SET status='CANCEL', updated_at=CURRENT_TIMESTAMP WHERE id=? AND status='PENDING'";
+            String statusUpper = status.toUpperCase();
+            if (!"PENDING".equals(statusUpper) && !"PAID".equals(statusUpper) && !"SHIPPING".equals(statusUpper)) {
+                conn.rollback();
+                return -1;
+            }
+
+            // Update status -> CANCEL (cho các đơn hàng ở trạng thái hoạt động)
+            String upd = "UPDATE orders SET status='CANCEL', updated_at=CURRENT_TIMESTAMP WHERE id=? AND status IN ('PENDING', 'PAID', 'SHIPPING')";
             try (PreparedStatement ps = conn.prepareStatement(upd)) {
                 ps.setInt(1, orderId);
                 int affected = ps.executeUpdate();
@@ -517,6 +532,26 @@ public class OrderDao extends DAO {
                             ps2.executeUpdate();
                         }
                     }
+                }
+            }
+
+            // Ghi log trạng thái
+            OrderStatusLogDao logDao = new OrderStatusLogDao();
+            logDao.insertLog(conn, orderId, status, "CANCEL", reason, adminUserId);
+
+            // Gửi thông báo cho khách hàng
+            NotificationDao notifDao = new NotificationDao();
+            String msg = "Đơn hàng #" + orderId + " của bạn đã bị hủy bởi quản trị viên. Lý do: " + reason;
+            notifDao.insertNotification(conn, customerUserId, "Đơn hàng bị hủy", msg, "/order-detail?id=" + orderId);
+
+            // Nếu đã thanh toán (PAID hoặc SHIPPING), tạo yêu cầu hoàn tiền
+            if ("PAID".equals(statusUpper) || "SHIPPING".equals(statusUpper)) {
+                String refundSql = "INSERT INTO refund_requests (order_id, amount, status, note) VALUES (?, ?, 'PENDING', ?)";
+                try (PreparedStatement ps = conn.prepareStatement(refundSql)) {
+                    ps.setInt(1, orderId);
+                    ps.setDouble(2, totalAmount);
+                    ps.setString(3, "Đơn hàng bị hủy ở trạng thái " + statusUpper + ". Lý do: " + reason);
+                    ps.executeUpdate();
                 }
             }
 
@@ -593,6 +628,102 @@ public class OrderDao extends DAO {
         }
     }
 
+    /**
+     * Đếm tổng số đơn hàng thỏa điều kiện lọc (cho phân trang).
+     */
+    public int adminCountAll(String status, String keyword) {
+        StringBuilder sql = new StringBuilder("SELECT COUNT(*) AS total FROM orders o ");
+        sql.append("JOIN users u ON u.id = o.user_id ");
+        sql.append("JOIN user_addresses a ON a.id = o.address_id ");
+        sql.append("WHERE 1=1 ");
+
+        List<Object> params = new ArrayList<>();
+        if (status != null) {
+            sql.append(" AND o.status = ? ");
+            params.add(status);
+        }
+        if (keyword != null) {
+            sql.append(" AND (a.full_name LIKE ? OR a.phone LIKE ? OR u.email LIKE ? OR u.name LIKE ?) ");
+            String k = "%" + keyword + "%";
+            params.add(k); params.add(k); params.add(k); params.add(k);
+        }
+
+        try {
+            PreparedStatement ps = getPreparedStatement(sql.toString());
+            for (int i = 0; i < params.size(); i++) ps.setObject(i + 1, params.get(i));
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) return rs.getInt("total");
+            return 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return 0;
+        }
+    }
+
+    /**
+     * Lấy danh sách đơn hàng theo trang (phân trang).
+     * @param status trạng thái lọc (null = tất cả)
+     * @param keyword từ khóa tìm kiếm (null = tất cả)
+     * @param page trang hiện tại (bắt đầu từ 1)
+     * @param pageSize số bản ghi mỗi trang
+     */
+    public List<Order> adminGetPaged(String status, String keyword, int page, int pageSize) {
+        List<Order> list = new ArrayList<>();
+
+        StringBuilder sql = new StringBuilder();
+        sql.append("SELECT o.id, o.user_id, o.address_id, o.total_amount, o.status, o.created_at, o.updated_at, ");
+        sql.append("u.name AS user_name, u.email AS user_email, ");
+        sql.append("a.full_name, a.phone, a.address_line, a.city, a.district, a.ward ");
+        sql.append("FROM orders o ");
+        sql.append("JOIN users u ON u.id = o.user_id ");
+        sql.append("JOIN user_addresses a ON a.id = o.address_id ");
+        sql.append("WHERE 1=1 ");
+
+        List<Object> params = new ArrayList<>();
+        if (status != null) {
+            sql.append(" AND o.status = ? ");
+            params.add(status);
+        }
+        if (keyword != null) {
+            sql.append(" AND (a.full_name LIKE ? OR a.phone LIKE ? OR u.email LIKE ? OR u.name LIKE ?) ");
+            String k = "%" + keyword + "%";
+            params.add(k); params.add(k); params.add(k); params.add(k);
+        }
+
+        sql.append(" ORDER BY o.created_at DESC, o.id DESC");
+        sql.append(" LIMIT ? OFFSET ?");
+        params.add(pageSize);
+        params.add((page - 1) * pageSize);
+
+        try {
+            PreparedStatement ps = getPreparedStatement(sql.toString());
+            for (int i = 0; i < params.size(); i++) ps.setObject(i + 1, params.get(i));
+
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                Order o = new Order();
+                o.setId(rs.getInt("id"));
+                o.setUserId(rs.getInt("user_id"));
+                o.setAddressId(rs.getInt("address_id"));
+                o.setTotalAmount(rs.getDouble("total_amount"));
+                o.setStatus(rs.getString("status"));
+                o.setCreatedAt(rs.getTimestamp("created_at"));
+                o.setUpdatedAt(rs.getTimestamp("updated_at"));
+                o.setFullName(rs.getString("full_name"));
+                o.setPhone(rs.getString("phone"));
+                o.setAddressLine(rs.getString("address_line"));
+                o.setCity(rs.getString("city"));
+                o.setDistrict(rs.getString("district"));
+                o.setWard(rs.getString("ward"));
+                list.add(o);
+            }
+            return list;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return list;
+        }
+    }
+
     public Order adminGetById(int orderId) {
         String sql =
                 "SELECT o.id, o.user_id, o.address_id, o.total_amount, o.status, o.created_at, o.updated_at, " +
@@ -634,16 +765,71 @@ public class OrderDao extends DAO {
     }
 
     public boolean adminUpdateStatus(int orderId, String status) {
-        // status hợp lệ tuỳ bạn định nghĩa, ở đây chấp nhận chuỗi bất kỳ để bạn test nhanh
-        String sql = "UPDATE orders SET status = ? WHERE id = ?";
+        return adminUpdateStatus(orderId, status, 1, "Cập nhật bởi hệ thống");
+    }
+
+    public boolean adminUpdateStatus(int orderId, String status, int adminUserId, String reason) {
+        Connection conn = null;
+        boolean oldAuto = true;
+
         try {
-            PreparedStatement ps = getPreparedStatement(sql);
-            ps.setString(1, status);
-            ps.setInt(2, orderId);
-            return ps.executeUpdate() > 0;
-        } catch (SQLException e) {
+            conn = getConnection();
+            oldAuto = conn.getAutoCommit();
+            conn.setAutoCommit(false);
+
+            // Lock order row and get current status + user_id
+            String lockOrder = "SELECT status, user_id FROM orders WHERE id=? FOR UPDATE";
+            String currentStatus = null;
+            int customerUserId = 0;
+            try (PreparedStatement ps = conn.prepareStatement(lockOrder)) {
+                ps.setInt(1, orderId);
+                try (ResultSet rs = ps.executeQuery()) {
+                    if (rs.next()) {
+                        currentStatus = rs.getString("status");
+                        customerUserId = rs.getInt("user_id");
+                    } else {
+                        conn.rollback();
+                        return false;
+                    }
+                }
+            }
+
+            if (currentStatus == null) {
+                conn.rollback();
+                return false;
+            }
+
+            // Update status
+            String sql = "UPDATE orders SET status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?";
+            try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                ps.setString(1, status);
+                ps.setInt(2, orderId);
+                int affected = ps.executeUpdate();
+                if (affected != 1) {
+                    conn.rollback();
+                    return false;
+                }
+            }
+
+            // Ghi log trạng thái
+            OrderStatusLogDao logDao = new OrderStatusLogDao();
+            logDao.insertLog(conn, orderId, currentStatus, status, reason, adminUserId);
+
+            // Gửi thông báo cho khách hàng
+            NotificationDao notifDao = new NotificationDao();
+            String statusVi = com.japansport.model.OrderStatusLog.statusToVi(status);
+            String msg = "Đơn hàng #" + orderId + " của bạn đã chuyển sang trạng thái: " + statusVi + ". Lý do: " + reason;
+            notifDao.insertNotification(conn, customerUserId, "Cập nhật đơn hàng", msg, "/order-detail?id=" + orderId);
+
+            conn.commit();
+            return true;
+        } catch (Exception e) {
             e.printStackTrace();
+            try { if (conn != null) conn.rollback(); } catch (Exception ignored) {}
             return false;
+        } finally {
+            try { if (conn != null) conn.setAutoCommit(oldAuto); } catch (Exception ignored) {}
+            try { if (conn != null) conn.close(); } catch (Exception ignored) {}
         }
     }
 
@@ -757,5 +943,28 @@ public class OrderDao extends DAO {
             e.printStackTrace();
             return list;
         }
+    }
+
+    /**
+     * Lấy trạng thái refund của đơn hàng.
+     * @return map chứa 'status', 'amount', 'note' hoặc null nếu không có refund.
+     */
+    public java.util.Map<String, Object> getRefundRequest(int orderId) {
+        String sql = "SELECT status, amount, note FROM refund_requests WHERE order_id = ?";
+        try (PreparedStatement ps = getPreparedStatement(sql)) {
+            ps.setInt(1, orderId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    java.util.Map<String, Object> map = new java.util.HashMap<>();
+                    map.put("status", rs.getString("status"));
+                    map.put("amount", rs.getDouble("amount"));
+                    map.put("note", rs.getString("note"));
+                    return map;
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 }
