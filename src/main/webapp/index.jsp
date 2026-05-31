@@ -86,9 +86,40 @@
     </div>
 </section>
 
-<!-- DANH MỤC NỔI BẬT 2x3 -->
+<!-- ===== DANH MỤC NỔI BẬT ===== -->
+<c:if test="${not empty featuredCategories}">
+<section class="container py-5">
+    <h3 class="text-center fw-bold mb-4 text-uppercase">Danh Mục Nổi Bật</h3>
+    <div class="cat-showcase">
+        <c:forEach var="cat" items="${featuredCategories}">
+            <c:url var="catUrl" value="/list-product">
+                <c:param name="categoryId" value="${cat.id}"/>
+            </c:url>
+            <c:set var="img" value="${cat.image_url}"/>
+            <c:choose>
+                <c:when test="${empty img}">
+                    <c:set var="catImgSrc" value="${ctx}/assets/images/index/DMNB1.jpg"/>
+                </c:when>
+                <c:when test="${fn:startsWith(img,'http://') || fn:startsWith(img,'https://')}">
+                    <c:set var="catImgSrc" value="${img}"/>
+                </c:when>
+                <c:when test="${fn:startsWith(img,'/')}">
+                    <c:set var="catImgSrc" value="${ctx}${img}"/>
+                </c:when>
+                <c:otherwise>
+                    <c:set var="catImgSrc" value="${ctx}/${img}"/>
+                </c:otherwise>
+            </c:choose>
+            <a href="${empty cat.link ? catUrl : cat.link}" class="cat-card">
+                <img src="${catImgSrc}" alt="${cat.name}" loading="lazy">
+                <span class="cat-label">${cat.name}</span>
+            </a>
+        </c:forEach>
+    </div>
+</section>
+</c:if>
 
-<%--<section class="container py-5">--%>
+<!-- ===== SẢN PHẨM MỚI NHẤT ===== -->
 <%--    <div class="row g-4">--%>
 <%--        <c:if test="${not empty featuredCategories}">--%>
 <%--            <c:forEach var="cat" items="${featuredCategories}">--%>
@@ -128,105 +159,125 @@
 
 
 
-<!-- ============ SẢN PHẨM MỚI NHẤT (ĐỘNG) ============ -->
+<!-- ===== SẢN PHẨM MỚI NHẤT ===== -->
 <div class="container py-5">
-    <h3 class="text-center fw-bold mb-4 text-uppercase">SẢN PHẨM MỚI NHẤT</h3>
-
+    <h3 class="text-center fw-bold mb-4 text-uppercase">Sản Phẩm Mới Nhất</h3>
     <div id="newProductsCarousel" class="carousel slide" data-bs-ride="carousel">
         <div class="carousel-inner">
-
             <c:if test="${not empty productList}">
                 <c:forEach var="p" items="${productList}" varStatus="st">
-
-                    <!-- Mở 1 slide mới khi index % 4 == 0 -->
                     <c:if test="${st.index % 4 == 0}">
                         <div class="carousel-item ${st.index == 0 ? 'active' : ''}">
-                        <div class="row g-4 justify-content-center">
+                        <div class="row g-3 justify-content-center">
                     </c:if>
-                    <!-- CARD SẢN PHẨM -->
                     <div class="col-6 col-md-4 col-lg-3">
                         <div class="product-card h-100">
-                            <a href="product?id=${p.id}">
-                                <img src="${p.image_url}" class="card-img-top" alt="${p.name}">
-                            </a>
-                            <div class="p-3">
+                            <div class="card-img-wrap">
+                                <c:if test="${p.sale}"><div class="ribbon">${p.promotionLabel}</div></c:if>
+                                <img src="${p.image_url}" class="card-img-top" alt="${p.name}" loading="lazy">
+                                <a href="${ctx}/product?id=${p.id}" class="quick-view-btn">Xem chi tiết →</a>
+                            </div>
+                            <div class="card-body-custom">
                                 <div class="product-title">${p.name}</div>
-                                <div class="text-danger fw-bold"><fmt:formatNumber value="${p.price}" pattern="#,###"/>đ</div>
+                                <%-- Star rating từ ratingMap --%>
+                                <c:set var="rd" value="${ratingMap[p.id]}"/>
+                                <c:if test="${not empty rd && rd[1] > 0}">
+                                    <div class="star-rating">
+                                        <span class="stars">
+                                            <c:forEach begin="1" end="5" var="s">
+                                                <c:choose>
+                                                    <c:when test="${s <= rd[0]}">★</c:when>
+                                                    <c:otherwise>☆</c:otherwise>
+                                                </c:choose>
+                                            </c:forEach>
+                                        </span>
+                                        <span class="review-count">(${fn:length(rd)})</span>
+                                    </div>
+                                </c:if>
+                                <div class="price-row">
+                                    <span class="price-current"><fmt:formatNumber value="${p.price}" pattern="#,###"/>đ</span>
+                                    <c:if test="${p.old_price > 0}">
+                                        <span class="price-original"><fmt:formatNumber value="${p.old_price}" pattern="#,###"/>đ</span>
+                                    </c:if>
+                                </div>
+                                <a href="${ctx}/product?id=${p.id}" class="btn-detail">Xem chi tiết</a>
                             </div>
                         </div>
                     </div>
-
-                    <!-- Đóng slide khi đủ 4 sp hoặc hết list -->
                     <c:if test="${st.index % 4 == 3 || st.last}">
-                        </div> <!-- .row -->
-                        </div> <!-- .carousel-item -->
+                        </div></div>
                     </c:if>
-
                 </c:forEach>
             </c:if>
-
         </div>
-
-        <!-- Nút điều hướng -->
-        <button class="carousel-control-prev prod-ctrl" type="button"
-                data-bs-target="#newProductsCarousel" data-bs-slide="prev">
+        <button class="carousel-control-prev prod-ctrl" type="button" data-bs-target="#newProductsCarousel" data-bs-slide="prev">
             <span class="carousel-control-prev-icon"></span>
         </button>
-        <button class="carousel-control-next prod-ctrl" type="button"
-                data-bs-target="#newProductsCarousel" data-bs-slide="next">
+        <button class="carousel-control-next prod-ctrl" type="button" data-bs-target="#newProductsCarousel" data-bs-slide="next">
             <span class="carousel-control-next-icon"></span>
         </button>
     </div>
 </div>
 
 
-<!-- SẢN PHẨM BÁN CHẠY  -->
-
-<div class="container py-5">
-    <h3 class="text-center fw-bold mb-4 text-uppercase">SẢN PHẨM BÁN CHẠY</h3>
-
+<!-- ===== SẢN PHẨM BÁN CHẠY ===== -->
+<div class="bg-light py-5">
+<div class="container">
+    <h3 class="text-center fw-bold mb-4 text-uppercase">Sản Phẩm Bán Chạy</h3>
     <div id="bestSellerCarousel" class="carousel slide" data-bs-ride="carousel">
         <div class="carousel-inner">
-
             <c:if test="${not empty bestSellerProducts}">
                 <c:forEach var="p" items="${bestSellerProducts}" varStatus="st">
-
                     <c:if test="${st.index % 4 == 0}">
                         <div class="carousel-item ${st.index == 0 ? 'active' : ''}">
-                        <div class="row g-4 justify-content-center">
+                        <div class="row g-3 justify-content-center">
                     </c:if>
-
                     <div class="col-6 col-md-4 col-lg-3">
                         <div class="product-card h-100">
-                            <a href="product?id=${p.id}">
-                                <img src="${p.image_url}" class="card-img-top" alt="${p.name}">
-                            </a>
-                            <div class="p-3">
+                            <div class="card-img-wrap">
+                                <c:if test="${p.sale}"><div class="ribbon">${p.promotionLabel}</div></c:if>
+                                <img src="${p.image_url}" class="card-img-top" alt="${p.name}" loading="lazy">
+                                <a href="${ctx}/product?id=${p.id}" class="quick-view-btn">Xem chi tiết →</a>
+                            </div>
+                            <div class="card-body-custom">
                                 <div class="product-title">${p.name}</div>
-                                <div class="text-danger fw-bold"><fmt:formatNumber value="${p.price}" pattern="#,###"/>đ</div>
+                                <c:set var="rd" value="${ratingMap[p.id]}"/>
+                                <c:if test="${not empty rd && rd[1] > 0}">
+                                    <div class="star-rating">
+                                        <span class="stars">
+                                            <c:forEach begin="1" end="5" var="s">
+                                                <c:choose>
+                                                    <c:when test="${s <= rd[0]}">★</c:when>
+                                                    <c:otherwise>☆</c:otherwise>
+                                                </c:choose>
+                                            </c:forEach>
+                                        </span>
+                                    </div>
+                                </c:if>
+                                <div class="price-row">
+                                    <span class="price-current"><fmt:formatNumber value="${p.price}" pattern="#,###"/>đ</span>
+                                    <c:if test="${p.old_price > 0}">
+                                        <span class="price-original"><fmt:formatNumber value="${p.old_price}" pattern="#,###"/>đ</span>
+                                    </c:if>
+                                </div>
+                                <a href="${ctx}/product?id=${p.id}" class="btn-detail">Xem chi tiết</a>
                             </div>
                         </div>
                     </div>
-
                     <c:if test="${st.index % 4 == 3 || st.last}">
-                        </div> <!-- .row -->
-                        </div> <!-- .carousel-item -->
+                        </div></div>
                     </c:if>
-
                 </c:forEach>
             </c:if>
         </div>
-
-        <!-- Nút điều hướng -->
-        <button class="carousel-control-prev prod-ctrl" type="button"
-                data-bs-target="#bestSellerCarousel" data-bs-slide="prev">
+        <button class="carousel-control-prev prod-ctrl" type="button" data-bs-target="#bestSellerCarousel" data-bs-slide="prev">
             <span class="carousel-control-prev-icon"></span>
         </button>
-        <button class="carousel-control-next prod-ctrl" type="button"
-                data-bs-target="#bestSellerCarousel" data-bs-slide="next">
+        <button class="carousel-control-next prod-ctrl" type="button" data-bs-target="#bestSellerCarousel" data-bs-slide="next">
             <span class="carousel-control-next-icon"></span>
         </button>
     </div>
+</div>
 </div>
 
 
@@ -283,31 +334,40 @@
                         <div class="row g-3">
                     </c:if>
 
-                    <!-- CARD SẢN PHẨM -->
                     <div class="col-6 col-md-4 col-lg-3">
                     <div class="product-card h-100">
-                            <c:if test="${p.sale}">
-                                <div class="ribbon">${p.promotionLabel}</div>
-                            </c:if>
-                            <a href="product?id=${p.id}">
-                                <img src="${p.image_url}" class="card-img-top" alt="${p.name}">
-                            </a>
-                            <div class="p-3">
-                                <div class="product-title">${p.name}</div>
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <div class="text-danger fw-bold">
-                                    <fmt:formatNumber value="${p.price}" pattern="#,###"/>đ
-                                    </div>
-                                    <a href="product?id=${p.id}" class="btn btn-sm btn-outline-danger">Chi tiết</a>
+                        <div class="card-img-wrap">
+                            <c:if test="${p.sale}"><div class="ribbon">${p.promotionLabel}</div></c:if>
+                            <img src="${p.image_url}" class="card-img-top" alt="${p.name}" loading="lazy">
+                            <a href="${ctx}/product?id=${p.id}" class="quick-view-btn">Xem chi tiết →</a>
+                        </div>
+                        <div class="card-body-custom">
+                            <div class="product-title">${p.name}</div>
+                            <c:set var="rd" value="${ratingMap[p.id]}"/>
+                            <c:if test="${not empty rd && rd[1] > 0}">
+                                <div class="star-rating">
+                                    <span class="stars">
+                                        <c:forEach begin="1" end="5" var="s">
+                                            <c:choose>
+                                                <c:when test="${s <= rd[0]}">★</c:when>
+                                                <c:otherwise>☆</c:otherwise>
+                                            </c:choose>
+                                        </c:forEach>
+                                    </span>
                                 </div>
+                            </c:if>
+                            <div class="price-row">
+                                <span class="price-current"><fmt:formatNumber value="${p.price}" pattern="#,###"/>đ</span>
+                                <c:if test="${p.old_price > 0}">
+                                    <span class="price-original"><fmt:formatNumber value="${p.old_price}" pattern="#,###"/>đ</span>
+                                </c:if>
                             </div>
+                            <a href="${ctx}/product?id=${p.id}" class="btn-detail">Xem chi tiết</a>
                         </div>
                     </div>
-
-                    <!-- Đóng slide khi đủ 4 sp hoặc hết list -->
+                    </div>
                     <c:if test="${st.index % 4 == 3 || st.last}">
-                        </div><!-- row -->
-                        </div><!-- carousel-item -->
+                        </div></div>
                     </c:if>
 
                 </c:forEach>
@@ -379,27 +439,38 @@
 
                     <div class="col-6 col-md-4 col-lg-3">
                     <div class="product-card h-100">
-                            <c:if test="${p.sale}">
-                                <div class="ribbon">${p.promotionLabel}</div>
-                            </c:if>
-                            <a href="product?id=${p.id}">
-                                <img src="${p.image_url}" class="card-img-top" alt="${p.name}">
-                            </a>
-                            <div class="p-3">
-                                <div class="product-title">${p.name}</div>
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <div class="text-danger fw-bold">
-                                    <fmt:formatNumber value="${p.price}" pattern="#,###"/>đ
-                                    </div>
-                                    <a href="product?id=${p.id}" class="btn btn-sm btn-outline-danger">Chi tiết</a>
+                        <div class="card-img-wrap">
+                            <c:if test="${p.sale}"><div class="ribbon">${p.promotionLabel}</div></c:if>
+                            <img src="${p.image_url}" class="card-img-top" alt="${p.name}" loading="lazy">
+                            <a href="${ctx}/product?id=${p.id}" class="quick-view-btn">Xem chi tiết →</a>
+                        </div>
+                        <div class="card-body-custom">
+                            <div class="product-title">${p.name}</div>
+                            <c:set var="rd" value="${ratingMap[p.id]}"/>
+                            <c:if test="${not empty rd && rd[1] > 0}">
+                                <div class="star-rating">
+                                    <span class="stars">
+                                        <c:forEach begin="1" end="5" var="s">
+                                            <c:choose>
+                                                <c:when test="${s <= rd[0]}">★</c:when>
+                                                <c:otherwise>☆</c:otherwise>
+                                            </c:choose>
+                                        </c:forEach>
+                                    </span>
                                 </div>
+                            </c:if>
+                            <div class="price-row">
+                                <span class="price-current"><fmt:formatNumber value="${p.price}" pattern="#,###"/>đ</span>
+                                <c:if test="${p.old_price > 0}">
+                                    <span class="price-original"><fmt:formatNumber value="${p.old_price}" pattern="#,###"/>đ</span>
+                                </c:if>
                             </div>
+                            <a href="${ctx}/product?id=${p.id}" class="btn-detail">Xem chi tiết</a>
                         </div>
                     </div>
-
+                    </div>
                     <c:if test="${st.index % 4 == 3 || st.last}">
-                        </div><!-- row -->
-                        </div><!-- carousel-item -->
+                        </div></div>
                     </c:if>
 
                 </c:forEach>

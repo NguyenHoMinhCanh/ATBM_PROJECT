@@ -1,6 +1,19 @@
-drop database web;
-create database web;
-use web;
+/*
+ Navicat Premium Dump SQL
+
+ Source Server         : Docker_test
+ Source Server Type    : MySQL
+ Source Server Version : 90600 (9.6.0)
+ Source Host           : 192.168.68.128:3306
+ Source Schema         : web
+
+ Target Server Type    : MySQL
+ Target Server Version : 90600 (9.6.0)
+ File Encoding         : 65001
+
+ Date: 30/05/2026 15:41:37
+*/
+
 SET NAMES utf8mb4;
 SET FOREIGN_KEY_CHECKS = 0;
 
@@ -75,7 +88,7 @@ CREATE TABLE `cart_items`  (
   CONSTRAINT `fk_cart_items_cart` FOREIGN KEY (`cart_id`) REFERENCES `carts` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
   CONSTRAINT `fk_cart_items_product` FOREIGN KEY (`product_id`) REFERENCES `products` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
   CONSTRAINT `fk_cart_items_variant` FOREIGN KEY (`variant_id`) REFERENCES `product_variants` (`id`) ON DELETE SET NULL ON UPDATE CASCADE
-) ENGINE = InnoDB AUTO_INCREMENT = 26 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 29 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of cart_items
@@ -102,7 +115,7 @@ CREATE TABLE `carts`  (
   UNIQUE INDEX `uq_carts_active_key`(`active_key` ASC) USING BTREE,
   INDEX `idx_carts_user_active`(`user_id` ASC, `is_active` ASC) USING BTREE,
   CONSTRAINT `fk_carts_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT
-) ENGINE = InnoDB AUTO_INCREMENT = 15 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 18 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of carts
@@ -111,7 +124,7 @@ INSERT INTO `carts` VALUES (1, 3, '2025-12-15 23:36:21', '2026-01-01 23:31:47', 
 INSERT INTO `carts` VALUES (2, 4, '2025-12-15 23:36:21', '2026-01-01 23:31:47', 'ORDERED', 0, NULL);
 INSERT INTO `carts` VALUES (3, 3, '2025-12-15 23:36:34', '2026-01-01 23:31:53', 'ACTIVE', 1, 3);
 INSERT INTO `carts` VALUES (4, 4, '2025-12-15 23:36:34', '2026-01-01 23:31:53', 'ACTIVE', 1, 4);
-INSERT INTO `carts` VALUES (5, 1, '2025-12-31 01:27:40', '2026-01-13 21:14:12', 'ACTIVE', 1, 1);
+INSERT INTO `carts` VALUES (5, 1, '2025-12-31 01:27:40', '2026-05-26 07:55:17', 'ORDERED', 0, NULL);
 INSERT INTO `carts` VALUES (6, 5, '2026-01-01 23:38:32', '2026-01-01 23:38:32', 'ACTIVE', 1, 5);
 INSERT INTO `carts` VALUES (8, 7, '2026-01-11 00:39:15', '2026-01-11 00:40:02', 'ORDERED', 0, NULL);
 INSERT INTO `carts` VALUES (9, 7, '2026-01-11 21:26:39', '2026-01-12 20:05:37', 'ORDERED', 0, NULL);
@@ -120,6 +133,9 @@ INSERT INTO `carts` VALUES (11, 7, '2026-01-12 23:16:48', '2026-01-12 23:16:51',
 INSERT INTO `carts` VALUES (12, 7, '2026-01-12 23:17:04', '2026-01-12 23:59:21', 'ORDERED', 0, NULL);
 INSERT INTO `carts` VALUES (13, 7, '2026-01-12 23:59:45', '2026-01-16 11:11:38', 'ORDERED', 0, NULL);
 INSERT INTO `carts` VALUES (14, 7, '2026-01-16 11:11:38', '2026-01-16 11:11:38', 'ACTIVE', 1, 7);
+INSERT INTO `carts` VALUES (15, 2, '2026-05-26 06:55:16', '2026-05-26 06:57:24', 'ORDERED', 0, NULL);
+INSERT INTO `carts` VALUES (16, 2, '2026-05-26 06:57:25', '2026-05-26 06:57:25', 'ACTIVE', 1, 2);
+INSERT INTO `carts` VALUES (17, 1, '2026-05-26 07:55:18', '2026-05-26 07:55:18', 'ACTIVE', 1, 1);
 
 -- ----------------------------
 -- Table structure for categories
@@ -215,7 +231,7 @@ CREATE TABLE `news_categories`  (
   `created_at` datetime NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE INDEX `uk_news_categories_slug`(`slug` ASC) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of news_categories
@@ -259,7 +275,7 @@ CREATE TABLE `order_items`  (
   CONSTRAINT `fk_order_items_order` FOREIGN KEY (`order_id`) REFERENCES `orders` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
   CONSTRAINT `fk_order_items_product` FOREIGN KEY (`product_id`) REFERENCES `products` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
   CONSTRAINT `fk_order_items_variant` FOREIGN KEY (`variant_id`) REFERENCES `product_variants` (`id`) ON DELETE SET NULL ON UPDATE CASCADE
-) ENGINE = InnoDB AUTO_INCREMENT = 10 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 12 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of order_items
@@ -273,6 +289,8 @@ INSERT INTO `order_items` VALUES (6, 5, 1, 1, 'Black', '40', 7, 2990000, 2093000
 INSERT INTO `order_items` VALUES (7, 6, 1, 2, 'Black', '41', 1, 2990000, 2990000);
 INSERT INTO `order_items` VALUES (8, 7, 1, 2, 'Black', '41', 1, 2990000, 2990000);
 INSERT INTO `order_items` VALUES (9, 8, 4, 238, 'Black', '40', 1, 4290000, 4290000);
+INSERT INTO `order_items` VALUES (10, 9, 4, 238, 'Black', '40', 1, 4290000, 4290000);
+INSERT INTO `order_items` VALUES (11, 10, 4, 238, 'Black', '40', 1, 4290000, 4290000);
 
 -- ----------------------------
 -- Table structure for orders
@@ -291,7 +309,7 @@ CREATE TABLE `orders`  (
   INDEX `fk_orders_address`(`address_id` ASC) USING BTREE,
   CONSTRAINT `fk_orders_address` FOREIGN KEY (`address_id`) REFERENCES `user_addresses` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
   CONSTRAINT `fk_orders_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT
-) ENGINE = InnoDB AUTO_INCREMENT = 9 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 11 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of orders
@@ -304,6 +322,8 @@ INSERT INTO `orders` VALUES (5, 7, 6, 20930000, 'CANCEL', '2026-01-12 23:15:45',
 INSERT INTO `orders` VALUES (6, 7, 7, 2990000, 'CANCEL', '2026-01-12 23:16:51', '2026-01-13 10:56:21');
 INSERT INTO `orders` VALUES (7, 7, 8, 2990000, 'PAID', '2026-01-12 23:59:21', '2026-01-15 19:35:59');
 INSERT INTO `orders` VALUES (8, 7, 9, 4290000, 'PENDING', '2026-01-16 11:11:38', '2026-01-16 11:11:38');
+INSERT INTO `orders` VALUES (9, 2, 10, 4290000, 'DONE', '2026-05-26 06:57:24', '2026-05-26 07:56:33');
+INSERT INTO `orders` VALUES (10, 1, 11, 4290000, 'DONE', '2026-05-26 07:55:17', '2026-05-26 08:09:50');
 
 -- ----------------------------
 -- Table structure for password_reset_tokens
@@ -320,7 +340,7 @@ CREATE TABLE `password_reset_tokens`  (
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `idx_token_hash`(`token_hash`) USING BTREE,
   INDEX `idx_user_id`(`user_id`) USING BTREE
-) ENGINE = MyISAM AUTO_INCREMENT = 15 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = DYNAMIC;
+) ENGINE = MyISAM AUTO_INCREMENT = 16 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of password_reset_tokens
@@ -339,6 +359,7 @@ INSERT INTO `password_reset_tokens` VALUES (11, 7, 'd2387eebe95a2b082d134ef02db3
 INSERT INTO `password_reset_tokens` VALUES (12, 7, '644ce88743491c2d0900dcc7c2be4f4d66c744d940ca722a1372b5375c34d4f7', '2026-01-16 07:50:12', NULL, '0:0:0:0:0:0:0:1', '2026-01-16 07:20:11');
 INSERT INTO `password_reset_tokens` VALUES (13, 7, '7cb8a87068192a8020992dc484f35bb20c0764846f43190ae5c2659f8f3ebf96', '2026-01-16 08:47:52', NULL, '0:0:0:0:0:0:0:1', '2026-01-16 08:17:52');
 INSERT INTO `password_reset_tokens` VALUES (14, 7, '8b80fef3397feffa42d43133578ba3626dd83425071d50cb67e6796f6a8667c8', '2026-01-16 08:48:29', '2026-01-16 08:18:59', '0:0:0:0:0:0:0:1', '2026-01-16 08:18:28');
+INSERT INTO `password_reset_tokens` VALUES (15, 7, '409052eece6cc70984fe771e9dc2f625f543886dd4ba0eb30446066b1cf99154', '2026-05-26 07:25:16', NULL, '2405:4800:5b0c:8290:9c85:f4e7:97e5:7a2d', '2026-05-26 06:55:15');
 
 -- ----------------------------
 -- Table structure for policies
@@ -1013,6 +1034,24 @@ INSERT INTO `product_images` VALUES (632, 4, 'https://bizweb.dktcdn.net/100/347/
 INSERT INTO `product_images` VALUES (633, 4, 'https://bizweb.dktcdn.net/100/347/092/products/6a86001a20a7c13491c5d69efd31bf74-472x497.jpg?v=1705130007890', NULL, 0, 0, 1, '2026-01-16 04:36:48', 'Navy');
 
 -- ----------------------------
+-- Table structure for product_promotions
+-- ----------------------------
+DROP TABLE IF EXISTS `product_promotions`;
+CREATE TABLE `product_promotions`  (
+  `product_id` int NOT NULL,
+  `promotion_id` int NOT NULL,
+  `sale_price` decimal(15, 2) NULL DEFAULT NULL COMMENT 'Giá bán trong đợt, NULL = dùng price gốc',
+  PRIMARY KEY (`product_id`, `promotion_id`) USING BTREE,
+  INDEX `fk_pp_promotion`(`promotion_id` ASC) USING BTREE,
+  CONSTRAINT `fk_pp_product` FOREIGN KEY (`product_id`) REFERENCES `products` (`id`) ON DELETE CASCADE ON UPDATE RESTRICT,
+  CONSTRAINT `fk_pp_promotion` FOREIGN KEY (`promotion_id`) REFERENCES `promotions` (`id`) ON DELETE CASCADE ON UPDATE RESTRICT
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- Records of product_promotions
+-- ----------------------------
+
+-- ----------------------------
 -- Table structure for product_specs
 -- ----------------------------
 DROP TABLE IF EXISTS `product_specs`;
@@ -1597,7 +1636,7 @@ INSERT INTO `product_variants` VALUES (234, 5, 'White', '40', 5, 'P13-WHI-40', N
 INSERT INTO `product_variants` VALUES (235, 5, 'White', '41', 7, 'P13-WHI-41', NULL, '2026-01-16 04:33:01', '2026-01-16 04:33:01');
 INSERT INTO `product_variants` VALUES (236, 4, 'Navy', '40', 5, 'P13-NAV-40', NULL, '2026-01-16 04:34:59', '2026-01-16 04:34:59');
 INSERT INTO `product_variants` VALUES (237, 4, 'Navy', '41', 8, 'P13-NAV-41', NULL, '2026-01-16 04:35:08', '2026-01-16 04:35:08');
-INSERT INTO `product_variants` VALUES (238, 4, 'Black', '40', 4, 'P13-BLK-40', NULL, '2026-01-16 04:35:20', '2026-01-16 11:11:38');
+INSERT INTO `product_variants` VALUES (238, 4, 'Black', '40', 2, 'P13-BLK-40', NULL, '2026-01-16 04:35:20', '2026-05-26 07:55:17');
 INSERT INTO `product_variants` VALUES (239, 4, 'Black', '41', 8, 'P13-BLK-41', NULL, '2026-01-16 04:35:31', '2026-01-16 04:35:31');
 
 -- ----------------------------
@@ -1689,6 +1728,25 @@ INSERT INTO `products` VALUES (59, 'Nike HIIT Flex WYZ', 'Linh hoạt, phù hợ
 INSERT INTO `products` VALUES (60, 'Mizuno Shoe Care Kit 5NS', 'Bộ vệ sinh giày gồm bàn chải, dung dịch, khăn. Thiết kế hiện đại, phù hợp đi học, đi làm và vận động. Cam kết hàng chính hãng.', 129000, 135000, 'https://bizweb.dktcdn.net/thumb/1024x1024/100/347/092/products/bot-ve-sinh-giay-tien-loi-150ml-01.jpg?v=1694779868303', 'unisex', 8, 10, 1, '2026-01-15 22:00:00', '2026-01-16 01:49:55');
 
 -- ----------------------------
+-- Table structure for promotions
+-- ----------------------------
+DROP TABLE IF EXISTS `promotions`;
+CREATE TABLE `promotions`  (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `name` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT 'Tên đợt: Flash Sale 30/4, Clearance...',
+  `label` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL DEFAULT 'SALE' COMMENT 'Nhãn hiển thị trên card: SALE, HOT, -30%...',
+  `start_date` datetime NULL DEFAULT NULL,
+  `end_date` datetime NULL DEFAULT NULL,
+  `active` tinyint(1) NOT NULL DEFAULT 1,
+  `created_at` datetime NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`) USING BTREE
+) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- Records of promotions
+-- ----------------------------
+
+-- ----------------------------
 -- Table structure for reviews
 -- ----------------------------
 DROP TABLE IF EXISTS `reviews`;
@@ -1705,7 +1763,7 @@ CREATE TABLE `reviews`  (
   INDEX `fk_reviews_user`(`user_id` ASC) USING BTREE,
   CONSTRAINT `fk_reviews_product` FOREIGN KEY (`product_id`) REFERENCES `products` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
   CONSTRAINT `fk_reviews_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT
-) ENGINE = InnoDB AUTO_INCREMENT = 4 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 9 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of reviews
@@ -1713,6 +1771,11 @@ CREATE TABLE `reviews`  (
 INSERT INTO `reviews` VALUES (1, 1, 3, 5, 'Giày chạy rất êm, form đúng size.', 'APPROVED', '2025-12-11 23:45:59');
 INSERT INTO `reviews` VALUES (2, 2, 4, 4, 'Đệm êm nhưng hơi nóng chân khi chạy dài.', 'APPROVED', '2025-12-11 23:45:59');
 INSERT INTO `reviews` VALUES (3, 1, 2, 4, 'giày oke đó, đáng tiền mua', 'APPROVED', '2025-12-24 11:02:00');
+INSERT INTO `reviews` VALUES (4, 4, 2, 5, 'giày đẹp', 'PENDING', '2026-05-26 06:57:59');
+INSERT INTO `reviews` VALUES (5, 4, 2, 3, 'nhưng hơi chật', 'PENDING', '2026-05-26 06:58:14');
+INSERT INTO `reviews` VALUES (6, 4, 1, 5, 'tuyệt vời', 'PENDING', '2026-05-26 08:10:13');
+INSERT INTO `reviews` VALUES (7, 4, 1, 5, 'sản phẩm hơi chật', 'PENDING', '2026-05-26 08:10:29');
+INSERT INTO `reviews` VALUES (8, 4, 1, 5, 'sản phẩm hơi chật', 'PENDING', '2026-05-26 08:10:35');
 
 -- ----------------------------
 -- Table structure for roles
@@ -1752,7 +1815,7 @@ CREATE TABLE `user_addresses`  (
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `fk_user_addresses_user`(`user_id` ASC) USING BTREE,
   CONSTRAINT `fk_user_addresses_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT
-) ENGINE = InnoDB AUTO_INCREMENT = 10 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 12 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of user_addresses
@@ -1766,6 +1829,8 @@ INSERT INTO `user_addresses` VALUES (6, 7, 'linh trọng', '0342406654', '123,',
 INSERT INTO `user_addresses` VALUES (7, 7, 'linh trọng', '0342406654', '123,', 'TP. Hồ Chí Minh', 'thuan an', 'binh hoa', 0, '2026-01-12 23:16:51');
 INSERT INTO `user_addresses` VALUES (8, 7, 'linh trọng', '0342406654', '123,', 'TP. Hồ Chí Minh', 'thuan an', 'binh hoa', 0, '2026-01-12 23:59:21');
 INSERT INTO `user_addresses` VALUES (9, 7, 'linh trọng', '0342406654', '123,', 'TP. Hồ Chí Minh', 'thuan an', 'binh hoa', 1, '2026-01-16 11:11:38');
+INSERT INTO `user_addresses` VALUES (10, 2, 'linh trọng', '0342406654', '47L/8', 'Thành phố Hồ Chí Minh', NULL, 'binh hoa', 1, '2026-05-26 06:57:24');
+INSERT INTO `user_addresses` VALUES (11, 1, 'linh trọng', '0342406654', '47L/8', 'Thành phố Hồ Chí Minh', NULL, 'binh hoa', 1, '2026-05-26 07:55:17');
 
 -- ----------------------------
 -- Table structure for user_roles
@@ -1805,31 +1870,19 @@ CREATE TABLE `users`  (
   `active` tinyint(1) NULL DEFAULT 1,
   `created_at` datetime NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` datetime NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `auth_provider` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL DEFAULT 'local',
   PRIMARY KEY (`id`) USING BTREE
 ) ENGINE = InnoDB AUTO_INCREMENT = 8 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of users
 -- ----------------------------
-INSERT INTO `users` VALUES (1, 'admin@japansport.com', 'admin123', 'NLU', NULL, NULL, NULL, NULL, 1, '2025-12-11 23:44:51', '2026-01-02 23:34:39');
-INSERT INTO `users` VALUES (2, 'staff1@japansport.com', 'staff123', 'Nhân viên kho', NULL, NULL, NULL, NULL, 1, '2025-12-11 23:44:51', '2026-01-14 00:38:03');
-INSERT INTO `users` VALUES (3, 'user1@example.com', 'user123', 'Nguyễn Văn A', NULL, NULL, NULL, NULL, 1, '2025-12-11 23:44:51', '2025-12-11 23:44:51');
-INSERT INTO `users` VALUES (4, 'user2@example.com', 'user123', 'Trần Thị B', NULL, NULL, NULL, NULL, 1, '2025-12-11 23:44:51', '2025-12-11 23:44:51');
-INSERT INTO `users` VALUES (5, 'user3@example.com', 'user123', 'Lê C', NULL, NULL, NULL, NULL, 1, '2025-12-11 23:44:51', '2026-01-15 16:21:44');
-INSERT INTO `users` VALUES (6, 'tronglinh2708@...', 'pbkdf2$...', 'linh', NULL, NULL, NULL, NULL, 1, '2025-12-30 01:38:48', '2025-12-30 01:38:48');
-INSERT INTO `users` VALUES (7, 'tronglinh2708@gmail.com', 'pbkdf2$120000$S7E3T34QEDn0CEtTnCQC_w$1OdEJrDwCldbgHMRuxSC0TpTlM3HxPhrdmeJ5jZvFTU', 'linh trọng', '', 'uploads/avatars/u7_622cc253-28f6-4672-b56e-b704b77e0db6.jpg', NULL, NULL, 1, '2026-01-03 00:22:49', '2026-01-16 08:18:59');
+INSERT INTO `users` VALUES (1, 'admin@japansport.com', 'admin123', 'NLU', NULL, NULL, NULL, NULL, 1, '2025-12-11 23:44:51', '2026-01-02 23:34:39', 'local');
+INSERT INTO `users` VALUES (2, 'staff1@japansport.com', 'staff123', 'Nhân viên kho', NULL, NULL, NULL, NULL, 1, '2025-12-11 23:44:51', '2026-01-14 00:38:03', 'local');
+INSERT INTO `users` VALUES (3, 'user1@example.com', 'user123', 'Nguyễn Văn A', NULL, NULL, NULL, NULL, 1, '2025-12-11 23:44:51', '2025-12-11 23:44:51', 'local');
+INSERT INTO `users` VALUES (4, 'user2@example.com', 'user123', 'Trần Thị B', NULL, NULL, NULL, NULL, 1, '2025-12-11 23:44:51', '2025-12-11 23:44:51', 'local');
+INSERT INTO `users` VALUES (5, 'user3@example.com', 'user123', 'Lê C', NULL, NULL, NULL, NULL, 1, '2025-12-11 23:44:51', '2026-01-15 16:21:44', 'local');
+INSERT INTO `users` VALUES (6, 'tronglinh2708@...', 'pbkdf2$...', 'linh', NULL, NULL, NULL, NULL, 1, '2025-12-30 01:38:48', '2025-12-30 01:38:48', 'local');
+INSERT INTO `users` VALUES (7, 'tronglinh2708@gmail.com', 'pbkdf2$120000$S7E3T34QEDn0CEtTnCQC_w$1OdEJrDwCldbgHMRuxSC0TpTlM3HxPhrdmeJ5jZvFTU', 'linh trọng', '', 'uploads/avatars/u7_622cc253-28f6-4672-b56e-b704b77e0db6.jpg', NULL, NULL, 1, '2026-01-03 00:22:49', '2026-01-16 08:18:59', 'local');
 
 SET FOREIGN_KEY_CHECKS = 1;
-
--- Tạo bảng thông báo
-CREATE TABLE `notifications` (
-                                 `id` int NOT NULL AUTO_INCREMENT,
-                                 `user_id` int NOT NULL COMMENT 'ID người dùng nhận thông báo',
-                                 `message` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
-                                 `is_read` tinyint(1) DEFAULT 0 COMMENT '0: chưa đọc, 1: đã đọc',
-                                 `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
-                                 PRIMARY KEY (`id`) USING BTREE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
-ALTER TABLE notifications ADD COLUMN link VARCHAR(255) DEFAULT NULL COMMENT 'Đường dẫn khi click vào thông báo';
-ALTER TABLE notifications ADD COLUMN title VARCHAR(255) AFTER user_id;
