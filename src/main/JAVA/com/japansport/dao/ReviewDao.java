@@ -173,6 +173,46 @@ public class ReviewDao extends DAO {
         }
     }
 
+    /**
+     * Lấy rating trung bình + số lượng đánh giá của nhiều sản phẩm cùng lúc.
+     * Tránh N+1 query khi render danh sách sản phẩm trang chủ.
+     *
+     * @param productIds danh sách id sản phẩm cần lấy
+     * @return Map<productId, double[]{avg, count}>
+     */
+    public Map<Integer, double[]> getAvgRatingBatch(List<Integer> productIds) {
+        Map<Integer, double[]> result = new HashMap<>();
+        if (productIds == null || productIds.isEmpty()) return result;
+
+        // Xây dựng chuỗi placeholder (?, ?, ...) an toàn
+        StringBuilder placeholders = new StringBuilder();
+        for (int i = 0; i < productIds.size(); i++) {
+            if (i > 0) placeholders.append(",");
+            placeholders.append("?");
+        }
+
+        String sql = "SELECT product_id, AVG(rating) AS avg_r, COUNT(*) AS cnt " +
+                     "FROM reviews " +
+                     "WHERE product_id IN (" + placeholders + ") AND status = 'APPROVED' " +
+                     "GROUP BY product_id";
+        try {
+            PreparedStatement ps = getPreparedStatement(sql);
+            for (int i = 0; i < productIds.size(); i++) {
+                ps.setInt(i + 1, productIds.get(i));
+            }
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                int pid = rs.getInt("product_id");
+                double avg = rs.getDouble("avg_r");
+                int cnt = rs.getInt("cnt");
+                result.put(pid, new double[]{avg, cnt});
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return result;
+    }
+
     // ===== ADMIN METHODS =====
 
     public List<Review> adminGetAll(String status) {
