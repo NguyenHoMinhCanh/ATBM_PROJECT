@@ -165,4 +165,38 @@ public class NotificationDAO extends DAO {
         insert(new Notification(userId, Notification.TYPE_ORDER, title, content,
                                 "/orders?id=" + orderId));
     }
+
+    // ========== BACKWARD COMPATIBILITY (Tương thích với code của Phong) ==========
+
+    /**
+     * Tạo thông báo mới trong transaction đang mở (Dùng trong OrderDao).
+     * Ánh xạ message thành content.
+     */
+    public void insertNotification(Connection conn, int userId, String title,
+                                    String message, String link) throws SQLException {
+        String sql = "INSERT INTO notifications (user_id, type, title, content, link) VALUES (?, ?, ?, ?, ?)";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, userId);
+            ps.setString(2, Notification.TYPE_SYSTEM); // Hoặc TYPE_ORDER nếu muốn
+            ps.setString(3, title);
+            ps.setString(4, message);
+            if (link == null) ps.setNull(5, Types.VARCHAR); else ps.setString(5, link);
+            ps.executeUpdate();
+        }
+    }
+
+    /**
+     * Đánh dấu thông báo có link tương ứng của người dùng là đã đọc.
+     * (Dùng trong OrderDetailController)
+     */
+    public void markReadByLink(int userId, String link) {
+        String sql = "UPDATE notifications SET is_read = 1 WHERE user_id = ? AND link = ? AND is_read = 0";
+        try (PreparedStatement ps = getPreparedStatement(sql)) {
+            ps.setInt(1, userId);
+            ps.setString(2, link);
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
 }

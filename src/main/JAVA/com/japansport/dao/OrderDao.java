@@ -540,7 +540,7 @@ public class OrderDao extends DAO {
             logDao.insertLog(conn, orderId, status, "CANCEL", reason, adminUserId);
 
             // Gửi thông báo cho khách hàng
-            NotificationDao notifDao = new NotificationDao();
+            NotificationDAO notifDao = new NotificationDAO();
             String msg = "Đơn hàng #" + orderId + " của bạn đã bị hủy bởi quản trị viên. Lý do: " + reason;
             notifDao.insertNotification(conn, customerUserId, "Đơn hàng bị hủy", msg, "/order-detail?id=" + orderId);
 
@@ -555,7 +555,9 @@ public class OrderDao extends DAO {
                 }
             }
 
-            conn.commit();
+            if (conn != null) {
+                conn.commit();
+            }
             return 1;
         } catch (Exception e) {
             e.printStackTrace();
@@ -816,7 +818,7 @@ public class OrderDao extends DAO {
             logDao.insertLog(conn, orderId, currentStatus, status, reason, adminUserId);
 
             // Gửi thông báo cho khách hàng
-            NotificationDao notifDao = new NotificationDao();
+            NotificationDAO notifDao = new NotificationDAO();
             String statusVi = com.japansport.model.OrderStatusLog.statusToVi(status);
             String msg = "Đơn hàng #" + orderId + " của bạn đã chuyển sang trạng thái: " + statusVi + ". Lý do: " + reason;
             notifDao.insertNotification(conn, customerUserId, "Cập nhật đơn hàng", msg, "/order-detail?id=" + orderId);
