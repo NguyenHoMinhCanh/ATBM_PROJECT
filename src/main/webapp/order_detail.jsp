@@ -38,25 +38,19 @@
                 </a>
 
                 <c:choose>
-                    <%-- 1. Nếu đang CHỜ XỬ LÝ -> Hiện nút Hủy đơn --%>
+                    <%-- 1. Nếu đang CHỜ XỬ LÝ -> Hiện nút Hủy đơn (Mở Modal) --%>
                     <c:when test="${order.status == 'PENDING'}">
-                        <form method="post" action="${ctx}/order-cancel" style="display:inline-block;"
-                              onsubmit="return confirm('Bạn chắc chắn muốn hủy đơn #${order.id} ?');">
-                            <input type="hidden" name="id" value="${order.id}"/>
-                            <input type="hidden" name="redirect" value="/order-detail?id=${order.id}"/>
-                            <input type="hidden" name="csrf" value="${sessionScope.CSRF_TOKEN}"/>
-
-                            <button type="submit" class="btn btn-outline-danger rounded-pill">
-                                <i class="bi bi-x-circle me-1"></i> Hủy đơn
-                            </button>
-                        </form>
+                        <button type="button" class="btn btn-outline-danger rounded-pill"
+                                onclick="openCancelModal('${order.id}', '/order-detail?id=${order.id}')">
+                            <i class="bi bi-x-circle me-1"></i> Hủy đơn
+                        </button>
                     </c:when>
 
                     <%-- 2. Nếu ĐÃ GIAO hoặc ĐÃ HỦY -> Hiện nút Mua lại --%>
                     <c:when test="${order.status == 'DONE' || order.status == 'CANCEL'}">
                         <form method="post" action="${ctx}/reorder" style="display:inline-block;">
                             <input type="hidden" name="orderId" value="${order.id}"/>
-                            <button type="submit" class="btn btn-warning rounded-pill fw-bold text-dark">
+                            <button type="submit" class="btn btn-reorder rounded-pill fw-bold">
                                 <i class="bi bi-cart-plus me-1"></i> Mua lại đơn này
                             </button>
                         </form>
@@ -217,6 +211,42 @@
         </div>
     </div>
 </section>
+<div class="modal fade" id="cancelOrderModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title fw-bold"><i class="bi bi-exclamation-triangle me-2"></i>Xác nhận hủy đơn hàng</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+
+            <form method="post" action="${ctx}/order-cancel">
+                <div class="modal-body p-4">
+                    <p class="fs-5 text-center">Bạn có chắc chắn muốn hủy đơn hàng <strong id="modalOrderIdDisplay" class="text-danger"></strong> không?</p>
+                    <p class="text-muted text-center small mb-4">Lưu ý: Hành động này không thể hoàn tác.</p>
+
+                    <div class="mb-3">
+                        <label for="cancelReason" class="form-label fw-bold text-secondary small">Lý do hủy đơn (Tùy chọn):</label>
+                        <select class="form-select rounded-3" name="reason" id="cancelReason">
+                            <option value="Thay đổi ý định">Tôi thay đổi ý định mua hàng</option>
+                            <option value="Cập nhật địa chỉ/SĐT">Tôi muốn cập nhật địa chỉ/SĐT nhận hàng</option>
+                            <option value="Thêm/Bớt sản phẩm">Tôi muốn thêm/bớt sản phẩm</option>
+                            <option value="Khác">Lý do khác</option>
+                        </select>
+                    </div>
+
+                    <input type="hidden" name="id" id="modalOrderIdInput" value=""/>
+                    <input type="hidden" name="redirect" id="modalRedirectInput" value=""/>
+                    <input type="hidden" name="csrf" value="${sessionScope.CSRF_TOKEN}"/>
+                </div>
+
+                <div class="modal-footer border-0 justify-content-center bg-light rounded-bottom">
+                    <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">Không, giữ lại</button>
+                    <button type="submit" class="btn btn-danger rounded-pill px-4">Đồng ý hủy đơn</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 
 <%@ include file="/WEB-INF/jspf/site_footer.jspf" %>
 
@@ -272,6 +302,28 @@
 
     /* Rút ngắn thanh kẻ ngang nếu đơn bị hủy */
     .stepper-wrapper.is-cancel::before { width: 50%; left: 25%; }
+
+    /* HIỆU ỨNG NÚT MUA LẠI PASTEL VÀNG NHẠT */
+    .btn-reorder {
+        background-color: #fff9e6;
+        color: #d49a00 !important;
+        border: 1px solid #ffe680;
+        transition: all 0.3s ease;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+    }
+
+    .btn-reorder:hover {
+        background-color: #fff2cc;
+        color: #b38000 !important;
+        border-color: #ffd966;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(212, 154, 0, 0.1);
+    }
+
+    .btn-reorder:active {
+        transform: translateY(0);
+        background-color: #ffe699;
+    }
 </style>
 <script>
     function qs(sel){ return document.querySelector(sel); }
@@ -289,6 +341,19 @@
         updateCartCount();
         document.querySelectorAll('.money').forEach(el => el.textContent = fmtVND(el.getAttribute('data-money')));
     });
+    // Hàm mở Modal và truyền dữ liệu ID đơn hàng vào Form
+    function openCancelModal(orderId, redirectUrl) {
+        // Cập nhật ID hiển thị trên màn hình
+        document.getElementById('modalOrderIdDisplay').innerText = '#' + orderId;
+
+        // Cập nhật dữ liệu vào các thẻ input ẩn
+        document.getElementById('modalOrderIdInput').value = orderId;
+        document.getElementById('modalRedirectInput').value = redirectUrl;
+
+        // Hiển thị Modal của Bootstrap
+        var myModal = new bootstrap.Modal(document.getElementById('cancelOrderModal'));
+        myModal.show();
+    }
 </script>
 </body>
 </html>
