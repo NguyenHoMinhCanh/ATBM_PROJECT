@@ -9,57 +9,146 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>${news.title}</title>
 
-    <!-- Bootstrap & Icons (để layout header/footer không bị vỡ) -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.10.0/font/bootstrap-icons.min.css" rel="stylesheet">
 
     <link rel="stylesheet" href="${ctx}/assets/css/style.css">
     <style>
-        .wrap { max-width: 900px; margin: 24px auto; padding: 0 12px; }
-        .thumb { width:100%; max-height:320px; object-fit:cover; border-radius:12px; margin: 12px 0; }
-        .meta { color:#777; font-size:13px; margin-top:6px; }
-        .content { line-height:1.7; margin-top:16px;  }
+        /*CẢI THIỆN ĐỘ ĐỌC (TYPOGRAPHY)*/
+        .article-content {
+            line-height: 1.85;
+            font-size: 1.1rem;
+            color: #333;
+            margin-top: 20px;
+        }
+
+        .article-content img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
+            margin: 16px 0;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+
+        .main-thumb {
+            width: 100%;
+            max-height: 450px;
+            object-fit: cover;
+            border-radius: 12px;
+            margin: 16px 0;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+        }
+
+        .article-meta { color: #6c757d; font-size: 0.9rem; margin-top: 10px; padding-bottom: 15px; border-bottom: 1px solid #eee; }
+
+        /* ================= SIDEBAR TIN TỨC MỚI ================= */
+        .sidebar-wrap { position: sticky; top: 24px; }
+        .sidebar-card { background: #fff; border: 1px solid #eee; border-radius: 12px; padding: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.02); }
+
+        .recent-news-item { display: flex; gap: 12px; margin-bottom: 16px; padding-bottom: 16px; border-bottom: 1px dashed #eee; align-items: flex-start; }
+        .recent-news-item:last-child { margin-bottom: 0; padding-bottom: 0; border-bottom: none; }
+
+        .recent-thumb { width: 85px; height: 85px; object-fit: cover; border-radius: 8px; flex-shrink: 0; }
+        .recent-title { font-size: 0.95rem; font-weight: 600; line-height: 1.4; margin: 0 0 6px 0; }
+        .recent-title a { color: #222; text-decoration: none; transition: color 0.2s; }
+        .recent-title a:hover { color: #dc3545; }
+        .recent-date { font-size: 0.75rem; color: #888; }
+
+        /* Breadcrumb tùy chỉnh */
+        .breadcrumb-item a { color: #6c757d; text-decoration: none; transition: color 0.2s; }
+        .breadcrumb-item a:hover { color: #dc3545; }
     </style>
 </head>
 <body>
-<!-- Banner quảng cáo -->
+
 <div class="topbar section hidden-xs hidden-sm">
     <a class="section block a-center" href="#">
-        <img src="${ctx}/assets/images/banner.webp" alt="Siêu bão khuyến mãi cuối năm"
-             style="width:100%;height:auto;display:flex;">
+        <img src="${ctx}/assets/images/banner.webp" alt="Siêu bão khuyến mãi cuối năm" style="width:100%;height:auto;display:flex;">
     </a>
 </div>
 
-<!-- HEADER + navbar -->
 <%@ include file="/WEB-INF/jspf/site_header.jspf" %>
 
-<div class="wrap">
-    <a href="${ctx}/news">← Quay lại Tin tức</a>
+<div class="container my-4">
+    <div class="row g-5">
+        <div class="col-lg-8">
 
-    <h1 style="margin-bottom:6px;">${news.title}</h1>
-    <div class="meta">
-        <span>View: ${news.viewCount}</span>
-        <c:if test="${not empty news.author}">
-            <span style="margin-left:10px;">Tác giả: ${news.author}</span>
-        </c:if>
-        <span style="margin-left:10px;">${news.createdAt}</span>
+            <nav aria-label="breadcrumb" class="mb-4">
+                <ol class="breadcrumb small bg-light px-3 py-2 rounded-3">
+                    <li class="breadcrumb-item"><a href="${ctx}/home"><i class="bi bi-house-door me-1"></i>Trang chủ</a></li>
+                    <li class="breadcrumb-item"><a href="${ctx}/news">Tin tức</a></li>
+                    <li class="breadcrumb-item active text-truncate" aria-current="page" style="max-width: 250px;" title="${news.title}">${news.title}</li>
+                </ol>
+            </nav>
+
+            <h1 class="fw-bold mb-3" style="font-size: 2rem; line-height: 1.3;">${news.title}</h1>
+
+            <div class="article-meta d-flex align-items-center flex-wrap gap-3">
+                <c:if test="${not empty news.author}">
+                    <span><i class="bi bi-person-circle me-1"></i> Đăng bởi: <strong class="text-dark">${news.author}</strong></span>
+                </c:if>
+                <span><i class="bi bi-clock me-1"></i> ${news.createdAt}</span>
+                <span><i class="bi bi-eye me-1"></i> ${news.viewCount} lượt xem</span>
+            </div>
+
+            <c:if test="${not empty news.thumbnailUrl}">
+                <img class="main-thumb" src="${news.thumbnailUrl}" alt="${news.title}">
+            </c:if>
+
+            <c:if test="${not empty news.summary}">
+                <div class="alert alert-secondary border-0 border-start border-4 border-danger rounded-0 mt-3 p-3">
+                    <b style="font-size: 1.05rem; line-height: 1.6;">${news.summary}</b>
+                </div>
+            </c:if>
+
+            <div class="article-content">
+                <c:out value="${news.content}" escapeXml="false"/>
+            </div>
+
+            <div class="d-flex justify-content-between align-items-center mt-5 pt-3 border-top">
+                <a href="${ctx}/news" class="btn btn-outline-secondary rounded-pill px-4"><i class="bi bi-arrow-left me-2"></i>Quay lại danh sách</a>
+                <div class="d-flex gap-2 align-items-center">
+                    <span class="text-muted small fw-bold">Chia sẻ:</span>
+                    <button class="btn btn-sm btn-light border text-primary rounded-circle" title="Chia sẻ Facebook"><i class="bi bi-facebook"></i></button>
+                    <button class="btn btn-sm btn-light border text-info rounded-circle" title="Chia sẻ Twitter"><i class="bi bi-twitter"></i></button>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="sidebar-wrap">
+                <div class="sidebar-card">
+                    <h5 class="fw-bold border-bottom pb-3 mb-4"><i class="bi bi-newspaper me-2 text-danger"></i>Tin tức mới cập nhật</h5>
+
+                    <c:forEach var="rn" items="${recentNews}">
+                        <div class="recent-news-item">
+                            <a href="${ctx}/news-detail?slug=${rn.slug}">
+                                <img src="${rn.thumbnailUrl}" alt="${rn.title}" class="recent-thumb">
+                            </a>
+                            <div>
+                                <h6 class="recent-title">
+                                    <a href="${ctx}/news-detail?slug=${rn.slug}">${rn.title}</a>
+                                </h6>
+                                <div class="recent-date"><i class="bi bi-clock me-1"></i>${rn.createdAt}</div>
+                            </div>
+                        </div>
+                    </c:forEach>
+
+                    <c:if test="${empty recentNews}">
+                        <p class="text-muted small text-center mb-0">Đang cập nhật thêm tin tức mới...</p>
+                    </c:if>
+                </div>
+
+                <div class="mt-4 rounded-3 overflow-hidden shadow-sm">
+                    <img src="${ctx}/assets/images/banner.webp" class="img-fluid" alt="Khuyến mãi">
+                </div>
+            </div>
+        </div>
     </div>
-
-    <c:if test="${not empty news.thumbnailUrl}">
-        <img class="thumb" src="${news.thumbnailUrl}" alt="${news.title}">
-    </c:if>
-
-    <c:if test="${not empty news.summary}">
-        <p style="color:#444; font-size:16px;"><b>${news.summary}</b></p>
-    </c:if>
-
-    <div class="content"><c:out value="${news.content}" escapeXml="false"/></div>
 </div>
 
-<!-- Footer -->
 <%@ include file="/WEB-INF/jspf/site_footer.jspf" %>
 
-<!-- Back to top -->
 <button class="btn btn-danger position-fixed bottom-0 end-0 m-4 rounded-circle"
         style="width:50px;height:50px;z-index:1000;"
         onclick="window.scrollTo({top:0,behavior:'smooth'})"
