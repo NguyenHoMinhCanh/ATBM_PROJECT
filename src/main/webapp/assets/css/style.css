@@ -2206,7 +2206,6 @@ body {
     font-weight: 700;
 }
 
-/* Magnifier Lens */
 .magnifier-lens {
     position: absolute;
     width: 250px;
@@ -2220,3 +2219,46 @@ body {
     z-index: 100;
     box-shadow: 0 5px 15px rgba(0,0,0,0.3);
 }
+
+/* ===== PRODUCT LIST PAGE ENHANCEMENTS ===== */
+
+/* Gỡ max-width cứng cho widget khi nằm trong sidebar col-lg-3 */
+.col-lg-3 .widget-box {
+    max-width: none;
+}
+
+/* Ô search brand */
+#brandSearchInput {
+    border-radius: 6px;
+    border: 1px solid #e0e0e0;
+    transition: border-color .2s;
+}
+#brandSearchInput:focus {
+    border-color: var(--primary-red);
+    box-shadow: 0 0 0 .15rem rgba(229,62,62,.12);
+}
+
+/* Discount badge nổi bật hơn */
+.product-card .ribbon {
+    font-size: 0.72rem;
+    letter-spacing: .3px;
+}
+
+/* Star rating cho trang list (dùng chung class với trang chủ) */
+.product-card .star-rating {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    min-height: 18px;
+}
+.product-card .star-rating .stars {
+    color: #f59e0b;
+    font-size: 0.75rem;
+    letter-spacing: -1px;
+}
+.product-card .star-rating .review-count {
+    color: #999;
+    font-size: 0.72rem;
+    margin-left: 4px;
+}
+

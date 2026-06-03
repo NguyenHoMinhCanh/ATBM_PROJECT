@@ -4,6 +4,7 @@ import com.japansport.dao.ProductDao;
 import com.japansport.dao.CategoryDao;
 import com.japansport.dao.BrandDao;
 import com.japansport.dao.BannerDao;
+import com.japansport.dao.ReviewDao;
 import com.japansport.model.Banner;
 import com.japansport.model.Product;
 import com.japansport.model.Category;
@@ -17,6 +18,8 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @WebServlet(name = "ProductListController", value = "/list-product")
 public class ProductListController extends HttpServlet {
@@ -24,6 +27,7 @@ public class ProductListController extends HttpServlet {
     private final ProductDao productDao = new ProductDao();
     private final CategoryDao categoryDao = new CategoryDao();
     private final BrandDao brandDao = new BrandDao();
+    private final ReviewDao reviewDao = new ReviewDao();
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)
@@ -207,6 +211,15 @@ public class ProductListController extends HttpServlet {
 
         req.setAttribute("listProduct", productsPage);
 
+        // Rating batch cho danh sách hiện tại (cùng pattern với HomeController)
+        if (productsPage != null && !productsPage.isEmpty()) {
+            List<Integer> pageIds = productsPage.stream()
+                    .map(Product::getId)
+                    .collect(Collectors.toList());
+            Map<Integer, double[]> ratingMap = reviewDao.getAvgRatingBatch(pageIds);
+            req.setAttribute("ratingMap", ratingMap);
+        }
+
         // Banner trang shop (products.jsp)
         BannerDao bannerDao = new BannerDao();
         Banner shopTopBanner = bannerDao.getOneBannerByPosition("SHOP_TOP");
@@ -319,6 +332,15 @@ public class ProductListController extends HttpServlet {
             case "3000+":
                 return price >= 3_000_000;
             default:
+                // Custom range: "from-to" (đơn vị đồng, ví dụ "200000-800000")
+                if (range.contains("-")) {
+                    try {
+                        String[] parts = range.split("-", 2);
+                        double lo = Double.parseDouble(parts[0]);
+                        double hi = Double.parseDouble(parts[1]);
+                        return price >= lo && price <= hi;
+                    } catch (NumberFormatException ignore) {}
+                }
                 return true;
         }
     }
