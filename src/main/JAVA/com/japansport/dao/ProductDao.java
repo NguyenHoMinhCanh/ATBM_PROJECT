@@ -420,53 +420,139 @@ public class ProductDao extends DAO {
         }
     }
 
-    /**
-     * Tìm kiếm mở rộng: hỗ trợ tiếng Việt không dấu + khớp cả tên thương hiệu.
-     * Lấy tất cả SP active (có JOIN brands), rồi lọc phía Java.
-     * Phù hợp với số lượng SP vừa phải (vài trăm).
-     */
-    public List<Product> searchByKeywordFull(String keyword) {
-        List<Product> result = new ArrayList<>();
-        if (keyword == null || keyword.trim().isEmpty()) return result;
+    // =========================================================================
+    // NEW: TỐI ƯU HOÁ BACKEND - FILTER & PAGINATION BẰNG SQL
+    // =========================================================================
 
-        // Lấy hết SP active + tên brand để lọc
-        String sql = "SELECT p.id, p.name, p.description, p.price, p.old_price, p.image_url, " +
-                "p.gender, p.category_id, p.brand_id, p.active, p.created_at, p.updated_at, " +
-                "b.name AS brand_name " +
-                "FROM products p " +
-                "LEFT JOIN brands b ON b.id = p.brand_id AND b.active = 1 " +
-                "WHERE p.active = 1 " +
-                "ORDER BY p.updated_at DESC, p.id DESC";
+    public static class PriceRange {
+        public double min;
+        public double max;
+        public PriceRange(double min, double max) { this.min = min; this.max = max; }
+    }
+
+    private void buildFilterSql(StringBuilder sql, List<Object> params,
+                                Integer categoryId, String keyword, List<Integer> brandIds,
+                                List<PriceRange> priceRanges, String gender, boolean saleOnly) {
+        sql.append(" FROM products p ");
+        sql.append(" LEFT JOIN brands b ON p.brand_id = b.id AND b.active = 1 ");
+        sql.append(" LEFT JOIN product_promotions pp ON pp.product_id = p.id ");
+        sql.append(" LEFT JOIN promotions pr ON pr.id = pp.promotion_id ");
+        sql.append("     AND pr.active = 1 ");
+        sql.append("     AND (pr.start_date IS NULL OR pr.start_date <= NOW()) ");
+        sql.append("     AND (pr.end_date IS NULL OR pr.end_date >= NOW()) ");
+        sql.append(" WHERE p.active = 1 ");
+
+        if (categoryId != null) {
+            sql.append(" AND p.category_id = ? ");
+            params.add(categoryId);
+        }
+
+        if (keyword != null && !keyword.trim().isEmpty()) {
+            sql.append(" AND (p.name LIKE ? OR b.name LIKE ?) ");
+            // Database utf8mb4_0900_ai_ci hỗ trợ tìm kiếm không phân biệt dấu tự động
+            String kw = "%" + keyword.trim() + "%";
+            params.add(kw);
+            params.add(kw);
+        }
+
+        if (brandIds != null && !brandIds.isEmpty()) {
+            sql.append(" AND p.brand_id IN (");
+            for (int i = 0; i < brandIds.size(); i++) {
+                sql.append("?");
+                if (i < brandIds.size() - 1) sql.append(",");
+                params.add(brandIds.get(i));
+            }
+            sql.append(") ");
+        }
+
+        if (gender != null && !gender.isEmpty()) {
+            sql.append(" AND p.gender = ? ");
+            params.add(mapGenderCode(gender));
+        }
+
+        if (saleOnly) {
+            sql.append(" AND pr.id IS NOT NULL ");
+        }
+
+        if (priceRanges != null && !priceRanges.isEmpty()) {
+            sql.append(" AND (");
+            for (int i = 0; i < priceRanges.size(); i++) {
+                PriceRange pr = priceRanges.get(i);
+                if (pr.max == Double.MAX_VALUE) {
+                    sql.append("(p.price >= ?)");
+                    params.add(pr.min);
+                } else {
+                    sql.append("(p.price >= ? AND p.price <= ?)");
+                    params.add(pr.min);
+                    params.add(pr.max);
+                }
+                if (i < priceRanges.size() - 1) sql.append(" OR ");
+            }
+            sql.append(") ");
+        }
+    }
+
+    public List<Product> searchAndFilterProducts(Integer categoryId, String keyword, List<Integer> brandIds,
+                                                 List<PriceRange> priceRanges, String gender, boolean saleOnly,
+                                                 String sortKey, int offset, int limit) {
+        List<Product> list = new ArrayList<>();
+        StringBuilder sql = new StringBuilder();
+        List<Object> params = new ArrayList<>();
+
+        sql.append("SELECT p.id, p.name, p.description, p.price, p.old_price, p.image_url, ");
+        sql.append("p.gender, p.category_id, p.brand_id, p.active, p.created_at, p.updated_at, ");
+        sql.append("b.name AS brand_name, b.logo_url AS brand_logo, ");
+        sql.append("pr.label AS promo_label ");
+
+        buildFilterSql(sql, params, categoryId, keyword, brandIds, priceRanges, gender, saleOnly);
+
+        // Group by để tránh trùng lặp dữ liệu do JOIN promotions
+        sql.append(" GROUP BY p.id, p.name, p.description, p.price, p.old_price, p.image_url, ");
+        sql.append(" p.gender, p.category_id, p.brand_id, p.active, p.created_at, p.updated_at, b.name, b.logo_url, pr.label ");
+
+        sql.append(buildOrderBy(sortKey));
+        sql.append(" LIMIT ? OFFSET ?");
+        params.add(limit);
+        params.add(offset);
 
         try {
-            PreparedStatement ps = getPreparedStatement(sql);
-            ResultSet rs = ps.executeQuery();
-
-            String trimmed = keyword.trim();
-            while (rs.next()) {
-                Product p = mapRowToProduct(rs);
-                String brandName = rs.getString("brand_name");
-                if (brandName != null) {
-                    Brand b = new Brand();
-                    b.setId(rs.getInt("brand_id"));
-                    b.setName(brandName);
-                    p.setBrand(b);
-                }
-
-                // Khớp tên SP hoặc tên brand (cả có dấu lẫn không dấu)
-                boolean matchName  = ViTextUtil.containsIgnoreAccent(p.getName(), trimmed);
-                boolean matchBrand = p.getBrand() != null
-                        && ViTextUtil.containsIgnoreAccent(p.getBrand().getName(), trimmed);
-
-                if (matchName || matchBrand) {
-                    result.add(p);
-                }
+            PreparedStatement ps = getPreparedStatement(sql.toString());
+            for (int i = 0; i < params.size(); i++) {
+                ps.setObject(i + 1, params.get(i));
             }
-            return result;
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                list.add(mapRowToProductWithDetails(rs)); // Dùng WithDetails để lấy luôn brand_name
+            }
         } catch (SQLException e) {
             e.printStackTrace();
             throw new RuntimeException(e);
         }
+        return list;
+    }
+
+    public int countSearchAndFilterProducts(Integer categoryId, String keyword, List<Integer> brandIds,
+                                            List<PriceRange> priceRanges, String gender, boolean saleOnly) {
+        StringBuilder sql = new StringBuilder();
+        List<Object> params = new ArrayList<>();
+
+        sql.append("SELECT COUNT(DISTINCT p.id) AS total ");
+        buildFilterSql(sql, params, categoryId, keyword, brandIds, priceRanges, gender, saleOnly);
+
+        try {
+            PreparedStatement ps = getPreparedStatement(sql.toString());
+            for (int i = 0; i < params.size(); i++) {
+                ps.setObject(i + 1, params.get(i));
+            }
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                return rs.getInt("total");
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            throw new RuntimeException(e);
+        }
+        return 0;
     }
 
 

@@ -74,112 +74,56 @@ public class ProductListController extends HttpServlet {
         String normalizedGender = normalizeGender(genderParam); // men/women/unisex hoặc null
         boolean saleOnly = "1".equals(saleParam) || "true".equalsIgnoreCase(saleParam);
 
-        List<Product> allProducts;
-
-        // 1) keyword -> search mở rộng: tên SP + tên brand + không dấu tiếng Việt
-        if (keywordParam != null && !keywordParam.trim().isEmpty()) {
-            String keyword = keywordParam.trim();
-            allProducts = productDao.searchByKeywordFull(keyword);
-            req.setAttribute("keyword", keyword);
-        } else {
-            // 2) category + sort / all + sort
-            if (categoryId != null) {
-                allProducts = productDao.getByCategorySorted(categoryId, sortParam);
-                req.setAttribute("selectedCategoryId", categoryIdParam);
-            } else {
-                allProducts = productDao.getAllSorted(sortParam);
-            }
-        }
-
-        // 3) filter brand
-        if (brandIdParams != null && brandIdParams.length > 0
-                && allProducts != null && !allProducts.isEmpty()) {
-
-            List<Integer> brandIdFilter = new ArrayList<>();
+        // Chuẩn bị các tham số filter cho SQL
+        List<Integer> brandIdFilter = new ArrayList<>();
+        if (brandIdParams != null) {
             for (String s : brandIdParams) {
                 try {
                     brandIdFilter.add(Integer.parseInt(s));
                 } catch (NumberFormatException ignore) {}
             }
+        }
 
-            if (!brandIdFilter.isEmpty()) {
-                List<Product> filteredByBrand = new ArrayList<>();
-                for (Product p : allProducts) {
-                    Integer bId = p.getBrandId();
-                    if (bId != null && brandIdFilter.contains(bId)) {
-                        filteredByBrand.add(p);
-                    }
+        List<ProductDao.PriceRange> priceRanges = new ArrayList<>();
+        if (priceParams != null) {
+            for (String range : priceParams) {
+                if ("0-500".equals(range)) priceRanges.add(new ProductDao.PriceRange(0, 500_000));
+                else if ("500-1000".equals(range)) priceRanges.add(new ProductDao.PriceRange(500_000, 1_000_000));
+                else if ("1000-1500".equals(range)) priceRanges.add(new ProductDao.PriceRange(1_000_000, 1_500_000));
+                else if ("1500-2000".equals(range)) priceRanges.add(new ProductDao.PriceRange(1_500_000, 2_000_000));
+                else if ("2000-2500".equals(range)) priceRanges.add(new ProductDao.PriceRange(2_000_000, 2_500_000));
+                else if ("2500-3000".equals(range)) priceRanges.add(new ProductDao.PriceRange(2_500_000, 3_000_000));
+                else if ("3000+".equals(range)) priceRanges.add(new ProductDao.PriceRange(3_000_000, Double.MAX_VALUE));
+                else if (range.contains("-")) {
+                    try {
+                        String[] parts = range.split("-", 2);
+                        priceRanges.add(new ProductDao.PriceRange(Double.parseDouble(parts[0]), Double.parseDouble(parts[1])));
+                    } catch (NumberFormatException ignore) {}
                 }
-                allProducts = filteredByBrand;
             }
         }
 
-        // 4) filter price
-        if (priceParams != null && priceParams.length > 0
-                && allProducts != null && !allProducts.isEmpty()) {
+        String kw = (keywordParam != null) ? keywordParam.trim() : null;
 
-            List<Product> filteredByPrice = new ArrayList<>();
-            for (Product p : allProducts) {
-                double price = p.getPrice();
+        // 1) Lấy tổng số lượng sản phẩm thỏa mãn để tính TotalPages
+        int totalProducts = productDao.countSearchAndFilterProducts(categoryId, kw, brandIdFilter, priceRanges, normalizedGender, saleOnly);
+        int totalPages = 0;
+        List<Product> productsPage = new ArrayList<>();
 
-                boolean matchAnyRange = false;
-                for (String range : priceParams) {
-                    if (isPriceInRange(price, range)) {
-                        matchAnyRange = true;
-                        break;
-                    }
-                }
-
-                if (matchAnyRange) {
-                    filteredByPrice.add(p);
-                }
-            }
-            allProducts = filteredByPrice;
-        }
-
-        // 4.5) NEW: filter gender (GIÀY NAM/NỮ hoặc sidebar gender)
-        if (normalizedGender != null
-                && allProducts != null && !allProducts.isEmpty()) {
-
-            List<Product> filteredByGender = new ArrayList<>();
-            for (Product p : allProducts) {
-                if (p.getGender() != null && p.getGender().equalsIgnoreCase(normalizedGender)) {
-                    filteredByGender.add(p);
-                }
-            }
-            allProducts = filteredByGender;
-            req.setAttribute("selectedGender", normalizedGender);
-        }
-
-        // 4.6) NEW: filter sale (nếu bạn dùng menu KHUYẾN MÃI)
-        if (saleOnly && allProducts != null && !allProducts.isEmpty()) {
-            List<Product> filteredSale = new ArrayList<>();
-            for (Product p : allProducts) {
-                if (p.getOld_price() > 0 && p.getOld_price() > p.getPrice()) {
-                    filteredSale.add(p);
-                }
-            }
-            allProducts = filteredSale;
-            req.setAttribute("selectedSale", "1");
-        }
-
-        // 5) pagination
-        int totalProducts = (allProducts != null) ? allProducts.size() : 0;
-        int totalPages;
-        List<Product> productsPage;
-
-        if (totalProducts == 0) {
-            totalPages = 0;
-            page = 1;
-            productsPage = allProducts;
-        } else {
+        if (totalProducts > 0) {
             totalPages = (int) Math.ceil(totalProducts * 1.0 / PAGE_SIZE);
             if (page > totalPages) page = totalPages;
+            int offset = (page - 1) * PAGE_SIZE;
 
-            int fromIndex = (page - 1) * PAGE_SIZE;
-            int toIndex = Math.min(fromIndex + PAGE_SIZE, totalProducts);
-            productsPage = allProducts.subList(fromIndex, toIndex);
+            // 2) Lấy chính xác 12 sản phẩm của trang hiện tại bằng SQL LIMIT/OFFSET
+            productsPage = productDao.searchAndFilterProducts(categoryId, kw, brandIdFilter, priceRanges, normalizedGender, saleOnly, sortParam, offset, PAGE_SIZE);
         }
+
+        // Set lại attribute cho các filter hiện tại
+        if (kw != null && !kw.isEmpty()) req.setAttribute("keyword", kw);
+        if (categoryId != null) req.setAttribute("selectedCategoryId", categoryIdParam);
+        if (normalizedGender != null) req.setAttribute("selectedGender", normalizedGender);
+        if (saleOnly) req.setAttribute("selectedSale", "1");
 
         // 6) sidebar data
         List<Category> categories = categoryDao.getAllActive();
@@ -315,35 +259,6 @@ public class ProductListController extends HttpServlet {
         return null;
     }
 
-    private boolean isPriceInRange(double price, String range) {
-        switch (range) {
-            case "0-500":
-                return price < 500_000;
-            case "500-1000":
-                return price >= 500_000 && price < 1_000_000;
-            case "1000-1500":
-                return price >= 1_000_000 && price < 1_500_000;
-            case "1500-2000":
-                return price >= 1_500_000 && price < 2_000_000;
-            case "2000-2500":
-                return price >= 2_000_000 && price < 2_500_000;
-            case "2500-3000":
-                return price >= 2_500_000 && price < 3_000_000;
-            case "3000+":
-                return price >= 3_000_000;
-            default:
-                // Custom range: "from-to" (đơn vị đồng, ví dụ "200000-800000")
-                if (range.contains("-")) {
-                    try {
-                        String[] parts = range.split("-", 2);
-                        double lo = Double.parseDouble(parts[0]);
-                        double hi = Double.parseDouble(parts[1]);
-                        return price >= lo && price <= hi;
-                    } catch (NumberFormatException ignore) {}
-                }
-                return true;
-        }
-    }
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp)
