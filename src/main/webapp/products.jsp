@@ -3,6 +3,7 @@
 <%@ page import="java.util.Set" %>
 <%@ page import="java.util.HashSet" %>
 <%@ page import="java.util.Arrays" %>
+<%@ page import="java.util.Map" %>
 <%@ page import="com.japansport.model.Product" %>
 <%@ page import="com.japansport.model.Category" %>
 <%@ page import="com.japansport.model.Brand" %>
@@ -56,9 +57,10 @@
     Boolean showGenderFilterObj = (Boolean) request.getAttribute("showGenderFilter");
     boolean showGenderFilter = (showGenderFilterObj != null && showGenderFilterObj);
 
-    String saleParam = request.getParameter("sale"); // nếu bạn dùng menu sale
+    String saleParam = request.getParameter("sale");
 
-
+    @SuppressWarnings("unchecked")
+    Map<Integer, double[]> ratingMap = (Map<Integer, double[]>) request.getAttribute("ratingMap");
 %>
 
 
@@ -200,9 +202,13 @@
                 <!-- THƯƠNG HIỆU -->
                 <div class="widget-box mb-4">
                     <div class="widget-title">THƯƠNG HIỆU</div>
-                    <div class="brand-list">
+                    <div class="px-3 pt-2 pb-1">
+                        <input type="text" class="form-control form-control-sm" id="brandSearchInput"
+                               placeholder="Tìm thương hiệu..." autocomplete="off">
+                    </div>
+                    <div class="brand-list" id="brandListWrap">
                         <% if (brandList != null) { for (Brand b : brandList) { %>
-                        <label class="form-check">
+                        <label class="form-check brand-check-item" data-brand-name="<%= b.getName().toLowerCase() %>">
                             <input class="form-check-input filter-auto"
                                    type="checkbox" name="brandId" value="<%= b.getId() %>"
                                    <%= selectedBrandIdSet.contains(String.valueOf(b.getId())) ? "checked" : "" %>>
@@ -225,6 +231,20 @@
                         <label class="form-check"><input class="form-check-input filter-auto" type="checkbox" name="price" value="2000-2500" <%= selectedPriceSet.contains("2000-2500") ? "checked" : "" %>><span class="form-check-label">2 - 2.5 triệu</span></label>
                         <label class="form-check"><input class="form-check-input filter-auto" type="checkbox" name="price" value="2500-3000" <%= selectedPriceSet.contains("2500-3000") ? "checked" : "" %>><span class="form-check-label">2.5 - 3 triệu</span></label>
                         <label class="form-check"><input class="form-check-input filter-auto" type="checkbox" name="price" value="3000+" <%= selectedPriceSet.contains("3000+") ? "checked" : "" %>><span class="form-check-label">Trên 3 triệu</span></label>
+                    </div>
+                    <!-- Khoảng giá tuỳ chỉnh -->
+                    <div class="px-3 pb-3 pt-1">
+                        <div class="text-muted" style="font-size:.8rem;margin-bottom:6px;">Hoặc nhập khoảng giá:</div>
+                        <div class="d-flex align-items-center gap-2">
+                            <input type="number" class="form-control form-control-sm" id="priceFrom"
+                                   placeholder="Từ" min="0" style="width:45%;">
+                            <span class="text-muted">–</span>
+                            <input type="number" class="form-control form-control-sm" id="priceTo"
+                                   placeholder="Đến" min="0" style="width:45%;">
+                        </div>
+                        <button type="button" class="btn btn-outline-danger btn-sm w-100 mt-2" id="btnApplyCustomPrice">
+                            Áp dụng
+                        </button>
                     </div>
                 </div>
 
@@ -323,12 +343,6 @@
             </p>
             <% } %>
 
-            <div class="row g-4">
-                    <% for (Product p : list) { %>
-                <!-- card sản phẩm -->
-                    <% } %>
-
-
                 <%-- ==== BẮT ĐẦU GRID DANH SÁCH ==== --%>
                 <div class="row g-4">
                     <% if (list.isEmpty()) { %>
@@ -336,30 +350,60 @@
                         <div class="alert alert-warning mb-0">Chưa có sản phẩm nào.</div>
                     </div>
                     <% } else { %>
-                    <% for (Product p : list) { %>
+                    <% for (Product p : list) {
+                        // Tính % giảm giá
+                        int discountPct = 0;
+                        if (p.getOld_price() > 0 && p.getOld_price() > p.getPrice()) {
+                            discountPct = (int) Math.round((1 - p.getPrice() / p.getOld_price()) * 100);
+                        }
+                        // Rating
+                        double avgRating = 0;
+                        int reviewCount = 0;
+                        if (ratingMap != null) {
+                            double[] rd = ratingMap.get(p.getId());
+                            if (rd != null) {
+                                avgRating = rd[0];
+                                reviewCount = (int) rd[1];
+                            }
+                        }
+                    %>
                     <div class="col-6 col-md-4 col-lg-3">
                         <div class="product-card h-100 d-flex flex-column">
 
-                            <%-- RIBBON: nhãn từ DB, chỉ hiện khi có promotion đang active --%>
+                            <%-- BADGE: nhãn promotion hoặc % giảm --%>
                             <% if (p.isSale()) { %>
                             <span class="ribbon"><%= p.getPromotionLabel() %></span>
+                            <% } else if (discountPct > 0) { %>
+                            <span class="ribbon">-<%= discountPct %>%</span>
                             <% } %>
 
-                            <%-- ẢNH: GIỮ CLASS product-thumb, chỉ thêm khung tỉ lệ để đồng đều --%>
-                            <a href="<%= ctx %>/product?id=<%= p.getId() %>">
-                                <img src="<%= p.getImage_url() %>" alt="<%= p.getName() %>" class="card-img-top">
+                            <%-- ẢNH --%>
+                            <a href="<%= ctx %>/product?id=<%= p.getId() %>" class="card-img-wrap">
+                                <img src="<%= p.getImage_url() %>" alt="<%= p.getName() %>" class="card-img-top" loading="lazy">
                             </a>
 
-                            <div class="p-3 d-flex flex-column flex-fill">
-                                <%-- TÊN: giữ class product-title, clamp 2 dòng để không vỡ hàng --%>
-                                <h6 class="product-title line-clamp-2 mb-2">
+                            <div class="card-body-custom d-flex flex-column flex-fill">
+                                <%-- TÊN --%>
+                                <h6 class="product-title line-clamp-2 mb-1">
                                     <a href="<%= ctx %>/product?id=<%= p.getId() %>"
                                        class="text-dark text-decoration-none">
                                         <%= p.getName() %>
                                     </a>
-
                                 </h6>
-                                <%-- GIÁ --%>
+
+                                <%-- RATING --%>
+                                <% if (reviewCount > 0) { %>
+                                <div class="star-rating mb-1">
+                                    <span class="stars">
+                                        <% for (int s = 1; s <= 5; s++) { %>
+                                            <%= (s <= Math.round(avgRating)) ? "★" : "☆" %>
+                                        <% } %>
+                                    </span>
+                                    <span class="review-count">(<%= reviewCount %>)</span>
+                                </div>
+                                <% } %>
+
+                                <%-- GIÁ + NÚT --%>
                                 <div class="product-footer mt-auto d-flex justify-content-between align-items-end gap-2">
                                     <div class="product-price text-danger">
                                         <div class="price-now">
@@ -367,17 +411,12 @@
                                         </div>
                                         <% if (p.getOld_price() > 0) { %>
                                         <div class="old-price">
-                                            <del>
-                                                <%= String.format("%,.0f", p.getOld_price()) %>đ
-                                            </del>
+                                            <del><%= String.format("%,.0f", p.getOld_price()) %>đ</del>
                                         </div>
                                         <% } %>
                                     </div>
-
-                                    <a class="btn btn-danger btn-sm px-3" href="<%= ctx %>/product?id=<%= p.getId() %>">Chi
-                                        tiết</a>
+                                    <a class="btn btn-danger btn-sm px-3" href="<%= ctx %>/product?id=<%= p.getId() %>">Chi tiết</a>
                                 </div>
-
                             </div>
                         </div>
                     </div>
@@ -556,6 +595,53 @@
                     form.submit();
                 }, 200);
             });
+        });
+    })();
+
+    // ===== Search thương hiệu nhanh =====
+    (function() {
+        var input = document.getElementById('brandSearchInput');
+        if (!input) return;
+        input.addEventListener('input', function() {
+            var keyword = this.value.trim().toLowerCase();
+            var items = document.querySelectorAll('.brand-check-item');
+            items.forEach(function(label) {
+                var name = label.getAttribute('data-brand-name') || '';
+                label.style.display = name.indexOf(keyword) !== -1 ? '' : 'none';
+            });
+        });
+    })();
+
+    // ===== Khoảng giá tuỳ chỉnh =====
+    (function() {
+        var btn = document.getElementById('btnApplyCustomPrice');
+        if (!btn) return;
+        btn.addEventListener('click', function() {
+            var fromVal = document.getElementById('priceFrom').value.trim();
+            var toVal   = document.getElementById('priceTo').value.trim();
+            if (!fromVal && !toVal) return;
+
+            var from = fromVal ? parseInt(fromVal) : 0;
+            var to   = toVal   ? parseInt(toVal)   : 999999999;
+            if (from > to) { var tmp = from; from = to; to = tmp; }
+
+            // Build custom range string (server sẽ parse)
+            var rangeKey = from + '-' + to;
+
+            // Clone hidden fields từ filterForm, thêm price custom
+            var form = document.getElementById('filterForm');
+            var url = new URL(form.action, window.location.origin);
+
+            // Giữ lại category, sort, keyword, gender, sale
+            var hiddens = form.querySelectorAll('input[type="hidden"]');
+            hiddens.forEach(function(h) { url.searchParams.set(h.name, h.value); });
+
+            // Bỏ hết price cũ, thêm price custom
+            url.searchParams.delete('price');
+            url.searchParams.append('price', rangeKey);
+            url.searchParams.set('page', '1');
+
+            window.location.href = url.toString();
         });
     })();
 </script>
