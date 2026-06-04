@@ -273,13 +273,13 @@
             <div class="d-flex justify-content-between align-items-center mb-3">
                 <div>
                     <h4 class="mb-0 d-inline"><%= pageTitle.toUpperCase() %></h4>
+                    <span id="productCountInfo" class="text-muted ms-2" style="font-size:0.88rem;">
                     <% if (totalProducts > 0) { %>
-                    <span class="text-muted ms-2" style="font-size:0.88rem;">
                         &mdash; Đang hiển thị <%= fromItem %>–<%= toItem %> / <%= totalProducts %> sản phẩm
-                    </span>
                     <% } else { %>
-                    <span class="text-muted ms-2" style="font-size:0.88rem;">— Không tìm thấy sản phẩm nào</span>
+                        — Không tìm thấy sản phẩm nào
                     <% } %>
+                    </span>
                 </div>
                 <form method="get" action="<%= ctx %>/list-product" class="d-flex align-items-center gap-2">
                     <%-- Giữ lại categoryId nếu đang lọc theo danh mục --%>
@@ -313,8 +313,7 @@
                     } %>
 
                     <label for="sortSelect" class="me-1 fw-semibold" style="white-space: nowrap;">Sắp xếp:</label>
-                    <select id="sortSelect" name="sort" class="form-select form-select-sm"
-                            onchange="this.form.submit()">
+                    <select id="sortSelect" name="sort" class="form-select form-select-sm">
                         <option value=""
                                 <% if (selectedSort == null || selectedSort.isEmpty()) { %>selected<% } %>>
                             Mặc định
@@ -344,6 +343,7 @@
             <% } %>
 
                 <%-- ==== BẮT ĐẦU GRID DANH SÁCH ==== --%>
+                <div id="productGridWrap">
                 <div class="row g-4">
                     <% if (list.isEmpty()) { %>
                     <div class="col-12">
@@ -377,10 +377,19 @@
                             <span class="ribbon">-<%= discountPct %>%</span>
                             <% } %>
 
-                            <%-- ẢNH --%>
-                            <a href="<%= ctx %>/product?id=<%= p.getId() %>" class="card-img-wrap">
-                                <img src="<%= p.getImage_url() %>" alt="<%= p.getName() %>" class="card-img-top" loading="lazy">
-                            </a>
+                            <%-- ẢNH + OVERLAY HOVER --%>
+                            <div class="card-img-wrap position-relative">
+                                <a href="<%= ctx %>/product?id=<%= p.getId() %>">
+                                    <img src="<%= p.getImage_url() %>" alt="<%= p.getName() %>" class="card-img-top" loading="lazy">
+                                </a>
+                                <div class="card-hover-overlay">
+                                    <button type="button" class="btn-quick-add"
+                                            data-product-id="<%= p.getId() %>"
+                                            title="Thêm vào giỏ hàng">
+                                        <i class="bi bi-bag-plus"></i> Thêm vào giỏ
+                                    </button>
+                                </div>
+                            </div>
 
                             <div class="card-body-custom d-flex flex-column flex-fill">
                                 <%-- TÊN --%>
@@ -462,7 +471,7 @@
 
                         <!-- Previous -->
                         <li class="page-item <%= (currentPage <= 1) ? "disabled" : "" %>">
-                            <a class="page-link" href="<%= ctx %>/list-product?page=<%= currentPage - 1 %><%= baseQuery.toString() %>" aria-label="Previous">&laquo;</a>
+                            <a class="page-link" href="<%= ctx %>/list-product?page=<%= currentPage - 1 %><%= baseQuery.toString() %>" data-page="<%= currentPage - 1 %>" aria-label="Previous">&laquo;</a>
                         </li>
 
                         <%-- Phân trang thông minh: hiện tối đa 7 trang, dùng "..." ở giữa --%>
@@ -485,17 +494,18 @@
                                 }
                         %>
                         <li class="page-item <%= (pi == currentPage) ? "active" : "" %>">
-                            <a class="page-link" href="<%= ctx %>/list-product?page=<%= pi %><%= baseQuery.toString() %>"><%= pi %></a>
+                            <a class="page-link" href="<%= ctx %>/list-product?page=<%= pi %><%= baseQuery.toString() %>" data-page="<%= pi %>"><%= pi %></a>
                         </li>
                         <% } %>
 
                         <!-- Next -->
                         <li class="page-item <%= (currentPage >= totalPages) ? "disabled" : "" %>">
-                            <a class="page-link" href="<%= ctx %>/list-product?page=<%= currentPage + 1 %><%= baseQuery.toString() %>" aria-label="Next">&raquo;</a>
+                            <a class="page-link" href="<%= ctx %>/list-product?page=<%= currentPage + 1 %><%= baseQuery.toString() %>" data-page="<%= currentPage + 1 %>" aria-label="Next">&raquo;</a>
                         </li>
                     </ul>
                 </nav>
                 <% } %>
+                </div><!-- end #productGridWrap -->
         </section>
     </div>
 </div>
@@ -559,43 +569,300 @@
 <%@ include file="/WEB-INF/jspf/site_footer.jspf" %>
 
 <!-- Back to top -->
-<button class="btn btn-danger position-fixed bottom-0 end-0 m-4 rounded-circle"
-        style="width:50px;height:50px;z-index:1000;"
+<button id="scrollTopBtn" class="scroll-top-btn"
         onclick="window.scrollTo({top:0,behavior:'smooth'})"
         title="Lên đầu trang" aria-label="Lên đầu trang">
     <i class="bi bi-arrow-up"></i>
 </button>
 
+<!-- ===== QUICK VIEW MODAL ===== -->
+<div class="modal fade" id="quickViewModal" tabindex="-1" aria-labelledby="quickViewLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header border-0">
+                <h5 class="modal-title" id="quickViewLabel">Chọn phân loại</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row g-3">
+                    <div class="col-md-5 text-center">
+                        <img id="qvImage" src="" alt="" class="img-fluid rounded" style="max-height:320px;object-fit:contain;">
+                    </div>
+                    <div class="col-md-7">
+                        <h5 id="qvName" class="fw-bold mb-2"></h5>
+                        <div id="qvPrice" class="mb-3"></div>
+
+                        <div id="qvColorSection" class="mb-3" style="display:none">
+                            <label class="fw-semibold mb-1 d-block">Màu sắc:</label>
+                            <div id="qvColorList" class="d-flex flex-wrap gap-2"></div>
+                        </div>
+
+                        <div id="qvSizeSection" class="mb-3" style="display:none">
+                            <label class="fw-semibold mb-1 d-block">Kích cỡ:</label>
+                            <div id="qvSizeList" class="d-flex flex-wrap gap-2"></div>
+                        </div>
+
+                        <div id="qvStockInfo" class="text-muted mb-3" style="font-size:0.85rem"></div>
+
+                        <div class="d-flex align-items-center gap-2 mb-3">
+                            <label class="fw-semibold">Số lượng:</label>
+                            <div class="input-group" style="width:120px">
+                                <button class="btn btn-outline-secondary btn-sm" type="button" id="qvQtyMinus">−</button>
+                                <input type="number" id="qvQty" class="form-control form-control-sm text-center" value="1" min="1">
+                                <button class="btn btn-outline-secondary btn-sm" type="button" id="qvQtyPlus">+</button>
+                            </div>
+                        </div>
+
+                        <button type="button" id="qvAddToCart" class="btn btn-danger w-100">
+                            <i class="bi bi-bag-plus me-1"></i>Thêm vào giỏ hàng
+                        </button>
+                        <div id="qvMsg" class="mt-2" style="display:none"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Toast thông báo thêm giỏ hàng -->
+<div class="position-fixed bottom-0 end-0 p-3" style="z-index:9999">
+    <div id="cartToast" class="toast align-items-center text-bg-success border-0" role="alert">
+        <div class="d-flex">
+            <div class="toast-body" id="cartToastMsg"></div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+        </div>
+    </div>
+</div>
+
 <script>
     // Tooltips
-    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-    tooltipTriggerList.map(el => new bootstrap.Tooltip(el));
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    tooltipTriggerList.map(function(el) { return new bootstrap.Tooltip(el); });
 
-    // ===== STT 29: Auto-submit bộ lọc khi tick checkbox/radio =====
-    // Dùng debounce nhỏ để tránh submit nhiều lần liên tiếp
+    // ===== AJAX Product Filter System =====
+    var __fetchProducts; // expose cho các module khác gọi
     (function() {
-        const form = document.getElementById('filterForm');
-        if (!form) return;
+        var CTX = '<%= ctx %>';
+        var API_URL = CTX + '/api/products';
+        var gridWrap = document.getElementById('productGridWrap');
+        var countInfo = document.getElementById('productCountInfo');
+        var filterForm = document.getElementById('filterForm');
+        var sortSelect = document.getElementById('sortSelect');
+        var currentPage = <%= currentPage %>;
+        var PAGE_SIZE = 16;
 
-        let submitTimer = null;
+        if (!gridWrap || !filterForm) return;
 
-        form.querySelectorAll('.filter-auto').forEach(function(el) {
-            el.addEventListener('change', function() {
-                clearTimeout(submitTimer);
-                submitTimer = setTimeout(function() {
-                    // Reset về trang 1 khi đổi bộ lọc
-                    let pageInput = form.querySelector('input[name="page"]');
-                    if (!pageInput) {
-                        pageInput = document.createElement('input');
-                        pageInput.type = 'hidden';
-                        pageInput.name = 'page';
-                        form.appendChild(pageInput);
+        // Thu thập tất cả params hiện tại từ sidebar + sort + hidden fields
+        function collectParams(page) {
+            var params = new URLSearchParams();
+
+            // Hidden fields trong filterForm (category, keyword, gender, sale)
+            filterForm.querySelectorAll('input[type="hidden"]').forEach(function(h) {
+                if (h.name && h.value) params.append(h.name, h.value);
+            });
+
+            // Checkbox brand
+            filterForm.querySelectorAll('input[name="brandId"]:checked').forEach(function(cb) {
+                params.append('brandId', cb.value);
+            });
+
+            // Checkbox price
+            filterForm.querySelectorAll('input[name="price"]:checked').forEach(function(cb) {
+                params.append('price', cb.value);
+            });
+
+            // Radio gender
+            var genderRadio = filterForm.querySelector('input[name="gender"]:checked');
+            if (genderRadio && genderRadio.value) {
+                params.set('gender', genderRadio.value);
+            }
+
+            // Sort
+            if (sortSelect && sortSelect.value) {
+                params.set('sort', sortSelect.value);
+            }
+
+            params.set('page', page || 1);
+            return params;
+        }
+
+        // Format giá
+        function formatPrice(num) {
+            return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') + 'đ';
+        }
+
+        // Render sao
+        function renderStars(avg, count) {
+            if (count <= 0) return '';
+            var html = '<div class="star-rating mb-1"><span class="stars">';
+            for (var s = 1; s <= 5; s++) {
+                html += (s <= Math.round(avg)) ? '★' : '☆';
+            }
+            html += '</span><span class="review-count">(' + count + ')</span></div>';
+            return html;
+        }
+
+        // Render 1 product card
+        function renderCard(p) {
+            var badge = '';
+            if (p.isSale && p.promotionLabel) {
+                badge = '<span class="ribbon">' + p.promotionLabel + '</span>';
+            } else if (p.discountPct > 0) {
+                badge = '<span class="ribbon">-' + p.discountPct + '%</span>';
+            }
+
+            var oldPriceHtml = '';
+            if (p.oldPrice > 0) {
+                oldPriceHtml = '<div class="old-price"><del>' + formatPrice(p.oldPrice) + '</del></div>';
+            }
+
+            return '<div class="col-6 col-md-4 col-lg-3">' +
+                '<div class="product-card h-100 d-flex flex-column">' +
+                badge +
+                '<div class="card-img-wrap position-relative">' +
+                '<a href="' + CTX + '/product?id=' + p.id + '">' +
+                '<img src="' + p.imageUrl + '" alt="' + p.name + '" class="card-img-top" loading="lazy">' +
+                '</a>' +
+                '<div class="card-hover-overlay">' +
+                '<button type="button" class="btn-quick-add" data-product-id="' + p.id + '" title="Thêm vào giỏ hàng">' +
+                '<i class="bi bi-bag-plus"></i> Thêm vào giỏ</button>' +
+                '</div></div>' +
+                '<div class="card-body-custom d-flex flex-column flex-fill">' +
+                '<h6 class="product-title line-clamp-2 mb-1">' +
+                '<a href="' + CTX + '/product?id=' + p.id + '" class="text-dark text-decoration-none">' + p.name + '</a></h6>' +
+                renderStars(p.avgRating, p.reviewCount) +
+                '<div class="product-footer mt-auto d-flex justify-content-between align-items-end gap-2">' +
+                '<div class="product-price text-danger">' +
+                '<div class="price-now">' + formatPrice(p.price) + '</div>' +
+                oldPriceHtml +
+                '</div>' +
+                '<a class="btn btn-danger btn-sm px-3" href="' + CTX + '/product?id=' + p.id + '">Chi tiết</a>' +
+                '</div></div></div></div>';
+        }
+
+        // Render pagination
+        function renderPagination(cur, total, params) {
+            if (total <= 1) return '';
+            var html = '<nav class="mt-4" aria-label="Pagination"><ul class="pagination justify-content-center">';
+
+            // Previous
+            html += '<li class="page-item ' + (cur <= 1 ? 'disabled' : '') + '">';
+            html += '<a class="page-link" href="#" data-page="' + (cur - 1) + '">&laquo;</a></li>';
+
+            var rangeSize = 2;
+            for (var pi = 1; pi <= total; pi++) {
+                var isFirst = (pi === 1), isLast = (pi === total);
+                var inRange = (pi >= cur - rangeSize && pi <= cur + rangeSize);
+                if (!isFirst && !isLast && !inRange) {
+                    var prevShown = (pi - 1 === 1) || (pi - 1 >= cur - rangeSize);
+                    if (!prevShown) {
+                        html += '<li class="page-item disabled"><span class="page-link">…</span></li>';
                     }
-                    pageInput.value = '1';
-                    form.submit();
-                }, 200);
+                    continue;
+                }
+                html += '<li class="page-item ' + (pi === cur ? 'active' : '') + '">';
+                html += '<a class="page-link" href="#" data-page="' + pi + '">' + pi + '</a></li>';
+            }
+
+            // Next
+            html += '<li class="page-item ' + (cur >= total ? 'disabled' : '') + '">';
+            html += '<a class="page-link" href="#" data-page="' + (cur + 1) + '">&raquo;</a></li>';
+            html += '</ul></nav>';
+            return html;
+        }
+
+        // Hiệu ứng loading
+        function showLoading() {
+            gridWrap.style.opacity = '0.45';
+            gridWrap.style.pointerEvents = 'none';
+            gridWrap.style.transition = 'opacity 0.2s';
+        }
+        function hideLoading() {
+            gridWrap.style.opacity = '1';
+            gridWrap.style.pointerEvents = '';
+        }
+
+        // AJAX fetch & render
+        function fetchProducts(page) {
+            var params = collectParams(page);
+            showLoading();
+
+            fetch(API_URL + '?' + params.toString())
+                .then(function(res) { return res.json(); })
+                .then(function(data) {
+                    currentPage = data.currentPage;
+
+                    // Update count info
+                    if (data.totalProducts > 0) {
+                        var from = (data.currentPage - 1) * PAGE_SIZE + 1;
+                        var to = Math.min(data.currentPage * PAGE_SIZE, data.totalProducts);
+                        countInfo.innerHTML = '&mdash; Đang hiển thị ' + from + '–' + to + ' / ' + data.totalProducts + ' sản phẩm';
+                    } else {
+                        countInfo.innerHTML = '— Không tìm thấy sản phẩm nào';
+                    }
+
+                    // Render grid
+                    var gridHtml = '<div class="row g-4">';
+                    if (data.products.length === 0) {
+                        gridHtml += '<div class="col-12"><div class="alert alert-warning mb-0">Chưa có sản phẩm nào.</div></div>';
+                    } else {
+                        data.products.forEach(function(p) { gridHtml += renderCard(p); });
+                    }
+                    gridHtml += '</div>';
+                    gridHtml += renderPagination(data.currentPage, data.totalPages, params);
+
+                    gridWrap.innerHTML = gridHtml;
+                    hideLoading();
+
+                    // Bind pagination click
+                    bindPaginationLinks();
+
+                    // Update browser URL (không reload)
+                    var newUrl = CTX + '/list-product?' + params.toString();
+                    history.replaceState(null, '', newUrl);
+
+                    // Cuộn lên đầu grid khi chuyển trang
+                    if (page && page !== 1) {
+                        gridWrap.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }
+                })
+                .catch(function(err) {
+                    console.error('Fetch error:', err);
+                    hideLoading();
+                });
+        }
+
+        // Bind pagination
+        function bindPaginationLinks() {
+            gridWrap.querySelectorAll('.page-link[data-page]').forEach(function(a) {
+                a.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    var pg = parseInt(this.getAttribute('data-page'));
+                    if (pg >= 1) fetchProducts(pg);
+                });
+            });
+        }
+
+        // Filter form: intercept checkbox/radio changes
+        var filterTimer = null;
+        filterForm.querySelectorAll('.filter-auto').forEach(function(el) {
+            el.addEventListener('change', function() {
+                clearTimeout(filterTimer);
+                filterTimer = setTimeout(function() { fetchProducts(1); }, 250);
             });
         });
+
+        // Sort change
+        if (sortSelect) {
+            sortSelect.addEventListener('change', function() { fetchProducts(1); });
+        }
+
+        // Bind pagination lần đầu (cho HTML server-render)
+        bindPaginationLinks();
+
+        // Expose ra ngoài
+        __fetchProducts = fetchProducts;
     })();
 
     // ===== Search thương hiệu nhanh =====
@@ -625,24 +892,266 @@
             var to   = toVal   ? parseInt(toVal)   : 999999999;
             if (from > to) { var tmp = from; from = to; to = tmp; }
 
-            // Build custom range string (server sẽ parse)
-            var rangeKey = from + '-' + to;
+            // Bỏ tick tất cả checkbox price cũ
+            document.querySelectorAll('input[name="price"]').forEach(function(cb) {
+                cb.checked = false;
+            });
 
-            // Clone hidden fields từ filterForm, thêm price custom
-            var form = document.getElementById('filterForm');
-            var url = new URL(form.action, window.location.origin);
+            // Tạo hidden input tạm cho custom range rồi gọi AJAX
+            var customInput = document.createElement('input');
+            customInput.type = 'hidden';
+            customInput.name = 'price';
+            customInput.value = from + '-' + to;
+            customInput.className = 'custom-price-hidden';
 
-            // Giữ lại category, sort, keyword, gender, sale
-            var hiddens = form.querySelectorAll('input[type="hidden"]');
-            hiddens.forEach(function(h) { url.searchParams.set(h.name, h.value); });
+            // Xóa hidden cũ nếu có
+            var old = document.querySelector('.custom-price-hidden');
+            if (old) old.remove();
 
-            // Bỏ hết price cũ, thêm price custom
-            url.searchParams.delete('price');
-            url.searchParams.append('price', rangeKey);
-            url.searchParams.set('page', '1');
+            var filterForm = document.getElementById('filterForm');
+            filterForm.appendChild(customInput);
 
-            window.location.href = url.toString();
+            // Gọi AJAX ngay
+            if (__fetchProducts) {
+                __fetchProducts(1);
+            }
         });
+    })();
+
+    // ===== QUICK ADD TO CART + QUICK VIEW =====
+    (function() {
+        var CTX = '<%= ctx %>';
+        var CART_API = CTX + '/api/cart-quick';
+        var qvModal = null;
+        var qvProductId = null;
+        var qvVariants = [];
+        var selectedColor = null;
+        var selectedVariantId = null;
+
+        // Toast helper
+        function showToast(msg, isError) {
+            var toast = document.getElementById('cartToast');
+            var toastMsg = document.getElementById('cartToastMsg');
+            if (!toast || !toastMsg) return;
+            toastMsg.textContent = msg;
+            toast.className = 'toast align-items-center border-0 ' + (isError ? 'text-bg-danger' : 'text-bg-success');
+            var bsToast = new bootstrap.Toast(toast, { delay: 2500 });
+            bsToast.show();
+        }
+
+        // Cập nhật badge giỏ hàng trên header
+        function updateCartBadge(count) {
+            var badges = document.querySelectorAll('.cart-count-badge');
+            badges.forEach(function(b) {
+                b.textContent = count;
+                b.style.display = count > 0 ? '' : 'none';
+            });
+        }
+
+        // Format giá
+        function fmtPrice(n) {
+            return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') + 'đ';
+        }
+
+        // Gọi API thêm vào giỏ
+        function addToCart(productId, variantId, qty, callback) {
+            var body = 'productId=' + productId + '&qty=' + (qty || 1);
+            if (variantId) body += '&variantId=' + variantId;
+
+            fetch(CART_API + '?action=add', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: body
+            })
+            .then(function(res) { return res.json(); })
+            .then(function(data) {
+                if (data.ok) {
+                    showToast(data.msg);
+                    if (data.cartCount !== undefined) updateCartBadge(data.cartCount);
+                } else if (data.msg === 'login_required') {
+                    window.location.href = CTX + '/login.jsp?back=' + encodeURIComponent(window.location.href);
+                    return;
+                } else if (data.msg === 'variant_required') {
+                    // Mở Quick View modal để chọn variant
+                    openQuickView(productId);
+                    return;
+                } else {
+                    showToast(data.msg || 'Có lỗi xảy ra', true);
+                }
+                if (callback) callback(data);
+            })
+            .catch(function() { showToast('Lỗi kết nối, thử lại sau', true); });
+        }
+
+        // Mở Quick View modal
+        function openQuickView(productId) {
+            qvProductId = productId;
+            selectedColor = null;
+            selectedVariantId = null;
+
+            // Reset modal
+            document.getElementById('qvImage').src = '';
+            document.getElementById('qvName').textContent = 'Đang tải...';
+            document.getElementById('qvPrice').innerHTML = '';
+            document.getElementById('qvColorSection').style.display = 'none';
+            document.getElementById('qvSizeSection').style.display = 'none';
+            document.getElementById('qvStockInfo').textContent = '';
+            document.getElementById('qvMsg').style.display = 'none';
+            document.getElementById('qvQty').value = 1;
+
+            if (!qvModal) {
+                qvModal = new bootstrap.Modal(document.getElementById('quickViewModal'));
+            }
+            qvModal.show();
+
+            // Fetch variant data
+            fetch(CART_API + '?action=variants&productId=' + productId)
+                .then(function(r) { return r.json(); })
+                .then(function(data) {
+                    if (!data.ok) { showToast(data.msg, true); return; }
+
+                    var p = data.product;
+                    qvVariants = data.variants;
+
+                    document.getElementById('qvImage').src = p.imageUrl;
+                    document.getElementById('qvName').textContent = p.name;
+
+                    var priceHtml = '<span class="text-danger fw-bold fs-5">' + fmtPrice(p.price) + '</span>';
+                    if (p.oldPrice > 0 && p.oldPrice > p.price) {
+                        priceHtml += ' <del class="text-muted">' + fmtPrice(p.oldPrice) + '</del>';
+                    }
+                    document.getElementById('qvPrice').innerHTML = priceHtml;
+
+                    // Lấy danh sách màu unique
+                    var colors = [];
+                    qvVariants.forEach(function(v) {
+                        if (v.color && colors.indexOf(v.color) === -1) colors.push(v.color);
+                    });
+
+                    if (colors.length > 0) {
+                        document.getElementById('qvColorSection').style.display = '';
+                        var colorHtml = '';
+                        colors.forEach(function(c) {
+                            colorHtml += '<button type="button" class="btn btn-outline-dark btn-sm qv-color-btn" data-color="' + c + '">' + c + '</button>';
+                        });
+                        document.getElementById('qvColorList').innerHTML = colorHtml;
+
+                        // Bind color click
+                        document.querySelectorAll('.qv-color-btn').forEach(function(btn) {
+                            btn.addEventListener('click', function() {
+                                document.querySelectorAll('.qv-color-btn').forEach(function(b) { b.classList.remove('active', 'btn-dark'); b.classList.add('btn-outline-dark'); });
+                                this.classList.add('active', 'btn-dark');
+                                this.classList.remove('btn-outline-dark');
+                                selectedColor = this.getAttribute('data-color');
+                                renderSizes(selectedColor);
+                            });
+                        });
+
+                        // Auto-select màu đầu tiên
+                        document.querySelector('.qv-color-btn').click();
+                    } else {
+                        // Không có color, hiển thị sizes thẳng
+                        renderSizes(null);
+                    }
+                });
+        }
+
+        // Render sizes theo color đã chọn
+        function renderSizes(color) {
+            var filtered = qvVariants.filter(function(v) {
+                return color ? v.color === color : true;
+            });
+
+            if (filtered.length === 0) {
+                document.getElementById('qvSizeSection').style.display = 'none';
+                return;
+            }
+
+            document.getElementById('qvSizeSection').style.display = '';
+            var sizeHtml = '';
+            filtered.forEach(function(v) {
+                var disabled = v.stockQty <= 0;
+                sizeHtml += '<button type="button" class="btn btn-sm qv-size-btn ' +
+                    (disabled ? 'btn-outline-secondary disabled' : 'btn-outline-dark') + '" ' +
+                    'data-variant-id="' + v.id + '" data-stock="' + v.stockQty + '"' +
+                    (disabled ? ' disabled' : '') + '>' +
+                    v.size + (disabled ? ' (Hết)' : '') + '</button>';
+            });
+            document.getElementById('qvSizeList').innerHTML = sizeHtml;
+            selectedVariantId = null;
+            document.getElementById('qvStockInfo').textContent = '';
+
+            // Bind size click
+            document.querySelectorAll('.qv-size-btn:not(.disabled)').forEach(function(btn) {
+                btn.addEventListener('click', function() {
+                    document.querySelectorAll('.qv-size-btn').forEach(function(b) { b.classList.remove('active', 'btn-dark'); b.classList.add('btn-outline-dark'); });
+                    this.classList.add('active', 'btn-dark');
+                    this.classList.remove('btn-outline-dark');
+                    selectedVariantId = parseInt(this.getAttribute('data-variant-id'));
+                    var stock = parseInt(this.getAttribute('data-stock'));
+                    document.getElementById('qvStockInfo').textContent = 'Còn ' + stock + ' sản phẩm';
+                });
+            });
+        }
+
+        // Qty buttons
+        document.getElementById('qvQtyMinus').addEventListener('click', function() {
+            var inp = document.getElementById('qvQty');
+            var v = parseInt(inp.value) || 1;
+            if (v > 1) inp.value = v - 1;
+        });
+        document.getElementById('qvQtyPlus').addEventListener('click', function() {
+            var inp = document.getElementById('qvQty');
+            var v = parseInt(inp.value) || 1;
+            inp.value = v + 1;
+        });
+
+        // Add to cart từ modal
+        document.getElementById('qvAddToCart').addEventListener('click', function() {
+            if (!selectedVariantId && qvVariants.length > 0) {
+                var msgEl = document.getElementById('qvMsg');
+                msgEl.innerHTML = '<div class="alert alert-warning py-1 mb-0">Vui lòng chọn phân loại trước!</div>';
+                msgEl.style.display = '';
+                return;
+            }
+            var qty = parseInt(document.getElementById('qvQty').value) || 1;
+            var btn = this;
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Đang thêm...';
+
+            addToCart(qvProductId, selectedVariantId, qty, function() {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="bi bi-bag-plus me-1"></i>Thêm vào giỏ hàng';
+                if (qvModal) qvModal.hide();
+            });
+        });
+
+        // Bind nút "Thêm vào giỏ" trên card (server-rendered)
+        function bindQuickAddButtons(container) {
+            (container || document).querySelectorAll('.btn-quick-add').forEach(function(btn) {
+                // Tránh bind lại
+                if (btn.dataset.bound) return;
+                btn.dataset.bound = '1';
+                btn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    var pid = parseInt(this.getAttribute('data-product-id'));
+                    addToCart(pid, null, 1);
+                });
+            });
+        }
+
+        // Bind lần đầu
+        bindQuickAddButtons();
+
+        // Khi AJAX render lại grid → cần bind lại
+        var observer = new MutationObserver(function() {
+            bindQuickAddButtons(document.getElementById('productGridWrap'));
+        });
+        var gridWrap = document.getElementById('productGridWrap');
+        if (gridWrap) {
+            observer.observe(gridWrap, { childList: true, subtree: true });
+        }
     })();
 </script>
 </body>
