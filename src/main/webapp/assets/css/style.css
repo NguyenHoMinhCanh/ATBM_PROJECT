@@ -2262,3 +2262,59 @@ body {
     margin-left: 4px;
 }
 
+/* ===== AJAX LOADING EFFECT ===== */
+#productGridWrap {
+    position: relative;
+    transition: opacity 0.2s ease;
+    min-height: 200px;
+}
+
+/* ===== CARD HOVER OVERLAY - QUICK ADD ===== */
+.card-img-wrap {
+    overflow: hidden;
+}
+.card-hover-overlay {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: rgba(0, 0, 0, 0.55);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px;
+    opacity: 0;
+    transform: translateY(100%);
+    transition: all 0.3s ease;
+}
+.product-card:hover .card-hover-overlay {
+    opacity: 1;
+    transform: translateY(0);
+}
+.btn-quick-add {
+    background: #fff;
+    color: #d32f2f;
+    border: none;
+    border-radius: 20px;
+    padding: 6px 18px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+.btn-quick-add:hover {
+    background: #d32f2f;
+    color: #fff;
+}
+.btn-quick-add i {
+    font-size: 1rem;
+}
+
+/* Quick View Modal */
+#quickViewModal .qv-color-btn.active,
+#quickViewModal .qv-size-btn.active {
+    font-weight: 600;
+}
