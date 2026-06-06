@@ -717,6 +717,59 @@
     </div>
 </div>
 
+<!-- ===== SẢN PHẨM LIÊN QUAN ===== -->
+<%
+    List<Product> relatedProducts = (List<Product>) request.getAttribute("relatedProducts");
+    if (relatedProducts != null && !relatedProducts.isEmpty()) {
+%>
+<div class="container my-5">
+    <h4 class="fw-bold mb-4 text-center">
+        <i class="bi bi-grid-3x3-gap-fill text-danger me-2"></i>Sản phẩm liên quan
+    </h4>
+    <div class="row g-3">
+        <% for (Product rp : relatedProducts) {
+            double rpDiscountPct = 0;
+            if (rp.getOld_price() > 0 && rp.getOld_price() > rp.getPrice()) {
+                rpDiscountPct = Math.round((1 - rp.getPrice() / rp.getOld_price()) * 100);
+            }
+        %>
+        <div class="col-6 col-md-4 col-lg-3">
+            <div class="product-card h-100 d-flex flex-column">
+                <% if (rp.isSale() && rp.getPromotionLabel() != null) { %>
+                <span class="ribbon"><%= rp.getPromotionLabel() %></span>
+                <% } else if (rpDiscountPct > 0) { %>
+                <span class="ribbon">-<%= (int) rpDiscountPct %>%</span>
+                <% } %>
+
+                <div class="card-img-wrap position-relative">
+                    <a href="<%= ctx %>/product?id=<%= rp.getId() %>">
+                        <img src="<%= rp.getImage_url() %>" alt="<%= rp.getName() %>"
+                             class="card-img-top" loading="lazy">
+                    </a>
+                </div>
+
+                <div class="card-body-custom d-flex flex-column flex-fill">
+                    <h6 class="product-title line-clamp-2 mb-1">
+                        <a href="<%= ctx %>/product?id=<%= rp.getId() %>"
+                           class="text-dark text-decoration-none"><%= rp.getName() %></a>
+                    </h6>
+                    <div class="product-footer mt-auto d-flex justify-content-between align-items-end gap-2">
+                        <div class="product-price text-danger">
+                            <div class="price-now"><%= String.format("%,.0f", rp.getPrice()) %>đ</div>
+                            <% if (rp.getOld_price() > 0) { %>
+                            <div class="old-price"><del><%= String.format("%,.0f", rp.getOld_price()) %>đ</del></div>
+                            <% } %>
+                        </div>
+                        <a class="btn btn-danger btn-sm px-3"
+                           href="<%= ctx %>/product?id=<%= rp.getId() %>">Chi tiết</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <% } %>
+    </div>
+</div>
+<% } %>
 
 <!-- ===== Service Features ===== -->
 <section class="bg-light py-4">

@@ -767,4 +767,62 @@ public class ProductDao extends DAO {
     public Product findBestSellers(int id) {
         return getById(id);
     }
+
+    /**
+     * Lấy sản phẩm liên quan: ưu tiên cùng category, sau đó cùng brand.
+     * Loại trừ chính sản phẩm đang xem, chỉ lấy sản phẩm active.
+     */
+    public List<Product> getRelatedProducts(int productId, Integer categoryId, Integer brandId, int limit) {
+        List<Product> list = new ArrayList<>();
+        if (limit <= 0) limit = 8;
+
+        // Ưu tiên cùng category trước, sau đó cùng brand
+        StringBuilder sql = new StringBuilder();
+        List<Object> params = new ArrayList<>();
+
+        sql.append("SELECT p.id, p.name, p.description, p.price, p.old_price, p.image_url, ");
+        sql.append("p.gender, p.category_id, p.brand_id, p.active, p.created_at, p.updated_at ");
+        sql.append("FROM products p ");
+        sql.append("WHERE p.active = 1 AND p.id != ? ");
+        params.add(productId);
+
+        // Lọc theo category hoặc brand (có ít nhất 1 cái)
+        if (categoryId != null && brandId != null) {
+            sql.append("AND (p.category_id = ? OR p.brand_id = ?) ");
+            params.add(categoryId);
+            params.add(brandId);
+            // Sắp xếp: cùng category lên trước
+            sql.append("ORDER BY CASE WHEN p.category_id = ? THEN 0 ELSE 1 END, ");
+            sql.append("p.updated_at DESC, p.id DESC ");
+            params.add(categoryId);
+        } else if (categoryId != null) {
+            sql.append("AND p.category_id = ? ");
+            sql.append("ORDER BY p.updated_at DESC, p.id DESC ");
+            params.add(categoryId);
+        } else if (brandId != null) {
+            sql.append("AND p.brand_id = ? ");
+            sql.append("ORDER BY p.updated_at DESC, p.id DESC ");
+            params.add(brandId);
+        } else {
+            // Không có category lẫn brand -> lấy random
+            sql.append("ORDER BY RAND() ");
+        }
+
+        sql.append("LIMIT ?");
+        params.add(limit);
+
+        try {
+            PreparedStatement ps = getPreparedStatement(sql.toString());
+            for (int i = 0; i < params.size(); i++) {
+                ps.setObject(i + 1, params.get(i));
+            }
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                list.add(mapRowToProduct(rs));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
 }
