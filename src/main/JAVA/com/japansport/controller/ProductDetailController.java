@@ -83,6 +83,16 @@ public class ProductDetailController extends HttpServlet {
         request.setAttribute("variants", variants);
         request.setAttribute("specs", specs);
 
+        // Sản phẩm liên quan (cùng category hoặc cùng brand, tối đa 8 sản phẩm)
+        List<Product> relatedProducts;
+        try {
+            relatedProducts = productDao.getRelatedProducts(
+                    productId, product.getCategoryId(), product.getBrandId(), 8);
+        } catch (Exception e) {
+            relatedProducts = Collections.emptyList();
+        }
+        request.setAttribute("relatedProducts", relatedProducts);
+
         // Banner trang chi tiết sản phẩm
         BannerDao bannerDao = new BannerDao();
         Banner productDetailTopBanner = bannerDao.getOneBannerByPosition("PRODUCT_DETAIL_TOP");
