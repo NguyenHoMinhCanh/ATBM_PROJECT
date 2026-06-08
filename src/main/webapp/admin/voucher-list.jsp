@@ -1,4 +1,5 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" language="java" %>
+<%@ page import="java.time.LocalDateTime" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <%@ taglib prefix="fmt" uri="jakarta.tags.fmt" %>
 
@@ -77,9 +78,18 @@
                         </td>
                         <td>${v.usedCount} / ${v.usageLimit != null ? v.usageLimit : '∞'}</td>
                         <td>
-                                <span class="badge ${v.active ? 'bg-success' : 'bg-danger'}">
-                                        ${v.active ? 'Hoạt động' : 'Tắt'}
-                                </span>
+                            <%-- Kiểm tra hết hạn ngay tại JSP để hiển thị đúng trạng thái tức thời --%>
+                            <c:choose>
+                                <c:when test="${v.active and v.endDate != null and v.endDate.isBefore(now)}">
+                                    <span class="badge bg-warning text-dark">Hết hạn</span>
+                                </c:when>
+                                <c:when test="${v.active}">
+                                    <span class="badge bg-success">Hoạt động</span>
+                                </c:when>
+                                <c:otherwise>
+                                    <span class="badge bg-danger">Tắt</span>
+                                </c:otherwise>
+                            </c:choose>
                         </td>
                         <td class="text-end">
                             <a href="voucher?action=edit&id=${v.id}" class="btn btn-sm btn-warning">

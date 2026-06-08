@@ -42,10 +42,16 @@ public class AdminVoucherServlet extends HttpServlet {
                     resp.sendRedirect("voucher");
                 }
 
+            } else if ("delete".equals(action) && idParam != null) {
+                voucherDao.deleteVoucher(Integer.parseInt(idParam));
+                resp.sendRedirect("voucher");
+
             } else {
-                // Danh sách voucher
+                // Danh sách voucher – set thời gian hiện tại để JSP kiểm tra hết hạn
+                voucherDao.deactivateExpiredVouchers(); // Cập nhật DB trước khi hiển thị
                 List<Voucher> vouchers = voucherDao.getAllVouchers();
                 req.setAttribute("vouchers", vouchers);
+                req.setAttribute("now", LocalDateTime.now()); // Dùng trong voucher-list.jsp
                 req.getRequestDispatcher("/admin/voucher-list.jsp").forward(req, resp);
             }
         } catch (Exception e) {
