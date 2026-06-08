@@ -146,6 +146,27 @@ public class VoucherDao {
         }
     }
 
+    /**
+     * Tự động tắt (is_active = 0) các voucher đã hết hạn (end_date < NOW()).
+     * Được gọi bởi VoucherExpiryScheduler mỗi phút.
+     * @return số voucher đã bị deactivate
+     */
+    public int deactivateExpiredVouchers() {
+        String sql = "UPDATE vouchers SET is_active = 0 " +
+                "WHERE is_active = 1 AND end_date IS NOT NULL AND end_date < NOW()";
+        try (Connection conn = DBConnect.getInstance().getConnect();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            int updated = ps.executeUpdate();
+            if (updated > 0) {
+                System.out.println("[VoucherDao] Đã tự động tắt " + updated + " voucher hết hạn.");
+            }
+            return updated;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return 0;
+        }
+    }
+
     public boolean deleteVoucher(int id) {
         String sql = "DELETE FROM vouchers WHERE id = ?";
         try (Connection conn = DBConnect.getInstance().getConnect();
