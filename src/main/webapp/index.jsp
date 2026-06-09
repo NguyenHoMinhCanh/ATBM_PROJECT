@@ -30,7 +30,7 @@
           rel="stylesheet">
 
     <!-- App CSS -->
-    <link rel="stylesheet" href="assets/css/style.css">
+    <link rel="stylesheet" href="assets/css/style.css?v=1.6">
 </head>
 <body>
 <%----%>
@@ -181,19 +181,24 @@
                                 <div class="product-title">${p.name}</div>
                                 <%-- Star rating từ ratingMap --%>
                                 <c:set var="rd" value="${ratingMap[p.id]}"/>
-                                <c:if test="${not empty rd && rd[1] > 0}">
-                                    <div class="star-rating">
-                                        <span class="stars">
-                                            <c:forEach begin="1" end="5" var="s">
-                                                <c:choose>
-                                                    <c:when test="${s <= rd[0]}">★</c:when>
-                                                    <c:otherwise>☆</c:otherwise>
-                                                </c:choose>
-                                            </c:forEach>
-                                        </span>
-                                        <span class="review-count">(${fn:length(rd)})</span>
-                                    </div>
-                                </c:if>
+                                <div class="star-rating">
+                                    <c:choose>
+                                        <c:when test="${not empty rd && rd[1] > 0}">
+                                            <span class="stars">
+                                                <c:forEach begin="1" end="5" var="s">
+                                                    <c:choose>
+                                                        <c:when test="${s <= rd[0]}">★</c:when>
+                                                        <c:otherwise>☆</c:otherwise>
+                                                    </c:choose>
+                                                </c:forEach>
+                                            </span>
+                                            <span class="review-count">(${fn:length(rd)})</span>
+                                        </c:when>
+                                        <c:otherwise>
+                                            <span class="stars" style="color: #ccc;">☆☆☆☆☆</span>
+                                        </c:otherwise>
+                                    </c:choose>
+                                </div>
                                 <div class="price-row">
                                     <span class="price-current"><fmt:formatNumber value="${p.price}" pattern="#,###"/>đ</span>
                                     <c:if test="${p.old_price > 0}">
@@ -242,18 +247,23 @@
                             <div class="card-body-custom">
                                 <div class="product-title">${p.name}</div>
                                 <c:set var="rd" value="${ratingMap[p.id]}"/>
-                                <c:if test="${not empty rd && rd[1] > 0}">
-                                    <div class="star-rating">
-                                        <span class="stars">
-                                            <c:forEach begin="1" end="5" var="s">
-                                                <c:choose>
-                                                    <c:when test="${s <= rd[0]}">★</c:when>
-                                                    <c:otherwise>☆</c:otherwise>
-                                                </c:choose>
-                                            </c:forEach>
-                                        </span>
-                                    </div>
-                                </c:if>
+                                <div class="star-rating">
+                                    <c:choose>
+                                        <c:when test="${not empty rd && rd[1] > 0}">
+                                            <span class="stars">
+                                                <c:forEach begin="1" end="5" var="s">
+                                                    <c:choose>
+                                                        <c:when test="${s <= rd[0]}">★</c:when>
+                                                        <c:otherwise>☆</c:otherwise>
+                                                    </c:choose>
+                                                </c:forEach>
+                                            </span>
+                                        </c:when>
+                                        <c:otherwise>
+                                            <span class="stars" style="color: #ccc;">☆☆☆☆☆</span>
+                                        </c:otherwise>
+                                    </c:choose>
+                                </div>
                                 <div class="price-row">
                                     <span class="price-current"><fmt:formatNumber value="${p.price}" pattern="#,###"/>đ</span>
                                     <c:if test="${p.old_price > 0}">
@@ -344,18 +354,25 @@
                         <div class="card-body-custom">
                             <div class="product-title">${p.name}</div>
                             <c:set var="rd" value="${ratingMap[p.id]}"/>
-                            <c:if test="${not empty rd && rd[1] > 0}">
-                                <div class="star-rating">
-                                    <span class="stars">
-                                        <c:forEach begin="1" end="5" var="s">
-                                            <c:choose>
-                                                <c:when test="${s <= rd[0]}">★</c:when>
-                                                <c:otherwise>☆</c:otherwise>
-                                            </c:choose>
-                                        </c:forEach>
-                                    </span>
-                                </div>
-                            </c:if>
+                            <c:choose>
+                                <c:when test="${not empty rd && rd[1] > 0}">
+                                    <div class="star-rating">
+                                        <span class="stars">
+                                            <c:forEach begin="1" end="5" var="s">
+                                                <c:choose>
+                                                    <c:when test="${s <= rd[0]}">★</c:when>
+                                                    <c:otherwise>☆</c:otherwise>
+                                                </c:choose>
+                                            </c:forEach>
+                                        </span>
+                                    </div>
+                                </c:when>
+                                <c:otherwise>
+                                    <div class="star-rating">
+                                        <span class="stars" style="color: #ccc;">☆☆☆☆☆</span>
+                                    </div>
+                                </c:otherwise>
+                            </c:choose>
                             <div class="price-row">
                                 <span class="price-current"><fmt:formatNumber value="${p.price}" pattern="#,###"/>đ</span>
                                 <c:if test="${p.old_price > 0}">
@@ -447,18 +464,25 @@
                         <div class="card-body-custom">
                             <div class="product-title">${p.name}</div>
                             <c:set var="rd" value="${ratingMap[p.id]}"/>
-                            <c:if test="${not empty rd && rd[1] > 0}">
-                                <div class="star-rating">
-                                    <span class="stars">
-                                        <c:forEach begin="1" end="5" var="s">
-                                            <c:choose>
-                                                <c:when test="${s <= rd[0]}">★</c:when>
-                                                <c:otherwise>☆</c:otherwise>
-                                            </c:choose>
-                                        </c:forEach>
-                                    </span>
-                                </div>
-                            </c:if>
+                            <c:choose>
+                                <c:when test="${not empty rd && rd[1] > 0}">
+                                    <div class="star-rating">
+                                        <span class="stars">
+                                            <c:forEach begin="1" end="5" var="s">
+                                                <c:choose>
+                                                    <c:when test="${s <= rd[0]}">★</c:when>
+                                                    <c:otherwise>☆</c:otherwise>
+                                                </c:choose>
+                                            </c:forEach>
+                                        </span>
+                                    </div>
+                                </c:when>
+                                <c:otherwise>
+                                    <div class="star-rating">
+                                        <span class="stars" style="color: #ccc;">☆☆☆☆☆</span>
+                                    </div>
+                                </c:otherwise>
+                            </c:choose>
                             <div class="price-row">
                                 <span class="price-current"><fmt:formatNumber value="${p.price}" pattern="#,###"/>đ</span>
                                 <c:if test="${p.old_price > 0}">
