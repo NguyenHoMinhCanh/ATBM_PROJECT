@@ -371,3 +371,295 @@
         });
     })();
 </script>
+
+<!-- Nút tròn dưới góc phải -->
+<style>
+/* ============================================== */
+/* PHẦN GIAO DIỆN CHAT KHÁCH HÀNG (CUSTOM) */
+/* ============================================== */
+.btn-chat-float {
+    position: fixed;
+    bottom: 25px;
+    right: 25px;
+    width: 55px;
+    height: 55px;
+    background-color: #ee4d2d; 
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 28px;
+    cursor: pointer;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.25);
+    z-index: 9999;
+    transition: 0.2s;
+}
+.btn-chat-float:hover {
+    background-color: #d73a1e;
+    transform: scale(1.05); 
+}
+
+.chat-box-container {
+    position: fixed;
+    bottom: 90px;
+    right: 25px;
+    width: 320px;
+    height: 420px;
+    background-color: #fff;
+    border-radius: 12px;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+    display: none; 
+    flex-direction: column;
+    z-index: 9999;
+    overflow: hidden;
+    border: 1px solid #e0e0e0;
+}
+
+.chat-header {
+    background-color: #ee4d2d;
+    color: white;
+    padding: 12px 15px;
+    font-weight: bold;
+    font-family: Arial, sans-serif;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.chat-header .btn-close-chat {
+    cursor: pointer;
+    font-size: 22px;
+    font-weight: normal;
+}
+
+.chat-body {
+    flex-grow: 1;
+    padding: 15px 10px;
+    overflow-y: auto;
+    background-color: #f7f7f7;
+    font-family: Arial, sans-serif;
+}
+
+.msg-item {
+    margin-bottom: 15px;
+    max-width: 75%;
+    padding: 10px 14px;
+    font-size: 14px;
+    clear: both;
+    line-height: 1.4;
+}
+
+.msg-admin {
+    background-color: #fff;
+    float: left;
+    color: #333;
+    border: 1px solid #ddd;
+    border-radius: 15px 15px 15px 0px; 
+}
+
+.msg-user {
+    background-color: #ee4d2d;
+    color: white;
+    float: right;
+    border-radius: 15px 15px 0px 15px;
+}
+
+.chat-footer {
+    padding: 10px;
+    background: #fff;
+    border-top: 1px solid #eee;
+    display: flex;
+}
+
+.txt-chat-input {
+    flex-grow: 1;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 20px;
+    outline: none;
+    font-family: Arial, sans-serif;
+}
+.txt-chat-input:focus {
+    border-color: #ee4d2d;
+}
+
+.btn-send-msg {
+    background-color: transparent;
+    border: none;
+    color: #ee4d2d;
+    font-weight: bold;
+    cursor: pointer;
+    margin-left: 10px;
+    font-size: 15px;
+}
+</style>
+<div class="btn-chat-float" id="btnOpenChat">
+    💬
+</div>
+
+<!-- Khung chat chi tiết -->
+<div class="chat-box-container" id="myChatBox">
+    <div class="chat-header">
+        <span>CSKH JapanSport</span>
+        <span class="btn-close-chat" id="btnCloseChat">&times;</span>
+    </div>
+    
+    <div class="chat-body" id="chatNoiDung">
+        <div class="msg-item msg-admin">
+            Chào bạn, admin của JapanSport có thể giúp gì cho bạn hôm nay?
+        </div>
+    </div>
+    
+    <div class="chat-footer">
+        <input type="text" id="txtNhapTin" class="txt-chat-input" placeholder="Viết tin nhắn..." autocomplete="off">
+        <button class="btn-send-msg" id="btnGuiTin">Gửi</button>
+    </div>
+</div>
+
+<script>
+    // Khai bao cac bien DOM
+    var nutMoChat = document.getElementById('btnOpenChat');
+    var khungChat = document.getElementById('myChatBox');
+    var nutDongChat = document.getElementById('btnCloseChat');
+    var oNhapTin = document.getElementById('txtNhapTin');
+    var nutGui = document.getElementById('btnGuiTin');
+    var vungNoiDung = document.getElementById('chatNoiDung');
+
+    // Bien trang thai
+    var CTX_CHAT = '${pageContext.request.contextPath}';
+    var daDangNhap = false;
+    var daLoadLichSu = false;
+    var lastMsgId = 0;       // id tin nhan cuoi cung da hien
+    var pollTimer = null;    // timer polling
+
+    // Logic bat / tat khung chat
+    nutMoChat.onclick = function() {
+        khungChat.style.display = 'flex';
+        nutMoChat.style.display = 'none';
+        if (!daLoadLichSu) {
+            kiemTraDangNhap();
+        }
+    };
+
+    nutDongChat.onclick = function() {
+        khungChat.style.display = 'none';
+        nutMoChat.style.display = 'flex';
+    };
+
+    // Kiem tra dang nhap + load lich su
+    function kiemTraDangNhap() {
+        fetch(CTX_CHAT + '/api/chat')
+            .then(function(r) {
+                if (r.status === 401) {
+                    vungNoiDung.innerHTML = '<div class="msg-item msg-admin">' +
+                        'Bạn cần <a href="' + CTX_CHAT + '/login" style="color:#ee4d2d;font-weight:bold;">đăng nhập</a> để chat với admin nhé!' +
+                        '</div>';
+                    return null;
+                }
+                return r.json();
+            })
+            .then(function(data) {
+                if (data === null) return;
+
+                daDangNhap = true;
+                daLoadLichSu = true;
+
+                // Hien lich su cu
+                var items = data.items || [];
+                vungNoiDung.innerHTML = '<div class="msg-item msg-admin">Chào bạn, admin của JapanSport có thể giúp gì cho bạn hôm nay?</div>';
+
+                for (var i = 0; i < items.length; i++) {
+                    var m = items[i];
+                    var div = document.createElement('div');
+                    div.className = 'msg-item ' + (m.role === 'ADMIN' ? 'msg-admin' : 'msg-user');
+                    div.innerText = m.content;
+                    vungNoiDung.appendChild(div);
+                    // Cap nhat lastMsgId
+                    if (m.id > lastMsgId) lastMsgId = m.id;
+                }
+                vungNoiDung.scrollTop = vungNoiDung.scrollHeight;
+
+                // Bat dau polling moi 2 giay de kiem tra tin nhan moi tu Admin
+                batDauPolling();
+            })
+            .catch(function() {
+                vungNoiDung.innerHTML = '<div class="msg-item msg-admin">Không thể kết nối server. Vui lòng thử lại sau!</div>';
+            });
+    }
+
+    // Polling: goi API moi 2 giay de lay tin nhan moi
+    function batDauPolling() {
+        if (pollTimer) clearInterval(pollTimer);
+        pollTimer = setInterval(function() {
+            if (!daDangNhap) return;
+            fetch(CTX_CHAT + '/api/chat?action=poll&lastId=' + lastMsgId)
+                .then(function(r) { return r.ok ? r.json() : null; })
+                .then(function(data) {
+                    if (!data) return;
+                    var items = data.items || [];
+                    for (var i = 0; i < items.length; i++) {
+                        var m = items[i];
+                        // Chi hien tin nhan cua ADMIN (tin cua minh da hien khi gui roi)
+                        if (m.role === 'ADMIN') {
+                            var div = document.createElement('div');
+                            div.className = 'msg-item msg-admin';
+                            div.innerText = m.content;
+                            vungNoiDung.appendChild(div);
+                            vungNoiDung.scrollTop = vungNoiDung.scrollHeight;
+                        }
+                        if (m.id > lastMsgId) lastMsgId = m.id;
+                    }
+                })
+                .catch(function() {});
+        }, 2000);
+    }
+
+    // Gui tin nhan
+    function xuLyGuiTinNhan() {
+        var ndung = oNhapTin.value.trim();
+        if (ndung === "") return;
+
+        if (!daDangNhap) {
+            vungNoiDung.innerHTML = '<div class="msg-item msg-admin">' +
+                'Bạn cần <a href="' + CTX_CHAT + '/login" style="color:#ee4d2d;font-weight:bold;">đăng nhập</a> để chat với admin nhé!' +
+                '</div>';
+            return;
+        }
+
+        // 1. Hien tin nhan cua khach len man hinh truoc
+        var theDivKhach = document.createElement('div');
+        theDivKhach.className = 'msg-item msg-user';
+        theDivKhach.innerText = ndung;
+        vungNoiDung.appendChild(theDivKhach);
+        oNhapTin.value = "";
+        vungNoiDung.scrollTop = vungNoiDung.scrollHeight;
+
+        // 2. Gui len server qua API POST
+        fetch(CTX_CHAT + '/api/chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ content: ndung })
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            if (data.ok && data.id > lastMsgId) {
+                lastMsgId = data.id;
+            }
+        })
+        .catch(function() {
+            var divLoi = document.createElement('div');
+            divLoi.className = 'msg-item msg-admin';
+            divLoi.innerText = 'Gửi tin nhắn thất bại, vui lòng thử lại!';
+            vungNoiDung.appendChild(divLoi);
+        });
+    }
+
+    // Bat su kien
+    nutGui.onclick = xuLyGuiTinNhan;
+    oNhapTin.addEventListener("keypress", function(event) {
+        if (event.key === "Enter") {
+            event.preventDefault();
+            xuLyGuiTinNhan();
+        }
+    });
+</script>

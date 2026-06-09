@@ -13,6 +13,7 @@
     String activeOrders     = "orders".equals(ap)     ? "active" : "";
     String activePolicies   = "policies".equals(ap)   ? "active" : "";
     String activeUsers      = "users".equals(ap)      ? "active" : "";
+    String activeChat       = "chat".equals(ap)       ? "active" : "";
 %>
 
 <aside id="sidebar" class="adm-sidebar">
@@ -53,6 +54,10 @@
 
         <a class="adm-item <%= activeVouchers %>" href="${ctx}/admin/voucher">
             <i class="bi bi-ticket-perforated"></i><span>Voucher</span>
+        </a>
+
+        <a class="adm-item <%= activeChat %>" href="${ctx}/admin/chat">
+            <i class="bi bi-chat-dots"></i><span>Chat CSKH</span>
         </a>
 
         <div class="adm-section">HỆ THỐNG</div>

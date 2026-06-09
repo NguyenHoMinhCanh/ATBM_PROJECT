@@ -401,16 +401,18 @@
                                 </h6>
 
                                 <%-- RATING --%>
-                                <% if (reviewCount > 0) { %>
                                 <div class="star-rating mb-1">
+                                <% if (reviewCount > 0) { %>
                                     <span class="stars">
                                         <% for (int s = 1; s <= 5; s++) { %>
                                             <%= (s <= Math.round(avgRating)) ? "★" : "☆" %>
                                         <% } %>
                                     </span>
                                     <span class="review-count">(<%= reviewCount %>)</span>
-                                </div>
+                                <% } else { %>
+                                    <span class="stars" style="color: #ccc;">☆☆☆☆☆</span>
                                 <% } %>
+                                </div>
 
                                 <%-- GIÁ + NÚT --%>
                                 <div class="product-footer mt-auto d-flex justify-content-between align-items-end gap-2">
@@ -694,7 +696,7 @@
 
         // Render sao
         function renderStars(avg, count) {
-            if (count <= 0) return '';
+            if (count <= 0) return '<div class="star-rating mb-1"><span class="stars" style="color: #ccc;">☆☆☆☆☆</span></div>';
             var html = '<div class="star-rating mb-1"><span class="stars">';
             for (var s = 1; s <= 5; s++) {
                 html += (s <= Math.round(avg)) ? '★' : '☆';

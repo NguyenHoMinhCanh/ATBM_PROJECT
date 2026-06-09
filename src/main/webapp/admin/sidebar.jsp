@@ -50,6 +50,10 @@
             <li><a class="s-item" href="${pageContext.request.contextPath}/admin/banners">
                 <i class="bi bi-image me-2"></i>Banner
             </a></li>
+
+            <li><a class="s-item" href="${pageContext.request.contextPath}/admin/chat">
+                <i class="bi bi-chat-dots me-2"></i>Chat CSKH
+            </a></li>
         </ul>
     </div>
 </aside>
