@@ -174,7 +174,7 @@ public class NewsDao extends DAO {
         }
 
         if (keyword != null && !keyword.trim().isEmpty()) {
-            sql.append("AND (n.title LIKE ? OR n.summary LIKE ?) ");
+            sql.append("AND (n.title LIKE ? OR n.summary LIKE ? OR n.content LIKE ?) ");
         }
 
         sql.append("ORDER BY n.created_at DESC, n.id DESC ")
@@ -201,6 +201,7 @@ public class NewsDao extends DAO {
 
         if (keyword != null && !keyword.trim().isEmpty()) {
             String k = "%" + keyword.trim() + "%";
+            ps.setString(idx++, k);
             ps.setString(idx++, k);
             ps.setString(idx++, k);
         }

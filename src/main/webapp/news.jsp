@@ -83,13 +83,22 @@
     <div class="news-grid">
         <div>
             <form method="get" action="${ctx}/news" class="d-flex gap-2 mb-4">
-                <input type="hidden" name="categoryId" value="${categoryId}">
+                <c:if test="${not empty categoryId}">
+                    <input type="hidden" name="categoryId" value="${categoryId}">
+                </c:if>
                 <div class="input-group">
                     <span class="input-group-text bg-white text-muted border-end-0"><i class="bi bi-search"></i></span>
-                    <input name="q" class="form-control border-start-0 ps-0 shadow-none" value="${q}" placeholder="Tìm kiếm bài viết...">
+                    <input name="q" class="form-control border-start-0 ps-0 shadow-none" value="${q}" placeholder="Nhập từ khóa tìm kiếm...">
                 </div>
                 <button class="btn btn-danger px-4 rounded-3">Tìm</button>
             </form>
+
+            <c:if test="${not empty q}">
+                <div class="alert alert-info py-2 px-3 d-flex justify-content-between align-items-center rounded-3 mb-4">
+                    <span><i class="bi bi-funnel me-2"></i>Kết quả tìm kiếm cho: <strong>"${q}"</strong></span>
+                    <a href="${ctx}/news${not empty categoryId ? '?categoryId='.concat(categoryId) : ''}" class="text-muted" title="Xóa bộ lọc"><i class="bi bi-x-circle-fill"></i></a>
+                </div>
+            </c:if>
 
             <c:forEach var="n" items="${newsList}">
                 <div class="news-card">
@@ -117,9 +126,15 @@
             </c:forEach>
 
             <c:if test="${empty newsList}">
-                <div class="alert alert-light border text-center py-5 rounded-3">
-                    <i class="bi bi-journal-x fs-1 text-muted mb-3 d-block"></i>
-                    <h6 class="text-muted">Chưa có bài viết nào phù hợp.</h6>
+                <div class="alert alert-light border text-center py-5 rounded-3 mb-4 shadow-sm">
+                    <i class="bi bi-search text-muted mb-3 d-block" style="font-size: 3rem;"></i>
+                    <h5 class="fw-bold text-dark mb-2">Không tìm thấy kết quả</h5>
+                    <p class="text-muted mb-4">
+                        Rất tiếc, chúng tôi không tìm thấy bài viết nào <c:if test="${not empty q}">chứa từ khóa "<strong>${q}</strong>"</c:if>. Vui lòng thử lại với từ khóa khác!
+                    </p>
+                    <a href="${ctx}/news" class="btn btn-outline-danger rounded-pill px-4">
+                        <i class="bi bi-arrow-clockwise me-1"></i> Tải lại danh sách
+                    </a>
                 </div>
             </c:if>
 
