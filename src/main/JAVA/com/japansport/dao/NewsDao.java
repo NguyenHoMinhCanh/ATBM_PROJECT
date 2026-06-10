@@ -260,4 +260,69 @@ public class NewsDao extends DAO {
             e.printStackTrace();
         }
     }
+    //HÀM TÌM KIẾM NÂNG CAO (HỖ TRỢ LỌC TAGS VÀ THÁNG/NĂM)
+    public List<News> shopGetPublished(Integer categoryId, String keyword, String tag, Integer month, Integer year, int limit, int offset) {
+        List<News> list = new ArrayList<>();
+
+        StringBuilder sql = new StringBuilder();
+        sql.append("SELECT DISTINCT n.* FROM news n ");
+
+        if (categoryId != null) {
+            sql.append("JOIN news_category_map m ON m.news_id = n.id ");
+        }
+
+        sql.append("WHERE n.status = 'PUBLISHED' ");
+
+        if (categoryId != null) {
+            sql.append("AND m.category_id = ? ");
+        }
+
+        if (keyword != null && !keyword.trim().isEmpty()) {
+            sql.append("AND (n.title LIKE ? OR n.summary LIKE ? OR n.content LIKE ?) ");
+        }
+
+        if (tag != null && !tag.trim().isEmpty()) {
+            sql.append("AND n.content LIKE ? ");
+        }
+
+        if (month != null) {
+            sql.append("AND MONTH(n.created_at) = ? ");
+        }
+
+        if (year != null) {
+            sql.append("AND YEAR(n.created_at) = ? ");
+        }
+
+        sql.append("ORDER BY n.created_at DESC, n.id DESC LIMIT ? OFFSET ?");
+
+        try (PreparedStatement ps = getPreparedStatement(sql.toString())) {
+            int idx = 1;
+
+            if (categoryId != null) ps.setInt(idx++, categoryId);
+
+            if (keyword != null && !keyword.trim().isEmpty()) {
+                String k = "%" + keyword.trim() + "%";
+                ps.setString(idx++, k);
+                ps.setString(idx++, k);
+                ps.setString(idx++, k);
+            }
+
+            if (tag != null && !tag.trim().isEmpty()) {
+                ps.setString(idx++, "%" + tag.trim() + "%");
+            }
+
+            if (month != null) ps.setInt(idx++, month);
+            if (year != null) ps.setInt(idx++, year);
+
+            ps.setInt(idx++, limit);
+            ps.setInt(idx, offset);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) list.add(map(rs));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
 }

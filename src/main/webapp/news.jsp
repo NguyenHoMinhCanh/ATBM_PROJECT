@@ -63,6 +63,34 @@
         .cat-link:last-child { border-bottom: none; }
         .cat-link:hover { color: #dc3545; padding-left: 5px; } /* Hiệu ứng lùi nhẹ chữ danh mục */
         .meta { font-size: 13px; color:#888; margin-top:10px; display: flex; align-items: center; gap: 12px;}
+
+        /*SIDEBAR TÙY CHỈNH (ARCHIVE & TAGS)*/
+        .tag-badge {
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: #555;
+            background-color: #f8f9fa;
+            border: 1px solid #e9ecef;
+            transition: all 0.2s ease;
+        }
+        .tag-badge:hover {
+            background-color: #dc3545;
+            color: #fff;
+            border-color: #dc3545;
+            transform: translateY(-2px);
+        }
+        .archive-link {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            color: #444;
+            text-decoration: none;
+            border-bottom: 1px dashed #eee;
+            transition: color 0.2s;
+        }
+        .archive-link:last-child { border-bottom: none; }
+        .archive-link:hover { color: #dc3545; }
     </style>
 </head>
 <body>
@@ -93,9 +121,14 @@
                 <button class="btn btn-danger px-4 rounded-3">Tìm</button>
             </form>
 
-            <c:if test="${not empty q}">
+            <c:if test="${not empty q or not empty tag or (not empty month and not empty year)}">
                 <div class="alert alert-info py-2 px-3 d-flex justify-content-between align-items-center rounded-3 mb-4">
-                    <span><i class="bi bi-funnel me-2"></i>Kết quả tìm kiếm cho: <strong>"${q}"</strong></span>
+                    <span>
+                        <i class="bi bi-funnel me-2"></i>Kết quả cho:
+                        <c:if test="${not empty q}">từ khóa <strong>"${q}"</strong></c:if>
+                        <c:if test="${not empty tag}">thẻ <strong>#${tag}</strong></c:if>
+                        <c:if test="${not empty month and not empty year}">tháng <strong>${month}/${year}</strong></c:if>
+                    </span>
                     <a href="${ctx}/news${not empty categoryId ? '?categoryId='.concat(categoryId) : ''}" class="text-muted" title="Xóa bộ lọc"><i class="bi bi-x-circle-fill"></i></a>
                 </div>
             </c:if>
@@ -142,12 +175,12 @@
                 <ul class="pagination">
                     <c:if test="${page > 1}">
                         <li class="page-item">
-                            <a class="page-link text-dark" href="${ctx}/news?page=${page-1}&categoryId=${categoryId}&q=${q}">← Trang trước</a>
+                            <a class="page-link text-dark" href="${ctx}/news?page=${page-1}&categoryId=${categoryId}&q=${q}&tag=${tag}&month=${month}&year=${year}">← Trang trước</a>
                         </li>
                     </c:if>
                     <c:if test="${not empty newsList}">
                         <li class="page-item">
-                            <a class="page-link text-danger fw-bold" href="${ctx}/news?page=${page+1}&categoryId=${categoryId}&q=${q}">Trang sau →</a>
+                            <a class="page-link text-danger fw-bold" href="${ctx}/news?page=${page+1}&categoryId=${categoryId}&q=${q}&tag=${tag}&month=${month}&year=${year}">Trang sau →</a>
                         </li>
                     </c:if>
                 </ul>
@@ -169,6 +202,29 @@
                 <c:if test="${empty categories}">
                     <div style="color:#777; font-size: 0.9rem;">Chưa có danh mục tin tức.</div>
                 </c:if>
+            </div>
+
+            <div class="side-box shadow-sm mt-4">
+                <h5 class="fw-bold mb-3"><i class="bi bi-calendar3 me-2 text-danger"></i>Lưu trữ</h5>
+                <a class="archive-link" href="${ctx}/news?month=06&year=2026">
+                    <span><i class="bi bi-chevron-right me-1 small"></i> Tháng 6 / 2026</span>
+                </a>
+                <a class="archive-link" href="${ctx}/news?month=05&year=2026">
+                    <span><i class="bi bi-chevron-right me-1 small"></i> Tháng 5 / 2026</span>
+                </a>
+                <a class="archive-link" href="${ctx}/news?month=04&year=2026">
+                    <span><i class="bi bi-chevron-right me-1 small"></i> Tháng 4 / 2026</span>
+                </a>
+            </div>
+
+            <div class="side-box shadow-sm mt-4">
+                <h5 class="fw-bold mb-3"><i class="bi bi-tags me-2 text-danger"></i>Tags nổi bật</h5>
+                <div class="d-flex flex-wrap gap-2">
+                    <a href="${ctx}/news?tag=the-thao" class="badge tag-badge text-decoration-none py-2 px-3"># Thể thao</a>
+                    <a href="${ctx}/news?tag=khuyen-mai" class="badge tag-badge text-decoration-none py-2 px-3"># Khuyến mãi</a>
+                    <a href="${ctx}/news?tag=giay-chay-bo" class="badge tag-badge text-decoration-none py-2 px-3"># Giày chạy bộ</a>
+                    <a href="${ctx}/news?tag=kien-thuc" class="badge tag-badge text-decoration-none py-2 px-3"># Kiến thức</a>
+                </div>
             </div>
         </div>
 
