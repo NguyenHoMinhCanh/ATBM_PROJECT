@@ -57,6 +57,9 @@
         /* Breadcrumb tùy chỉnh */
         .breadcrumb-item a { color: #6c757d; text-decoration: none; transition: color 0.2s; }
         .breadcrumb-item a:hover { color: #dc3545; }
+
+        .btn-back-news { transition: all 0.3s ease; }
+        .btn-back-news:hover { transform: translateY(-3px); box-shadow: 0 4px 10px rgba(220, 53, 69, 0.2); }
     </style>
 </head>
 <body>
@@ -103,6 +106,13 @@
 
             <div class="article-content">
                 <c:out value="${news.content}" escapeXml="false"/>
+            </div>
+
+            <div class="text-center mt-5 mb-2 border-top pt-5">
+                <h6 class="text-muted mb-3">Bạn đã đọc xong bài viết!</h6>
+                <a href="${ctx}/news" class="btn btn-outline-danger rounded-pill px-5 py-2 fw-bold btn-back-news">
+                    <i class="bi bi-arrow-left-circle me-2"></i> Quay về danh sách tin tức
+                </a>
             </div>
 
             <div class="d-flex justify-content-between align-items-center mt-5 pt-3 border-top">
@@ -155,5 +165,6 @@
         title="Lên đầu trang" aria-label="Lên đầu trang">
     <i class="bi bi-arrow-up"></i>
 </button>
+
 </body>
 </html>
