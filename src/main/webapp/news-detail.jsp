@@ -115,8 +115,7 @@
                 </a>
             </div>
 
-            <div class="d-flex justify-content-between align-items-center mt-5 pt-3 border-top">
-                <a href="${ctx}/news" class="btn btn-outline-secondary rounded-pill px-4"><i class="bi bi-arrow-left me-2"></i>Quay lại danh sách</a>
+            <div class="d-flex justify-content-end align-items-center mt-3 pt-3">
                 <div class="d-flex gap-2 align-items-center">
                     <span class="text-muted small fw-bold">Chia sẻ:</span>
                     <button class="btn btn-sm btn-light border text-primary rounded-circle" title="Chia sẻ Facebook"><i class="bi bi-facebook"></i></button>
