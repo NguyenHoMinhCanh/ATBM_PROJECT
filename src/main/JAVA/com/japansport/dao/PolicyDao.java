@@ -63,6 +63,20 @@ public class PolicyDao extends DAO {
         return null;
     }
 
+    /** Check by slug regardless of active status (used by seed to avoid duplicates) */
+    public Policy getBySlugAny(String slug) {
+        String sql = "SELECT * FROM policies WHERE slug = ?";
+        try {
+            PreparedStatement ps = getPreparedStatement(sql);
+            ps.setString(1, slug);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) return map(rs);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
     public int insert(Policy p) {
         String sql = "INSERT INTO policies(title, slug, content, policy_type, display_order, active) VALUES(?,?,?,?,?,?)";
         try {
