@@ -60,6 +60,12 @@
 
         .btn-back-news { transition: all 0.3s ease; }
         .btn-back-news:hover { transform: translateY(-3px); box-shadow: 0 4px 10px rgba(220, 53, 69, 0.2); }
+
+        .hover-danger:hover { color: #dc3545 !important; transition: color 0.2s; }
+        .focus-ring-danger:focus { border-color: #dc3545; box-shadow: 0 0 0 0.25rem rgba(220, 53, 69, 0.25); }
+        .comment-avatar { width: 45px; height: 45px; object-fit: cover; border-radius: 50%; }
+        .comment-box { background-color: #f8f9fa; border: 1px solid #eaeaea; transition: all 0.3s ease; }
+        .comment-box:hover { background-color: #fff; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
     </style>
 </head>
 <body>
@@ -115,11 +121,48 @@
                 </a>
             </div>
 
-            <div class="d-flex justify-content-end align-items-center mt-3 pt-3">
-                <div class="d-flex gap-2 align-items-center">
-                    <span class="text-muted small fw-bold">Chia sẻ:</span>
-                    <button class="btn btn-sm btn-light border text-primary rounded-circle" title="Chia sẻ Facebook"><i class="bi bi-facebook"></i></button>
-                    <button class="btn btn-sm btn-light border text-info rounded-circle" title="Chia sẻ Twitter"><i class="bi bi-twitter"></i></button>
+            <div class="comment-section mt-5 mb-4">
+                <h4 class="fw-bold mb-4"><i class="bi bi-chat-dots me-2 text-danger"></i>Bình luận (${comments.size()})</h4>
+
+                <!-- Form nhập bình luận -->
+                <div class="d-flex gap-3 mb-5">
+                    <div class="bg-secondary text-white rounded-circle d-flex justify-content-center align-items-center flex-shrink-0" style="width: 45px; height: 45px; font-weight: bold;">
+                        U
+                    </div>
+                    <div class="flex-grow-1">
+                        <form action="${ctx}/post-comment" method="POST">
+                            <!-- Dữ liệu ngầm gửi kèm -->
+                            <input type="hidden" name="newsId" value="${news.id}">
+                            <input type="hidden" name="slug" value="${news.slug}">
+
+                            <input type="text" name="userName" class="form-control mb-2 rounded-3 shadow-none focus-ring focus-ring-danger" placeholder="Tên của bạn (Tùy chọn)..." maxlength="50">
+                            <textarea name="content" class="form-control mb-2 rounded-3 shadow-none focus-ring focus-ring-danger" rows="3" placeholder="Chia sẻ suy nghĩ của bạn về bài viết này..." required></textarea>
+                            <div class="text-end">
+                                <button type="submit" class="btn btn-danger rounded-pill px-4 fw-bold">Gửi bình luận</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Danh sách bình luận -->
+                <div class="comment-list">
+                    <c:forEach var="cmt" items="${comments}">
+                        <div class="d-flex gap-3 mb-4">
+                            <!-- Tạo avatar tự động từ tên -->
+                            <img src="https://ui-avatars.com/api/?name=${cmt.userName}&background=random" alt="Avatar" class="comment-avatar">
+                            <div class="comment-box p-3 rounded-4 flex-grow-1">
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <h6 class="mb-0 fw-bold">${cmt.userName}</h6>
+                                    <small class="text-muted">${cmt.createdAt}</small>
+                                </div>
+                                <p class="mb-2 text-dark">${cmt.content}</p>
+                            </div>
+                        </div>
+                    </c:forEach>
+
+                    <c:if test="${empty comments}">
+                        <div class="text-center text-muted p-4 bg-light rounded-3">Chưa có bình luận nào. Hãy là người đầu tiên nhận xét!</div>
+                    </c:if>
                 </div>
             </div>
         </div>
