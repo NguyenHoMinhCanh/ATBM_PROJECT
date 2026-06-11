@@ -47,6 +47,11 @@ public class NewsDetailServlet extends HttpServlet {
             List<News> recentNews = newsDao.shopGetPublished(null, null, 5, 0);
             request.setAttribute("recentNews", recentNews);
 
+            // Lấy danh sách bình luận
+            com.japansport.dao.NewsCommentDao commentDao = new com.japansport.dao.NewsCommentDao();
+            java.util.List<com.japansport.model.NewsComment> comments = commentDao.getByNewsId(n.getId());
+            request.setAttribute("comments", comments);
+
             // Điều hướng sang JSP
             request.getRequestDispatcher("/news-detail.jsp").forward(request, response);
 
