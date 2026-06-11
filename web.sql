@@ -1886,3 +1886,13 @@ INSERT INTO `users` VALUES (6, 'tronglinh2708@...', 'pbkdf2$...', 'linh', NULL, 
 INSERT INTO `users` VALUES (7, 'tronglinh2708@gmail.com', 'pbkdf2$120000$S7E3T34QEDn0CEtTnCQC_w$1OdEJrDwCldbgHMRuxSC0TpTlM3HxPhrdmeJ5jZvFTU', 'linh trọng', '', 'uploads/avatars/u7_622cc253-28f6-4672-b56e-b704b77e0db6.jpg', NULL, NULL, 1, '2026-01-03 00:22:49', '2026-01-16 08:18:59', 'local');
 
 SET FOREIGN_KEY_CHECKS = 1;
+
+DROP TABLE IF EXISTS ` news_comments`;
+CREATE TABLE news_comments (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    news_id INT NOT NULL,
+    user_name VARCHAR(100) NOT NULL,
+    content TEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (news_id) REFERENCES news(id) ON DELETE CASCADE
+);
