@@ -1833,3 +1833,49 @@ CREATE TABLE `notifications` (
 
 ALTER TABLE notifications ADD COLUMN link VARCHAR(255) DEFAULT NULL COMMENT 'Đường dẫn khi click vào thông báo';
 ALTER TABLE notifications ADD COLUMN title VARCHAR(255) AFTER user_id;
+
+DROP TABLE IF EXISTS ` news_comments`;
+CREATE TABLE news_comments (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    news_id INT NOT NULL,
+    user_name VARCHAR(100) NOT NULL,
+    content TEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (news_id) REFERENCES news(id) ON DELETE CASCADE
+);
+
+INSERT INTO news (title, slug, summary, content, thumbnail_url, author, status, featured) VALUES 
+('Top 5 đôi giày chạy bộ tốt nhất năm 2026', 
+ 'top-5-doi-giay-chay-bo-tot-nhat-nam-2026', 
+ 'Khám phá danh sách những đôi giày chạy bộ được đánh giá cao nhất về độ êm ái, hỗ trợ phản lực và độ bền trong năm nay.', 
+ '<p>Đối với những người yêu thích chạy bộ, việc sở hữu một đôi giày phù hợp là cực kỳ quan trọng. Năm 2026 chứng kiến sự bùng nổ của các công nghệ đế bọt mới giúp tối ưu hóa hiệu suất chạy...</p>', 
+ 'https://images.unsplash.com/photo-1476480862126-209bfaa8edc8?w=800', 
+ 'Admin', 'PUBLISHED', 1),
+
+('Cách phân biệt giày thật và giày giả chính xác 100%', 
+ 'cach-phan-biet-giay-that-va-giay-gia-chinh-xac-100', 
+ 'Mẹo kiểm tra đường may, hộp giày, tem mác và lót giày giúp bạn không bao giờ mua phải hàng kém chất lượng.', 
+ '<p>Hiện nay công nghệ làm giả giày ngày càng tinh vi. Tuy nhiên, nếu chú ý kỹ vào các chi tiết như đường chỉ khâu, font chữ trên tem và mùi keo đặc trưng, bạn hoàn toàn có thể tự mình nhận biết...</p>', 
+ 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=800', 
+ 'Biên tập viên', 'PUBLISHED', 0),
+
+('Bí quyết chọn size giày đá bóng vừa vặn không bị kích chân', 
+ 'bi-quyet-chon-size-giay-da-bong-vua-van-khong-bi-kich-chan', 
+ 'Giày đá bóng cần độ ôm sát nhưng nếu chọn sai size sẽ gây chấn thương. Dưới đây là hướng dẫn đo chân chuẩn nhất.', 
+ '<p>Không giống như giày đi chơi thông thường, giày đá bóng đòi hỏi sự chính xác tuyệt đối về kích thước để đảm bảo cảm giác bóng và tránh các chấn thương lật cổ chân, thâm móng...</p>', 
+ 'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?w=800', 
+ 'Huấn luyện viên', 'PUBLISHED', 1),
+
+('Xu hướng thời trang Sneaker khuấy đảo giới trẻ hè này', 
+ 'xu-huong-thoi-trang-sneaker-khuay-dao-gioi-tre-he-nay', 
+ 'Những mẫu thiết kế retro cổ điển phối màu độc lạ đang trở lại và chiếm lĩnh các bảng xếp hạng thời trang đường phố.', 
+ '<p>Phong cách hoài cổ phối cùng các gam màu pastel nhẹ nhàng đang là xu hướng chủ đạo của mùa hè năm nay. Các thương hiệu lớn liên tục tái bản các dòng sản phẩm huyền thoại...</p>', 
+ 'https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?w=800', 
+ 'JapanSport Team', 'PUBLISHED', 0),
+
+('Lợi ích của việc chạy bộ mỗi buổi sáng đối với sức khỏe', 
+ 'loi-ich-cua-viec-chay-bo-moi-buoi-sang-doi-voi-suc-khoe', 
+ 'Chỉ với 20 phút chạy bộ mỗi ngày, bạn sẽ thấy cơ thể có những thay đổi rõ rệt về cả thể chất lẫn tinh thần.', 
+ '<p>Chạy bộ buổi sáng không chỉ giúp đốt cháy calo, cải thiện hệ tim mạch mà còn kích thích sản sinh nội tiết tố hạnh phúc, giúp bạn bắt đầu một ngày mới tràn đầy năng lượng...</p>', 
+ 'https://images.unsplash.com/photo-1502224562085-639556652f33?w=800', 
+ 'Bác sĩ thể thao', 'PUBLISHED', 0);
