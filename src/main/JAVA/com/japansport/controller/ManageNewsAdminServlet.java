@@ -5,15 +5,22 @@ import com.japansport.dao.NewsCategoryDao;
 import com.japansport.model.News;
 import com.japansport.model.NewsCategory;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.annotation.MultipartConfig;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.*;
 
+import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.text.Normalizer;
 import java.util.*;
 import java.util.regex.Pattern;
 
 @WebServlet(name = "ManageNewsAdminServlet", urlPatterns = {"/admin/news"})
+@MultipartConfig(maxFileSize = 10 * 1024 * 1024, maxRequestSize = 20 * 1024 * 1024)
 public class ManageNewsAdminServlet extends HttpServlet {
 
     private NewsDao newsDao;
@@ -126,7 +133,17 @@ public class ManageNewsAdminServlet extends HttpServlet {
         String action = request.getParameter("action");
 
         if ("create".equals(action)) {
-            News n = readFromRequest(new News(), request);
+            News n = new News();
+            try {
+                n = readFromRequest(n, request);
+            } catch (IllegalArgumentException e) {
+                request.setAttribute("error", e.getMessage());
+                request.setAttribute("categories", categoryDao.getAll());
+                request.setAttribute("news", n);
+                request.setAttribute("pageTitle", "Thêm tin tức");
+                request.getRequestDispatcher("/admin/news-form.jsp").forward(request, response);
+                return;
+            }
 
             if (isBlank(n.getTitle()) || isBlank(n.getContent())) {
                 request.setAttribute("error", "Vui lòng nhập Tiêu đề và Nội dung.");
@@ -155,7 +172,16 @@ public class ManageNewsAdminServlet extends HttpServlet {
                 return;
             }
 
-            n = readFromRequest(n, request);
+            try {
+                n = readFromRequest(n, request);
+            } catch (IllegalArgumentException e) {
+                request.setAttribute("error", e.getMessage());
+                request.setAttribute("categories", categoryDao.getAll());
+                request.setAttribute("news", n);
+                request.setAttribute("pageTitle", "Sửa tin tức");
+                request.getRequestDispatcher("/admin/news-form.jsp").forward(request, response);
+                return;
+            }
 
             if (isBlank(n.getTitle()) || isBlank(n.getContent())) {
                 request.setAttribute("error", "Vui lòng nhập Tiêu đề và Nội dung.");
@@ -176,17 +202,24 @@ public class ManageNewsAdminServlet extends HttpServlet {
         }
     }
 
-    private News readFromRequest(News n, HttpServletRequest request) {
+    private News readFromRequest(News n, HttpServletRequest request) throws ServletException, IOException {
         n.setTitle(trimToNull(request.getParameter("title")));
         n.setSummary(trimToNull(request.getParameter("summary")));
         n.setContent(trimToNull(request.getParameter("content")));
-        n.setThumbnailUrl(trimToNull(request.getParameter("thumbnailUrl")));
         n.setAuthor(trimToNull(request.getParameter("author")));
 
         String status = trimToNull(request.getParameter("status"));
         n.setStatus(status == null ? "PUBLISHED" : status);
 
         n.setFeatured("on".equals(request.getParameter("featured")) ? 1 : 0);
+
+        // process file upload
+        String uploadedImageUrl = handleImageUpload(request, "thumbnailFile");
+        if (uploadedImageUrl != null) {
+            n.setThumbnailUrl(uploadedImageUrl);
+        } else {
+            n.setThumbnailUrl(trimToNull(request.getParameter("thumbnailUrl")));
+        }
 
         // multi categories
         String[] catArr = request.getParameterValues("categoryIds");
@@ -223,5 +256,42 @@ public class ManageNewsAdminServlet extends HttpServlet {
         slug = slug.replaceAll("-{2,}", "-");
         slug = slug.replaceAll("^-|-$", "");
         return slug.isEmpty() ? "news" : slug;
+    }
+
+    /**
+     * Xử lý upload ảnh từ form
+     */
+    private String handleImageUpload(HttpServletRequest request, String inputFieldName)
+            throws ServletException, IOException, IllegalArgumentException {
+        try {
+            Part filePart = request.getPart(inputFieldName);
+            if (filePart != null && filePart.getSize() > 0) {
+                String submittedFileName = Paths.get(filePart.getSubmittedFileName()).getFileName().toString();
+                String ext = "";
+                int dotIdx = submittedFileName.lastIndexOf('.');
+                if (dotIdx >= 0) ext = submittedFileName.substring(dotIdx).toLowerCase();
+
+                if (!ext.matches(".*(jpg|jpeg|png|gif|webp|bmp|svg)")) {
+                    throw new IllegalArgumentException("Chỉ chấp nhận file ảnh (jpg, png, gif, webp...)");
+                }
+
+                String newFileName = UUID.randomUUID().toString().replace("-", "") + ext;
+                String uploadDir = getServletContext().getRealPath("/uploads/news");
+                File dir = new File(uploadDir);
+                if (!dir.exists()) dir.mkdirs();
+
+                File saveFile = new File(dir, newFileName);
+                try (InputStream is = filePart.getInputStream()) {
+                    Files.copy(is, saveFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+                }
+
+                String contextPath = request.getContextPath();
+                return contextPath + "/uploads/news/" + newFileName;
+            }
+        } catch (ServletException e) {
+            // Có thể xảy ra nếu request không phải multipart, trả về null để fallback
+            return null;
+        }
+        return null;
     }
 }

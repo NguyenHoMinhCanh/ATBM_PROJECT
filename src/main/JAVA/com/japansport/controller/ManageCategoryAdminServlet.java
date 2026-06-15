@@ -6,14 +6,20 @@ import com.google.gson.Gson;
 import jakarta.servlet.*;
 import jakarta.servlet.http.*;
 import jakarta.servlet.annotation.*;
+import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.PrintWriter;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 @WebServlet(name = "ManageCategoryAdminServlet", urlPatterns = {"/admin/categories"})
-@MultipartConfig
+@MultipartConfig(maxFileSize = 10 * 1024 * 1024, maxRequestSize = 20 * 1024 * 1024)
 public class ManageCategoryAdminServlet extends HttpServlet {
 
     private CategoryDao categoryDao;
@@ -120,8 +126,15 @@ public class ManageCategoryAdminServlet extends HttpServlet {
             // Đọc dữ liệu từ request
             Category category = new Category();
             category.setName(request.getParameter("name"));
-            category.setImage_url(request.getParameter("image_url"));
             category.setLink(request.getParameter("link"));
+
+            // Xử lý upload ảnh
+            String uploadedImageUrl = handleImageUpload(request, "image_file");
+            if (uploadedImageUrl != null) {
+                category.setImage_url(uploadedImageUrl);
+            } else {
+                category.setImage_url(request.getParameter("image_url"));
+            }
 
             // Slug: tự động tạo nếu để trống
             String slug = request.getParameter("slug");
@@ -171,6 +184,8 @@ public class ManageCategoryAdminServlet extends HttpServlet {
 
         } catch (NumberFormatException e) {
             sendJsonError(response, "Dữ liệu số không hợp lệ", 400);
+        } catch (IllegalArgumentException e) {
+            sendJsonError(response, e.getMessage(), 400);
         } catch (Exception e) {
             e.printStackTrace();
             sendJsonError(response, "Lỗi khi tạo danh mục: " + e.getMessage(), 500);
@@ -193,8 +208,15 @@ public class ManageCategoryAdminServlet extends HttpServlet {
 
             // Cập nhật thông tin
             category.setName(request.getParameter("name"));
-            category.setImage_url(request.getParameter("image_url"));
             category.setLink(request.getParameter("link"));
+
+            // Xử lý upload ảnh
+            String uploadedImageUrl = handleImageUpload(request, "image_file");
+            if (uploadedImageUrl != null) {
+                category.setImage_url(uploadedImageUrl);
+            } else {
+                category.setImage_url(request.getParameter("image_url"));
+            }
 
             // Slug
             String slug = request.getParameter("slug");
@@ -245,6 +267,8 @@ public class ManageCategoryAdminServlet extends HttpServlet {
 
         } catch (NumberFormatException e) {
             sendJsonError(response, "ID không hợp lệ", 400);
+        } catch (IllegalArgumentException e) {
+            sendJsonError(response, e.getMessage(), 400);
         } catch (Exception e) {
             e.printStackTrace();
             sendJsonError(response, "Lỗi khi cập nhật danh mục: " + e.getMessage(), 500);
@@ -305,5 +329,42 @@ public class ManageCategoryAdminServlet extends HttpServlet {
         PrintWriter out = response.getWriter();
         out.print(gson.toJson(error));
         out.flush();
+    }
+
+    /**
+     * Xử lý upload ảnh từ form
+     */
+    private String handleImageUpload(HttpServletRequest request, String inputFieldName)
+            throws ServletException, IOException, IllegalArgumentException {
+        try {
+            Part filePart = request.getPart(inputFieldName);
+            if (filePart != null && filePart.getSize() > 0) {
+                String submittedFileName = Paths.get(filePart.getSubmittedFileName()).getFileName().toString();
+                String ext = "";
+                int dotIdx = submittedFileName.lastIndexOf('.');
+                if (dotIdx >= 0) ext = submittedFileName.substring(dotIdx).toLowerCase();
+
+                if (!ext.matches(".*(jpg|jpeg|png|gif|webp|bmp|svg)")) {
+                    throw new IllegalArgumentException("Chỉ chấp nhận file ảnh (jpg, png, gif, webp...)");
+                }
+
+                String newFileName = UUID.randomUUID().toString().replace("-", "") + ext;
+                String uploadDir = getServletContext().getRealPath("/uploads/categories");
+                File dir = new File(uploadDir);
+                if (!dir.exists()) dir.mkdirs();
+
+                File saveFile = new File(dir, newFileName);
+                try (InputStream is = filePart.getInputStream()) {
+                    Files.copy(is, saveFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+                }
+
+                String contextPath = request.getContextPath();
+                return contextPath + "/uploads/categories/" + newFileName;
+            }
+        } catch (ServletException e) {
+            // Có thể xảy ra nếu request không phải multipart, trả về null để fallback
+            return null;
+        }
+        return null;
     }
 }
