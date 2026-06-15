@@ -11,7 +11,7 @@
  Target Server Version : 90600 (9.6.0)
  File Encoding         : 65001
 
- Date: 30/05/2026 15:41:37
+ Date: 13/06/2026 22:12:17
 */
 
 SET NAMES utf8mb4;
@@ -159,14 +159,38 @@ CREATE TABLE `categories`  (
 -- ----------------------------
 -- Records of categories
 -- ----------------------------
-INSERT INTO `categories` VALUES (1, 'Giày chạy bộ', '/images/categories/running.jpg', '/category/running', 1, 1, '2025-12-11 23:45:33', '2025-12-11 23:45:33', NULL, NULL, 0);
-INSERT INTO `categories` VALUES (2, 'Giày bóng đá', '/images/categories/football.jpg', '/category/football', 1, 1, '2025-12-11 23:45:33', '2025-12-11 23:45:33', NULL, NULL, 0);
-INSERT INTO `categories` VALUES (3, 'Giày bóng rổ', '/images/categories/basket.jpg', '/category/basket', 1, 1, '2025-12-11 23:45:33', '2025-12-11 23:45:33', NULL, NULL, 0);
-INSERT INTO `categories` VALUES (4, 'Sneaker lifestyle', '/images/categories/lifestyle.jpg', '/category/lifestyle', 1, 1, '2025-12-11 23:45:33', '2025-12-11 23:45:33', NULL, NULL, 0);
+INSERT INTO `categories` VALUES (1, 'Giày chạy bộ', 'assets/images/index/cat_running.png', '/category/running', 1, 1, '2025-12-11 23:45:33', '2026-06-08 17:16:15', NULL, NULL, 0);
+INSERT INTO `categories` VALUES (2, 'Giày bóng đá', 'assets/images/index/cat_football.png', '/category/football', 1, 1, '2025-12-11 23:45:33', '2026-06-08 17:16:15', NULL, NULL, 0);
+INSERT INTO `categories` VALUES (3, 'Giày bóng rổ', 'assets/images/index/cat_basketball.png', '/category/basket', 1, 1, '2025-12-11 23:45:33', '2026-06-08 17:16:15', NULL, NULL, 0);
+INSERT INTO `categories` VALUES (4, 'Sneaker lifestyle', 'assets/images/index/cat_sneaker.png', '/category/lifestyle', 1, 1, '2025-12-11 23:45:33', '2026-06-08 17:16:15', NULL, NULL, 0);
 INSERT INTO `categories` VALUES (5, 'Dép & Sandal', '/images/categories/sandal.jpg', '/category/sandal', 0, 1, '2025-12-11 23:45:33', '2026-01-15 09:43:24', 'dep-sandal', NULL, 0);
 INSERT INTO `categories` VALUES (6, 'Giày tennis', '/images/categories/tennis.jpg', '/category/tennis', 0, 1, '2025-12-11 23:45:33', '2025-12-11 23:45:33', NULL, NULL, 0);
 INSERT INTO `categories` VALUES (7, 'Giày training / gym', '/images/categories/training.jpg', '/category/training', 0, 1, '2025-12-11 23:45:33', '2025-12-11 23:45:33', NULL, NULL, 0);
 INSERT INTO `categories` VALUES (8, 'Phụ kiện chăm sóc giày', '/images/categories/access.jpg', '/category/access', 0, 1, '2025-12-11 23:45:33', '2025-12-11 23:45:33', NULL, NULL, 0);
+
+-- ----------------------------
+-- Table structure for chat_messages
+-- ----------------------------
+DROP TABLE IF EXISTS `chat_messages`;
+CREATE TABLE `chat_messages`  (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `user_id` int NOT NULL COMMENT 'ID cua khach hang (tham chieu bang users)',
+  `sender_role` varchar(10) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'USER' COMMENT 'USER hoac ADMIN',
+  `content` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'Noi dung tin nhan',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`) USING BTREE,
+  INDEX `idx_user_id`(`user_id` ASC) USING BTREE,
+  INDEX `idx_created`(`created_at` ASC) USING BTREE
+) ENGINE = InnoDB AUTO_INCREMENT = 6 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- Records of chat_messages
+-- ----------------------------
+INSERT INTO `chat_messages` VALUES (1, 3, 'USER', 'hello', '2026-06-09 09:11:13');
+INSERT INTO `chat_messages` VALUES (2, 3, 'USER', 'ád', '2026-06-09 09:11:23');
+INSERT INTO `chat_messages` VALUES (3, 3, 'USER', 'alo', '2026-06-09 09:11:26');
+INSERT INTO `chat_messages` VALUES (4, 0, 'ADMIN', 'hello', '2026-06-09 09:23:47');
+INSERT INTO `chat_messages` VALUES (5, 3, 'ADMIN', 'chào b', '2026-06-09 09:24:23');
 
 -- ----------------------------
 -- Table structure for contact_messages
@@ -216,7 +240,7 @@ CREATE TABLE `news`  (
 -- ----------------------------
 -- Records of news
 -- ----------------------------
-INSERT INTO `news` VALUES (1, 'Cách chọn size giày (Nike/Adidas) chuẩn, tránh rộng – chật khi mua online', 'cach-chon-size-giay-nikeadidas-chuan-tranh-rong-chat-khi-mua-online', NULL, '<p>Mua giày online dễ “lệch size” vì mỗi hãng có form khác nhau. Dưới đây là cách đo nhanh và mẹo chọn size an toàn.</p>\r\n\r\n<h2>Bước 1: Đo chiều dài bàn chân</h2>\r\n<ul>\r\n  <li>Đặt chân lên tờ giấy, kẻ vạch gót và mũi dài nhất.</li>\r\n  <li>Đo khoảng cách (mm) và <b>cộng thêm 5–10mm</b> để có “khoảng thở”.</li>\r\n</ul>\r\n\r\n<h2>Bước 2: Hiểu form theo hãng</h2>\r\n<ul>\r\n  <li><b>Nike (nhiều mẫu form ôm):</b> chân bè nên cân nhắc +0.5 size.</li>\r\n  <li><b>Adidas (nhiều mẫu form thoải mái):</b> thường true-to-size, nhưng dòng knit dễ giãn.</li>\r\n</ul>\r\n\r\n<h2>Bước 3: Chọn theo nhu cầu</h2>\r\n<ul>\r\n  <li><b>Đi học/đi làm:</b> ưu tiên thoải mái, dư nhẹ 0.5cm.</li>\r\n  <li><b>Chạy bộ:</b> dư 0.5–1cm (chân trượt về trước khi chạy).</li>\r\n  <li><b>Bóng rổ/đổi hướng:</b> ôm gót chắc để giảm lật cổ chân.</li>\r\n</ul>\r\n\r\n<p><b>Mẹo:</b> Nếu bạn đang mang 1 đôi vừa chân, hãy đo <i>chiều dài insole</i> (lót giày) rồi đối chiếu.</p>', 'https://bizweb.dktcdn.net/thumb/large/100/347/092/articles/1043a024-100-sr-rt-glb.jpg?v=1756175361867', NULL, 9, 'PUBLISHED', 0, '2026-01-15 15:52:43', '2026-01-16 08:21:59');
+INSERT INTO `news` VALUES (1, 'Cách chọn size giày (Nike/Adidas) chuẩn, tránh rộng – chật khi mua online', 'cach-chon-size-giay-nikeadidas-chuan-tranh-rong-chat-khi-mua-online', NULL, '<p>Mua giày online dễ “lệch size” vì mỗi hãng có form khác nhau. Dưới đây là cách đo nhanh và mẹo chọn size an toàn.</p>\r\n\r\n<h2>Bước 1: Đo chiều dài bàn chân</h2>\r\n<ul>\r\n  <li>Đặt chân lên tờ giấy, kẻ vạch gót và mũi dài nhất.</li>\r\n  <li>Đo khoảng cách (mm) và <b>cộng thêm 5–10mm</b> để có “khoảng thở”.</li>\r\n</ul>\r\n\r\n<h2>Bước 2: Hiểu form theo hãng</h2>\r\n<ul>\r\n  <li><b>Nike (nhiều mẫu form ôm):</b> chân bè nên cân nhắc +0.5 size.</li>\r\n  <li><b>Adidas (nhiều mẫu form thoải mái):</b> thường true-to-size, nhưng dòng knit dễ giãn.</li>\r\n</ul>\r\n\r\n<h2>Bước 3: Chọn theo nhu cầu</h2>\r\n<ul>\r\n  <li><b>Đi học/đi làm:</b> ưu tiên thoải mái, dư nhẹ 0.5cm.</li>\r\n  <li><b>Chạy bộ:</b> dư 0.5–1cm (chân trượt về trước khi chạy).</li>\r\n  <li><b>Bóng rổ/đổi hướng:</b> ôm gót chắc để giảm lật cổ chân.</li>\r\n</ul>\r\n\r\n<p><b>Mẹo:</b> Nếu bạn đang mang 1 đôi vừa chân, hãy đo <i>chiều dài insole</i> (lót giày) rồi đối chiếu.</p>', 'https://bizweb.dktcdn.net/thumb/large/100/347/092/articles/1043a024-100-sr-rt-glb.jpg?v=1756175361867', NULL, 10, 'PUBLISHED', 0, '2026-01-15 15:52:43', '2026-06-08 16:49:34');
 
 -- ----------------------------
 -- Table structure for news_categories
@@ -252,6 +276,28 @@ CREATE TABLE `news_category_map`  (
 
 -- ----------------------------
 -- Records of news_category_map
+-- ----------------------------
+
+-- ----------------------------
+-- Table structure for notifications
+-- ----------------------------
+DROP TABLE IF EXISTS `notifications`;
+CREATE TABLE `notifications`  (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `user_id` int NOT NULL,
+  `type` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT 'SYSTEM',
+  `title` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+  `content` text CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL,
+  `link` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT '#',
+  `is_read` tinyint(1) NULL DEFAULT 0,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`) USING BTREE,
+  INDEX `user_id`(`user_id` ASC) USING BTREE,
+  CONSTRAINT `notifications_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE RESTRICT
+) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- Records of notifications
 -- ----------------------------
 
 -- ----------------------------
@@ -1886,13 +1932,3 @@ INSERT INTO `users` VALUES (6, 'tronglinh2708@...', 'pbkdf2$...', 'linh', NULL, 
 INSERT INTO `users` VALUES (7, 'tronglinh2708@gmail.com', 'pbkdf2$120000$S7E3T34QEDn0CEtTnCQC_w$1OdEJrDwCldbgHMRuxSC0TpTlM3HxPhrdmeJ5jZvFTU', 'linh trọng', '', 'uploads/avatars/u7_622cc253-28f6-4672-b56e-b704b77e0db6.jpg', NULL, NULL, 1, '2026-01-03 00:22:49', '2026-01-16 08:18:59', 'local');
 
 SET FOREIGN_KEY_CHECKS = 1;
-
-DROP TABLE IF EXISTS ` news_comments`;
-CREATE TABLE news_comments (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    news_id INT NOT NULL,
-    user_name VARCHAR(100) NOT NULL,
-    content TEXT NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (news_id) REFERENCES news(id) ON DELETE CASCADE
-);

@@ -139,12 +139,19 @@
                                 <span class="text-muted small">hoặc</span>
                                 <hr class="flex-grow-1 m-0">
                             </div>
-                            <a href="<%= ctx %>/auth/google"
-                               class="btn btn-outline-secondary w-100 d-flex align-items-center justify-content-center gap-2">
-                                <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
-                                     width="20" alt="Google">
-                                Đăng ký bằng Google
-                            </a>
+                            <div class="d-flex gap-2">
+                                <a href="<%= ctx %>/auth/google"
+                                   class="btn btn-outline-secondary w-50 d-flex align-items-center justify-content-center gap-2">
+                                    <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
+                                         width="20" alt="Google"> Google
+                                </a>
+                                <a href="<%= ctx %>/auth/facebook"
+                                   class="btn btn-outline-primary w-50 d-flex align-items-center justify-content-center gap-2"
+                                   style="color: #1877f2; border-color: #1877f2;">
+                                    <img src="https://upload.wikimedia.org/wikipedia/commons/b/b8/2021_Facebook_icon.svg"
+                                         width="20" alt="Facebook"> Facebook
+                                </a>
+                            </div>
 
                             <% if (err != null) { %>
                             <div class="alert alert-danger mt-3 mb-0"><%= err %>

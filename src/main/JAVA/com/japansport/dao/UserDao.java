@@ -331,6 +331,27 @@ public class UserDao extends DAO implements IDAO<User> {
         }
     }
 
+    // Tạo tài khoản từ Facebook (có xử lý trường hợp không có email thật)
+    public User insertFacebookUser(String facebookId, String name, String email) throws SQLException {
+        if (email == null || email.isBlank()) {
+            email = facebookId + "@facebook.com"; // Email ảo nếu FB không trả về email
+        }
+        String sql = "INSERT INTO users (email, password, name, active, auth_provider) VALUES (?, '', ?, 1, 'facebook')";
+        try (Connection cn = getConnection();
+                PreparedStatement ps = cn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            ps.setString(1, email);
+            ps.setString(2, name);
+            ps.executeUpdate();
+            try (ResultSet keys = ps.getGeneratedKeys()) {
+                if (!keys.next()) throw new SQLException("Không lấy được ID sau insert");
+                int newId = keys.getInt(1);
+                User u = new User(newId, email, name, "", 1);
+                u.setAuthProvider("facebook");
+                return u;
+            }
+        }
+    }
+
     /* Account/Profile */
     public boolean updateName(int userId, String name) {
         String sql = "UPDATE users SET name=? WHERE id=? AND active=1";

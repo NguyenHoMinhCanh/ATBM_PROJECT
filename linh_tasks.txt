@@ -1,0 +1,6 @@
+STT: 1
+Trang: Trang chß╗º
+Chức năng:  - Header
+Hiện trạng: - Ho├án th├ánh
+Mong muốn: - Header hiß╗ân thß╗ï ─æß║ºy ─æß╗º logo, menu ─æiß╗üu h╞░ß╗¢ng, thanh t├¼m kiß║┐m v├á sß╗æ l╞░ß╗úng giß╗Å h├áng. Danh mß╗Ñc v├á th╞░╞íng hiß╗çu trong menu lß║Ñy ─æ├║ng tß╗½ hß╗ç thß╗æng.
+======================

@@ -1490,19 +1490,20 @@ footer h6 {
     }
 }
 
-/* Đảm bảo zoom preview nằm trên info bên phải */
+/* Đảm bảo zoom preview nằm trên info bên phải nhưng không đè lên sticky header (z-index 1020) */
 .product-zoom-wrap {
     position: relative;
-    z-index: 3000;
+    z-index: 10;
 }
 
 .product-gallery {
-    position: relative; /* sticky vẫn giữ nguyên, thêm z-index */
-    z-index: 3001;
+    position: sticky; 
+    top: 100px;
+    z-index: 11;
 }
 
 .zoom-preview {
-    z-index: 3002;
+    z-index: 12;
     pointer-events: none; /* không chặn click info */
 }
 
