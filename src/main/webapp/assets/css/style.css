@@ -345,27 +345,63 @@
     padding-bottom: 10px;
 }
 
+/* ===== CATEGORY SECTION WRAPPER ===== */
+.cat-section {
+    padding: 60px 0;
+    background: #fafafa;
+}
+
+.cat-section-header {
+    text-align: center;
+    margin-bottom: 36px;
+}
+
+.cat-section-title {
+    font-size: 1.75rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    color: #1a1a1a;
+    margin-bottom: 14px;
+}
+
+.cat-section-line {
+    width: 60px;
+    height: 3px;
+    background: var(--primary-red);
+    margin: 0 auto;
+    border-radius: 2px;
+}
+
 /* ===== CATEGORY SHOWCASE GRID (Trang chủ #1) ===== */
 .cat-showcase {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
-    gap: 16px;
+    gap: 20px;
 }
 
-@media (max-width: 767px) {
+@media (max-width: 576px) {
     .cat-showcase {
-        grid-template-columns: repeat(2, 1fr);
+        grid-template-columns: 1fr;
+        gap: 14px;
     }
 }
 
 .cat-card {
     position: relative;
-    border-radius: 12px;
+    border-radius: 14px;
     overflow: hidden;
     display: block;
     text-decoration: none;
-    aspect-ratio: 2.5 / 1; /* Làm chiều cao ngắn lại nhiều hơn nữa (tỷ lệ 2.5 : 1) */
-    background: #000;
+    aspect-ratio: 16 / 7;
+    background: linear-gradient(135deg, #2d2d2d 0%, #1a1a1a 100%);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+    transition: box-shadow 0.35s ease, transform 0.35s ease;
+}
+
+.cat-card:hover {
+    box-shadow: 0 12px 40px rgba(0,0,0,0.22);
+    transform: translateY(-3px);
 }
 
 .cat-card img {
@@ -376,71 +412,96 @@
     height: 100%;
     object-fit: cover;
     display: block;
-    transition: transform 0.45s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    transition: transform 0.55s cubic-bezier(0.25, 0.46, 0.45, 0.94), opacity 0.3s ease;
+    opacity: 0.92;
 }
 
-/* Lớp phủ đen trong suốt trải đều toàn ảnh */
+/* Lớp phủ gradient từ dưới lên — đẹp hơn overlay đen thuần */
 .cat-card::after {
     content: '';
     position: absolute;
     inset: 0;
-    background: rgba(0, 0, 0, 0.35);
-    transition: background 0.3s ease;
+    background: linear-gradient(
+        to top,
+        rgba(0,0,0,0.75) 0%,
+        rgba(0,0,0,0.25) 50%,
+        rgba(0,0,0,0.05) 100%
+    );
+    transition: background 0.35s ease;
     z-index: 1;
 }
 
 .cat-card:hover img {
-    transform: scale(1.08);
+    transform: scale(1.07);
+    opacity: 1;
 }
 
 .cat-card:hover::after {
-    background: rgba(0, 0, 0, 0.55); /* Đậm hơn khi đưa chuột vào */
+    background: linear-gradient(
+        to top,
+        rgba(0,0,0,0.82) 0%,
+        rgba(0,0,0,0.35) 55%,
+        rgba(0,0,0,0.08) 100%
+    );
 }
 
-/* Chữ đưa ra chính giữa */
+/* Chữ đặt ở dưới card — dùng div bọc 2 span */
 .cat-label {
     position: absolute;
-    top: 50%;
-    left: 0;
-    right: 0;
-    transform: translateY(-50%);
+    inset: 0;
     z-index: 2;
-    padding: 0 20px;
-    text-align: center;
-    color: #fff;
-    font-weight: 800;
-    font-size: 1.6rem; /* Chữ nhỏ lại một chút cho cân đối với chiều cao mới */
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    text-shadow: 0 4px 8px rgba(0,0,0,0.6);
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
+    justify-content: flex-end;
+    padding: 0 20px 28px;
+    gap: 12px;
+    text-align: center;
+    transition: padding-bottom 0.35s ease;
 }
 
-/* Hiệu ứng nút bấm giả hiện ra khi hover */
-.cat-label::after {
-    content: 'KHÁM PHÁ NGAY'; 
-    font-size: 0.85rem;
-    font-weight: 600;
-    margin-top: 12px;
-    letter-spacing: 1px;
-    padding: 8px 24px;
-    border: 2px solid #fff;
-    border-radius: 30px;
-    background: transparent;
+.cat-card:hover .cat-label {
+    padding-bottom: 32px;
+}
+
+.cat-label-name {
     color: #fff;
-    opacity: 0;
-    transform: translateY(15px);
-    transition: all 0.35s ease;
+    font-weight: 800;
+    font-size: 1.35rem;
+    letter-spacing: 2.5px;
+    text-transform: uppercase;
+    text-shadow: 0 2px 16px rgba(0,0,0,0.65);
+    line-height: 1.2;
+    transition: transform 0.3s ease;
 }
 
-.cat-card:hover .cat-label::after {
+.cat-card:hover .cat-label-name {
+    transform: translateY(-4px);
+}
+
+/* Nút "Khám phá" — ẩn mặc định, slide lên khi hover */
+.cat-label-btn {
+    display: inline-block;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    padding: 7px 24px;
+    border: 1.5px solid rgba(255,255,255,0.9);
+    border-radius: 30px;
+    background: rgba(255,255,255,0.12);
+    color: #fff;
+    text-transform: uppercase;
+    opacity: 0;
+    transform: translateY(14px);
+    transition: opacity 0.35s ease, transform 0.35s ease, background 0.25s ease;
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+}
+
+.cat-card:hover .cat-label-btn {
     opacity: 1;
     transform: translateY(0);
-    background: #fff;
-    color: #000; /* Nút chuyển sang nền trắng, chữ đen */
+    background: rgba(255,255,255,0.22);
 }
 
 /* ===== PRODUCT CARD — Upgraded (Trang chủ #2) ===== */
