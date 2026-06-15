@@ -130,14 +130,18 @@
 
                 <%-- Resolve image_url từ DB; nếu rỗng hoặc lỗi → fallback localImg --%>
                 <c:set var="img" value="${cat.image_url}"/>
+                <c:set var="ctxSlash" value="${ctx}/"/>
                 <c:choose>
                     <c:when test="${empty img}">
                         <c:set var="catImgSrc" value="${localImg}"/>
                     </c:when>
-                    <c:when test="${fn:startsWith(img,'http://') || fn:startsWith(img,'https://')}">
+                    <c:when test="${fn:startsWith(img, 'http://') || fn:startsWith(img, 'https://')}">
                         <c:set var="catImgSrc" value="${img}"/>
                     </c:when>
-                    <c:when test="${fn:startsWith(img,'/')}">
+                    <c:when test="${fn:startsWith(img, ctxSlash)}">
+                        <c:set var="catImgSrc" value="${img}"/>
+                    </c:when>
+                    <c:when test="${fn:startsWith(img, '/')}">
                         <c:set var="catImgSrc" value="${ctx}${img}"/>
                     </c:when>
                     <c:otherwise>

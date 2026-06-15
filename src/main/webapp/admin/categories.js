@@ -1,5 +1,21 @@
 const API_URL = `${CTX}/admin/categories`;
 
+function resolveImageUrl(url) {
+    if (!url) return '';
+    if (url.startsWith('http://') || url.startsWith('https://')) return url;
+    let path = url;
+    if (path.startsWith('/')) {
+        if (typeof CTX !== 'undefined' && CTX && path.startsWith(CTX + '/')) {
+            return path;
+        }
+        if (typeof CTX === 'undefined' || !CTX || CTX === '/') {
+            return path;
+        }
+        path = path.substring(1);
+    }
+    return (typeof CTX !== 'undefined' ? CTX : '') + '/' + path;
+}
+
 function slugify(str) {
     if (!str) return '';
     return str.toString().toLowerCase().trim()
@@ -139,7 +155,7 @@ async function renderCategories() {
             <td><code>${cat.slug || ''}</code></td>
             <td>
                 ${cat.image_url
-            ? `<img src="${cat.image_url}" alt="" class="thumb" style="width:50px;height:50px;object-fit:cover;border-radius:8px;">`
+            ? `<img src="${resolveImageUrl(cat.image_url)}" alt="" class="thumb" style="width:50px;height:50px;object-fit:cover;border-radius:8px;">`
             : '<span class="text-muted">-</span>'}
             </td>
             <td>${cat.display_order ?? 0}</td>
@@ -191,6 +207,16 @@ async function openAddModal() {
     document.getElementById('categoryOrder').value = 0;
     document.getElementById('categoryActive').value = '1';
 
+    // reset image input & preview
+    const fileInput = document.getElementById('categoryImageFile');
+    if (fileInput) fileInput.value = '';
+    const previewContainer = document.getElementById('imagePreviewContainer');
+    const previewImg = document.getElementById('imagePreview');
+    if (previewContainer && previewImg) {
+        previewImg.src = '';
+        previewContainer.classList.add('d-none');
+    }
+
     // reset slug manual flag
     const slugInput = document.getElementById('categorySlug');
     if (slugInput) delete slugInput.dataset.manualEdit;
@@ -216,6 +242,21 @@ async function openEditModal(id) {
     document.getElementById('categoryImage').value = category.image_url || '';
     document.getElementById('categoryLink').value = category.link || '';
     document.getElementById('categoryOrder').value = category.display_order ?? 0;
+
+    // reset image input & set preview
+    const fileInput = document.getElementById('categoryImageFile');
+    if (fileInput) fileInput.value = '';
+    const previewContainer = document.getElementById('imagePreviewContainer');
+    const previewImg = document.getElementById('imagePreview');
+    if (previewContainer && previewImg) {
+        if (category.image_url) {
+            previewImg.src = resolveImageUrl(category.image_url);
+            previewContainer.classList.remove('d-none');
+        } else {
+            previewImg.src = '';
+            previewContainer.classList.add('d-none');
+        }
+    }
 
     // giữ is_featured nhưng ẩn (preserve data)
     document.getElementById('categoryFeatured').checked = (Number(category.is_featured ?? 0) === 1);
@@ -275,6 +316,17 @@ document.getElementById('categorySlug')?.addEventListener('input', (e) => {
 
 document.getElementById('btnAddCategory')?.addEventListener('click', openAddModal);
 document.getElementById('searchInput')?.addEventListener('input', renderCategories);
+
+// Preview image when selecting file
+document.getElementById('categoryImageFile')?.addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    const previewContainer = document.getElementById('imagePreviewContainer');
+    const previewImg = document.getElementById('imagePreview');
+    if (file && previewContainer && previewImg) {
+        previewImg.src = URL.createObjectURL(file);
+        previewContainer.classList.remove('d-none');
+    }
+});
 
 document.addEventListener('DOMContentLoaded', async () => {
     const modalEl = document.getElementById('modalCategory');

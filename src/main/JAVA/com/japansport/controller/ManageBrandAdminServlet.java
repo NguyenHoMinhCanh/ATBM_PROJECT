@@ -9,15 +9,22 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.Part;
 
+import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.text.Normalizer;
 import java.util.List;
 import java.util.Locale;
+import java.util.UUID;
 import java.util.regex.Pattern;
 
 @WebServlet(name = "ManageBrandAdminServlet", urlPatterns = {"/admin/brands"})
-@MultipartConfig
+@MultipartConfig(maxFileSize = 10 * 1024 * 1024, maxRequestSize = 20 * 1024 * 1024)
 public class ManageBrandAdminServlet extends HttpServlet {
 
     private BrandDao brandDao;
@@ -133,13 +140,25 @@ public class ManageBrandAdminServlet extends HttpServlet {
             throws ServletException, IOException {
 
         String name = trimToNull(request.getParameter("name"));
-        String logoUrl = trimToNull(request.getParameter("logoUrl"));
         boolean active = "on".equals(request.getParameter("active"));
 
         if (name == null) {
             request.setAttribute("error", "Vui lòng nhập tên nhãn hàng.");
             showAddForm(request, response);
             return;
+        }
+
+        String logoUrl = null;
+        try {
+            logoUrl = handleImageUpload(request, "logoFile");
+        } catch (IllegalArgumentException e) {
+            request.setAttribute("error", e.getMessage());
+            showAddForm(request, response);
+            return;
+        }
+
+        if (logoUrl == null) {
+            logoUrl = trimToNull(request.getParameter("logoUrl"));
         }
 
         // tạo slug ngay tại servlet (vì Brand.java của LTWEB không có generateSlug)
@@ -196,7 +215,6 @@ public class ManageBrandAdminServlet extends HttpServlet {
 
         String idStr = request.getParameter("id");
         String name = trimToNull(request.getParameter("name"));
-        String logoUrl = trimToNull(request.getParameter("logoUrl"));
         boolean active = "on".equals(request.getParameter("active"));
 
         if (idStr == null) {
@@ -224,6 +242,21 @@ public class ManageBrandAdminServlet extends HttpServlet {
             request.setAttribute("pageTitle", "Sửa Nhãn hàng");
             request.getRequestDispatcher("/admin/brand-form.jsp").forward(request, response);
             return;
+        }
+
+        String logoUrl = null;
+        try {
+            logoUrl = handleImageUpload(request, "logoFile");
+        } catch (IllegalArgumentException e) {
+            request.setAttribute("error", e.getMessage());
+            request.setAttribute("brand", brand);
+            request.setAttribute("pageTitle", "Sửa Nhãn hàng");
+            request.getRequestDispatcher("/admin/brand-form.jsp").forward(request, response);
+            return;
+        }
+
+        if (logoUrl == null) {
+            logoUrl = trimToNull(request.getParameter("logoUrl"));
         }
 
         brand.setName(name);
@@ -324,5 +357,42 @@ public class ManageBrandAdminServlet extends HttpServlet {
         slug = slug.replaceAll("^-|-$", "");
         if (slug.isEmpty()) slug = "brand";
         return slug;
+    }
+
+    /**
+     * Xử lý upload ảnh từ form
+     */
+    private String handleImageUpload(HttpServletRequest request, String inputFieldName)
+            throws ServletException, IOException, IllegalArgumentException {
+        try {
+            Part filePart = request.getPart(inputFieldName);
+            if (filePart != null && filePart.getSize() > 0) {
+                String submittedFileName = Paths.get(filePart.getSubmittedFileName()).getFileName().toString();
+                String ext = "";
+                int dotIdx = submittedFileName.lastIndexOf('.');
+                if (dotIdx >= 0) ext = submittedFileName.substring(dotIdx).toLowerCase();
+
+                if (!ext.matches(".*(jpg|jpeg|png|gif|webp|bmp|svg)")) {
+                    throw new IllegalArgumentException("Chỉ chấp nhận file ảnh (jpg, png, gif, webp...)");
+                }
+
+                String newFileName = UUID.randomUUID().toString().replace("-", "") + ext;
+                String uploadDir = getServletContext().getRealPath("/uploads/brands");
+                File dir = new File(uploadDir);
+                if (!dir.exists()) dir.mkdirs();
+
+                File saveFile = new File(dir, newFileName);
+                try (InputStream is = filePart.getInputStream()) {
+                    Files.copy(is, saveFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+                }
+
+                String contextPath = request.getContextPath();
+                return contextPath + "/uploads/brands/" + newFileName;
+            }
+        } catch (ServletException e) {
+            // Có thể xảy ra nếu request không phải multipart, trả về null để fallback
+            return null;
+        }
+        return null;
     }
 }

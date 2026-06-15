@@ -27,7 +27,7 @@
 
     <div class="card">
         <div class="card-body">
-            <form method="post" action="${ctx}/admin/news">
+            <form method="post" action="${ctx}/admin/news" enctype="multipart/form-data">
                 <input type="hidden" name="action" value="${news != null ? 'update' : 'create'}">
                 <c:if test="${news != null}">
                     <input type="hidden" name="id" value="${news.id}">
@@ -57,9 +57,39 @@
                 </div>
 
                 <div class="mb-3">
-                    <label class="form-label">Ảnh thumbnail (URL)</label>
-                    <input type="text" class="form-control" name="thumbnailUrl"
-                           value="${news != null ? news.thumbnailUrl : ''}" placeholder="https://...">
+                    <label class="form-label">Tải ảnh thumbnail lên từ máy tính</label>
+                    <input type="file" class="form-control" id="thumbnailFile" name="thumbnailFile" accept="image/*">
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Hoặc nhập ảnh thumbnail (URL)</label>
+                    <input type="text" class="form-control" id="thumbnailUrl" name="thumbnailUrl"
+                           value="${news != null ? news.thumbnailUrl : ''}" placeholder="https://... hoặc tự điền khi upload">
+                </div>
+
+                <!-- Thumbnail Preview -->
+                <c:set var="newsImgSrc" value=""/>
+                <c:if test="${news != null && not empty news.thumbnailUrl}">
+                    <c:set var="img" value="${news.thumbnailUrl}"/>
+                    <c:set var="ctxSlash" value="${ctx}/"/>
+                    <c:choose>
+                        <c:when test="${fn:startsWith(img, 'http://') || fn:startsWith(img, 'https://')}">
+                            <c:set var="newsImgSrc" value="${img}"/>
+                        </c:when>
+                        <c:when test="${fn:startsWith(img, ctxSlash)}">
+                            <c:set var="newsImgSrc" value="${img}"/>
+                        </c:when>
+                        <c:when test="${fn:startsWith(img, '/')}">
+                            <c:set var="newsImgSrc" value="${ctx}${img}"/>
+                        </c:when>
+                        <c:otherwise>
+                            <c:set var="newsImgSrc" value="${ctx}/${img}"/>
+                        </c:otherwise>
+                    </c:choose>
+                </c:if>
+                <div class="mb-3 ${news != null && not empty news.thumbnailUrl ? '' : 'd-none'}" id="thumbnailPreviewContainer">
+                    <label class="form-label d-block">Xem trước ảnh:</label>
+                    <img id="thumbnailPreview" src="${newsImgSrc}" alt="Xem trước ảnh" style="max-width: 200px; max-height: 150px; object-fit: cover; border-radius: 8px; border: 1px solid #dee2e6; padding: 4px;">
                 </div>
 
                 <div class="mb-3">
@@ -107,5 +137,39 @@
         </div>
     </div>
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const fileInput = document.getElementById('thumbnailFile');
+        const urlInput = document.getElementById('thumbnailUrl');
+        const previewContainer = document.getElementById('thumbnailPreviewContainer');
+        const previewImg = document.getElementById('thumbnailPreview');
+
+        function updatePreview(url) {
+            if (url && url.trim()) {
+                previewImg.src = url;
+                previewContainer.classList.remove('d-none');
+            } else {
+                previewImg.src = '';
+                previewContainer.classList.add('d-none');
+            }
+        }
+
+        urlInput.addEventListener('input', function () {
+            updatePreview(this.value);
+        });
+
+        fileInput.addEventListener('change', function () {
+            const file = this.files[0];
+            if (file) {
+                const url = URL.createObjectURL(file);
+                previewImg.src = url;
+                previewContainer.classList.remove('d-none');
+            } else {
+                updatePreview(urlInput.value);
+            }
+        });
+    });
+</script>
 
 <%@ include file="/admin/includes/_admin_layout_close.jspf" %>
