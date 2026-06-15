@@ -78,7 +78,7 @@
                     </h5>
                 </div>
                 <div class="card-body">
-                    <form method="post" action="${ctx}/admin/brands" id="brandForm">
+                    <form method="post" action="${ctx}/admin/brands" id="brandForm" enctype="multipart/form-data">
                         <input type="hidden" name="action" value="${brand != null ? 'update' : 'create'}">
                         <c:if test="${brand != null}">
                             <input type="hidden" name="id" value="${brand.id}">
@@ -99,11 +99,16 @@
                         </div>
 
                         <div class="mb-3">
-                            <label for="logoUrl" class="form-label">Logo URL</label>
-                            <input type="url" class="form-control" id="logoUrl" name="logoUrl"
+                            <label for="logoFile" class="form-label">Tải logo lên từ máy tính</label>
+                            <input type="file" class="form-control" id="logoFile" name="logoFile" accept="image/*">
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="logoUrl" class="form-label">Hoặc nhập logo URL</label>
+                            <input type="text" class="form-control" id="logoUrl" name="logoUrl"
                                    value="${brand != null ? brand.logoUrl : ''}"
                                    placeholder="https://example.com/logo.png">
-                            <div class="form-text">Link ảnh logo thương hiệu</div>
+                            <div class="form-text">Link ảnh logo thương hiệu hoặc tự điền khi upload</div>
                         </div>
 
                         <div class="mb-4 form-check">
@@ -174,6 +179,7 @@
     document.addEventListener('DOMContentLoaded', function () {
         const logoUrlInput = document.getElementById('logoUrl');
         const logoPreview = document.getElementById('logoPreview');
+        const logoFile = document.getElementById('logoFile');
 
         function updateLogoPreview(url) {
             if (url && url.trim()) {
@@ -189,6 +195,16 @@
 
         logoUrlInput.addEventListener('input', function () {
             updateLogoPreview(this.value);
+        });
+
+        logoFile.addEventListener('change', function () {
+            const file = this.files[0];
+            if (file) {
+                const url = URL.createObjectURL(file);
+                logoPreview.innerHTML = '<img src="' + url + '" alt="Logo Preview" id="previewImg">';
+            } else {
+                updateLogoPreview(logoUrlInput.value);
+            }
         });
 
         // Auto-generate slug from name

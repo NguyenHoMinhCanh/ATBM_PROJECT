@@ -1,6 +1,7 @@
 <%@ page contentType="text/html;charset=UTF-8" pageEncoding="UTF-8" %>
 
 <%@ taglib uri="jakarta.tags.core" prefix="c" %>
+<%@ taglib prefix="fn" uri="jakarta.tags.functions" %>
 <c:set var="ctx" value="${pageContext.request.contextPath}"/>
 
 <%
@@ -89,7 +90,23 @@
                             <td>${brand.id}</td>
                             <td>
                                 <c:if test="${not empty brand.logoUrl}">
-                                    <img src="${brand.logoUrl}" alt="${brand.name}" class="brand-logo">
+                                    <c:set var="img" value="${brand.logoUrl}"/>
+                                    <c:set var="ctxSlash" value="${ctx}/"/>
+                                    <c:choose>
+                                        <c:when test="${fn:startsWith(img, 'http://') || fn:startsWith(img, 'https://')}">
+                                            <c:set var="brandImgSrc" value="${img}"/>
+                                        </c:when>
+                                        <c:when test="${fn:startsWith(img, ctxSlash)}">
+                                            <c:set var="brandImgSrc" value="${img}"/>
+                                        </c:when>
+                                        <c:when test="${fn:startsWith(img, '/')}">
+                                            <c:set var="brandImgSrc" value="${ctx}${img}"/>
+                                        </c:when>
+                                        <c:otherwise>
+                                            <c:set var="brandImgSrc" value="${ctx}/${img}"/>
+                                        </c:otherwise>
+                                    </c:choose>
+                                    <img src="${brandImgSrc}" alt="${brand.name}" class="brand-logo">
                                 </c:if>
                                 <c:if test="${empty brand.logoUrl}">
                                     <div class="brand-logo d-flex align-items-center justify-content-center text-muted">

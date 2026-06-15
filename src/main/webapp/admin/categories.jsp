@@ -93,8 +93,19 @@
                     </div>
 
                     <div class="col-md-6">
-                        <label class="form-label">Ảnh (image_url)</label>
-                        <input type="text" class="form-control" id="categoryImage" name="image_url" placeholder="https://...">
+                        <label class="form-label">Tải ảnh lên từ máy tính</label>
+                        <input type="file" class="form-control" id="categoryImageFile" name="image_file" accept="image/*">
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label">Hoặc nhập đường dẫn ảnh (image_url)</label>
+                        <input type="text" class="form-control" id="categoryImage" name="image_url" placeholder="https://... hoặc tự điền khi upload">
+                    </div>
+
+                    <!-- Image Preview -->
+                    <div class="col-12 text-center my-2 d-none" id="imagePreviewContainer">
+                        <div class="text-start mb-1"><label class="form-label mb-0">Xem trước ảnh:</label></div>
+                        <img id="imagePreview" src="" alt="Xem trước ảnh" style="max-width: 160px; max-height: 160px; object-fit: cover; border-radius: 8px; border: 1px solid #dee2e6; padding: 4px;">
                     </div>
 
                     <div class="col-md-6">

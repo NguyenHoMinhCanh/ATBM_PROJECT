@@ -30,7 +30,7 @@
           rel="stylesheet">
 
     <!-- App CSS -->
-    <link rel="stylesheet" href="assets/css/style.css?v=1.6">
+    <link rel="stylesheet" href="assets/css/style.css?v=1.7">
 </head>
 <body>
 <%----%>
@@ -88,36 +88,83 @@
 
 <!-- ===== DANH MỤC NỔI BẬT ===== -->
 <c:if test="${not empty featuredCategories}">
-<section class="container py-5">
-    <h3 class="text-center fw-bold mb-4 text-uppercase">Danh Mục Nổi Bật</h3>
-    <div class="cat-showcase">
-        <c:forEach var="cat" items="${featuredCategories}">
-            <c:url var="catUrl" value="/list-product">
-                <c:param name="categoryId" value="${cat.id}"/>
-            </c:url>
-            <c:set var="img" value="${cat.image_url}"/>
-            <c:choose>
-                <c:when test="${empty img}">
-                    <c:set var="catImgSrc" value="${ctx}/assets/images/index/DMNB1.jpg"/>
-                </c:when>
-                <c:when test="${fn:startsWith(img,'http://') || fn:startsWith(img,'https://')}">
-                    <c:set var="catImgSrc" value="${img}"/>
-                </c:when>
-                <c:when test="${fn:startsWith(img,'/')}">
-                    <c:set var="catImgSrc" value="${ctx}${img}"/>
-                </c:when>
-                <c:otherwise>
-                    <c:set var="catImgSrc" value="${ctx}/${img}"/>
-                </c:otherwise>
-            </c:choose>
-            <a href="${empty cat.link ? catUrl : cat.link}" class="cat-card">
-                <img src="${catImgSrc}" alt="${cat.name}" loading="lazy">
-                <span class="cat-label">${cat.name}</span>
-            </a>
-        </c:forEach>
+<section class="cat-section">
+    <div class="container">
+        <div class="cat-section-header">
+            <h3 class="cat-section-title">Danh Mục Nổi Bật</h3>
+            <div class="cat-section-line"></div>
+        </div>
+        <div class="cat-showcase">
+            <%
+                // Mảng ảnh local theo thứ tự 4 danh mục nổi bật
+                String[] catLocalImgs = {
+                    request.getContextPath() + "/assets/images/index/cat_chay_bo.png",
+                    request.getContextPath() + "/assets/images/index/cat_bong_da.png",
+                    request.getContextPath() + "/assets/images/index/cat_bong_ro.png",
+                    request.getContextPath() + "/assets/images/index/cat_sneaker.png"
+                };
+                request.setAttribute("catLocalImgs", catLocalImgs);
+            %>
+            <c:forEach var="cat" items="${featuredCategories}" varStatus="catSt">
+                <%-- Link luôn dùng ctx + servlet path để tránh 404 --%>
+                <c:set var="catHref" value="${ctx}/list-product?categoryId=${cat.id}"/>
+
+                <%-- Chọn ảnh local theo index (0-3), fallback DMNB nếu vượt 4 --%>
+                <c:choose>
+                    <c:when test="${catSt.index == 0}">
+                        <c:set var="localImg" value="${ctx}/assets/images/index/cat_chay_bo.png"/>
+                    </c:when>
+                    <c:when test="${catSt.index == 1}">
+                        <c:set var="localImg" value="${ctx}/assets/images/index/cat_bong_da.png"/>
+                    </c:when>
+                    <c:when test="${catSt.index == 2}">
+                        <c:set var="localImg" value="${ctx}/assets/images/index/cat_bong_ro.png"/>
+                    </c:when>
+                    <c:when test="${catSt.index == 3}">
+                        <c:set var="localImg" value="${ctx}/assets/images/index/cat_sneaker.png"/>
+                    </c:when>
+                    <c:otherwise>
+                        <c:set var="localImg" value="${ctx}/assets/images/index/DMNB${catSt.index + 1}.jpg"/>
+                    </c:otherwise>
+                </c:choose>
+
+                <%-- Resolve image_url từ DB; nếu rỗng hoặc lỗi → fallback localImg --%>
+                <c:set var="img" value="${cat.image_url}"/>
+                <c:set var="ctxSlash" value="${ctx}/"/>
+                <c:choose>
+                    <c:when test="${empty img}">
+                        <c:set var="catImgSrc" value="${localImg}"/>
+                    </c:when>
+                    <c:when test="${fn:startsWith(img, 'http://') || fn:startsWith(img, 'https://')}">
+                        <c:set var="catImgSrc" value="${img}"/>
+                    </c:when>
+                    <c:when test="${fn:startsWith(img, ctxSlash)}">
+                        <c:set var="catImgSrc" value="${img}"/>
+                    </c:when>
+                    <c:when test="${fn:startsWith(img, '/')}">
+                        <c:set var="catImgSrc" value="${ctx}${img}"/>
+                    </c:when>
+                    <c:otherwise>
+                        <c:set var="catImgSrc" value="${ctx}/${img}"/>
+                    </c:otherwise>
+                </c:choose>
+
+                <a href="${catHref}" class="cat-card">
+                    <img src="${catImgSrc}"
+                         alt="${cat.name}"
+                         loading="lazy"
+                         onerror="this.onerror=null; this.src='${localImg}'">
+                    <div class="cat-label">
+                        <span class="cat-label-name">${cat.name}</span>
+                        <span class="cat-label-btn">KHÁM PHÁ NGAY →</span>
+                    </div>
+                </a>
+            </c:forEach>
+        </div>
     </div>
 </section>
 </c:if>
+
 
 <!-- ===== SẢN PHẨM MỚI NHẤT ===== -->
 <%--    <div class="row g-4">--%>
