@@ -1,0 +1,6 @@
+STT: 1
+Trang: Trang chủ
+Chức năng:  - Header
+Hiện trạng: - Hoàn thành
+Mong muốn: - Header hiển thị đầy đủ logo, menu điều hướng, thanh tìm kiếm và số lượng giỏ hàng. Danh mục và thương hiệu trong menu lấy đúng từ hệ thống.
+======================

@@ -130,7 +130,7 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.10.0/font/bootstrap-icons.min.css"
           rel="stylesheet"/>
     <!-- App CSS -->
-    <link href="assets/css/style.css" rel="stylesheet"/>
+    <link href="assets/css/style.css?v=1.4" rel="stylesheet"/>
 </head>
 <body>
 
