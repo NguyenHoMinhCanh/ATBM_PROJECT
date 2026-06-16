@@ -148,9 +148,20 @@ public class CheckoutController extends HttpServlet {
             req.getSession().removeAttribute("appliedVoucherCode");
 
             HttpSession session = req.getSession();
-            session.setAttribute("FLASH_MSG", "Đặt hàng thành công. Mã đơn #" + orderId);
-            session.setAttribute("FLASH_TYPE", "success");
-            resp.sendRedirect(req.getContextPath() + "/order-detail?id=" + orderId);
+
+            // LOGIC MỚI: Kiểm tra phương thức thanh toán
+            if ("bank".equals(payMethod)) {
+                // Làm tròn số tiền để mất đi dấu thập phân (Ví dụ 2990000.0 thành 2990000)
+                long amountToSend = Math.round(finalTotal);
+
+                // Truyền thêm tham số amount vào URL
+                resp.sendRedirect(req.getContextPath() + "/checkout-qr.jsp?orderId=" + orderId + "&amount=" + amountToSend);
+            }else {
+                // Nếu là COD (thanh toán tiền mặt) thì về thẳng trang chi tiết đơn
+                session.setAttribute("FLASH_MSG", "Đặt hàng thành công. Mã đơn #" + orderId);
+                session.setAttribute("FLASH_TYPE", "success");
+                resp.sendRedirect(req.getContextPath() + "/order-detail?id=" + orderId);
+            }
 
         } catch (Exception e) {
             req.setAttribute("errorMessage", "Đặt hàng thất bại: " + e.getMessage());
