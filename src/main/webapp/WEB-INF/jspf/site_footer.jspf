@@ -11,7 +11,7 @@
                 <p class="text-muted mb-0 small">Nhận thông tin cập nhật về ưu đãi mới nhất và khuyến mãi đặc biệt.</p>
             </div>
             <div class="col-lg-6">
-                <form action="#" method="post" class="d-flex">
+                <form action="#" method="post" class="d-flex" onsubmit="alert('Cảm ơn bạn đã đăng ký nhận tin từ JapanSport!'); return false;">
                     <input type="email" class="form-control me-2 py-2" placeholder="Nhập địa chỉ email của bạn..." required>
                     <button type="submit" class="btn btn-danger px-4 fw-bold text-nowrap">Đăng Ký</button>
                 </form>
@@ -32,7 +32,7 @@
                 </div>
                 <!-- Logo Bộ Công Thương -->
                 <div class="mt-4">
-                    <a href="#">
+                    <a href="http://online.gov.vn/" target="_blank">
                         <img src="${ctx}/assets/images/bo-cong-thuong.png" alt="Đã thông báo Bộ Công Thương" style="max-width: 140px;" onerror="this.src='https://laptoptcc.com/wp-content/uploads/2018/06/logo-bct-2.png'">
                     </a>
                 </div>
@@ -94,17 +94,17 @@
                         <img src="${ctx}/assets/images/qr-code.png" alt="QR Code" style="width: 70px; height: 70px;" onerror="this.src='https://upload.wikimedia.org/wikipedia/commons/d/d0/QR_code_for_mobile_English_Wikipedia.svg'">
                     </div>
                     <div class="d-flex flex-column gap-2">
-                        <a href="#"><img src="${ctx}/assets/images/app-store.png" alt="App Store" style="height: 30px;" onerror="this.src='https://developer.apple.com/assets/elements/badges/download-on-the-app-store.svg'"></a>
-                        <a href="#"><img src="${ctx}/assets/images/google-play.png" alt="Google Play" style="height: 30px;" onerror="this.src='https://upload.wikimedia.org/wikipedia/commons/7/78/Google_Play_Store_badge_EN.svg'"></a>
+                        <a href="javascript:void(0)" onclick="alert('Tính năng đang phát triển!')"><img src="${ctx}/assets/images/app-store.png" alt="App Store" style="height: 30px;" onerror="this.src='https://developer.apple.com/assets/elements/badges/download-on-the-app-store.svg'"></a>
+                        <a href="javascript:void(0)" onclick="alert('Tính năng đang phát triển!')"><img src="${ctx}/assets/images/google-play.png" alt="Google Play" style="height: 30px;" onerror="this.src='https://upload.wikimedia.org/wikipedia/commons/7/78/Google_Play_Store_badge_EN.svg'"></a>
                     </div>
                 </div>
 
                 <h5 class="text-uppercase mb-3 fw-bold border-start border-danger border-3 ps-2">Kết Nối Với Chúng Tôi</h5>
                 <div class="d-flex gap-2 mb-3">
-                    <a href="#" class="social-icon bg-primary text-white"><i class="bi bi-facebook"></i></a>
-                    <a href="#" class="social-icon text-white" style="background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);"><i class="bi bi-instagram"></i></a>
-                    <a href="#" class="social-icon bg-danger text-white"><i class="bi bi-youtube"></i></a>
-                    <a href="#" class="social-icon bg-dark text-white border border-light"><i class="bi bi-tiktok"></i></a>
+                    <a href="https://facebook.com" target="_blank" class="social-icon bg-primary text-white"><i class="bi bi-facebook"></i></a>
+                    <a href="https://instagram.com" target="_blank" class="social-icon text-white" style="background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);"><i class="bi bi-instagram"></i></a>
+                    <a href="https://youtube.com" target="_blank" class="social-icon bg-danger text-white"><i class="bi bi-youtube"></i></a>
+                    <a href="https://tiktok.com" target="_blank" class="social-icon bg-dark text-white border border-light"><i class="bi bi-tiktok"></i></a>
                 </div>
                 
                 <div class="text-muted small">

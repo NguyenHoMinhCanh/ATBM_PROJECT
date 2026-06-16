@@ -30,8 +30,10 @@ public class PolicyPageServlet extends HttpServlet {
 
         Policy p = dao.getBySlug(slug);
         if (p == null || !p.isActive()) {
-            response.sendError(404);
-            return;
+            // Tự động tạo nội dung tạm thời nếu Database chưa có, tránh lỗi 404 Tomcat
+            p = new Policy();
+            p.setTitle(slug.replace("-", " ").toUpperCase());
+            p.setContent("<div class='container my-5 py-5 text-center'><h4><i class='bi bi-tools text-warning'></i> Nội dung đang được cập nhật</h4><p>Chính sách này hiện chưa có nội dung trong Database. Vui lòng thêm trong trang Admin.</p></div>");
         }
 
         request.setAttribute("policy", p);

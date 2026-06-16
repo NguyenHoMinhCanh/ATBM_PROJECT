@@ -15,7 +15,8 @@ public class OrderDao extends DAO {
             int userId,
             String fullName, String phone,
             String addressLine, String city, String district, String ward,
-            String payMethod, String note
+            String payMethod, String note,
+            double discountAmount, double shippingFee
     ) throws SQLException {
 
         Connection conn = getConnection();
@@ -40,6 +41,8 @@ public class OrderDao extends DAO {
             // 4) Tính tổng tiền
             double total = 0;
             for (CartItem it : items) total += it.getSubtotal();
+            total = total - discountAmount + shippingFee;
+            if (total < 0) total = 0;
 
             // 5) Tạo order
             int orderId = insertOrder(conn, userId, addressId, total, "PENDING");
