@@ -28,15 +28,20 @@ public class SeedPolicyAdminServlet extends HttpServlet {
     }
 
     @Override
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        doPost(request, response);
+    }
+
+    @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
         request.setCharacterEncoding("UTF-8");
         String typesParam = request.getParameter("types");
 
+        // Nếu gọi từ trình duyệt qua GET (không có param types), mặc định tạo tất cả
         if (typesParam == null || typesParam.isBlank()) {
-            response.sendRedirect(request.getContextPath() + "/admin/policies?error=seed_empty");
-            return;
+            typesParam = "SHIPPING,RETURN,PAYMENT,PRIVACY,TERMS,SUPPORT,ORDER_GUIDE";
         }
 
         String[] types = typesParam.split(",");
@@ -67,28 +72,37 @@ public class SeedPolicyAdminServlet extends HttpServlet {
 
         switch (type) {
             case "SHIPPING":
-                p.setTitle("Chính sách vận chuyển");
+                p.setTitle("Chính Sách Vận Chuyển");
                 p.setSlug("chinh-sach-van-chuyen");
                 p.setDisplayOrder(1);
                 p.setContent(
-                    "<h2>Chính sách vận chuyển</h2>\n" +
-                    "<h3>1. Phạm vi giao hàng</h3>\n" +
-                    "<p>Japan Sport giao hàng toàn quốc tới tất cả 63 tỉnh thành trên cả nước thông qua các đối tác vận chuyển uy tín như GHN, GHTK, VNPost.</p>\n" +
-                    "<h3>2. Thời gian giao hàng</h3>\n" +
-                    "<ul>\n" +
-                    "<li><strong>Nội thành Hà Nội &amp; TP.HCM:</strong> 1 - 2 ngày làm việc</li>\n" +
-                    "<li><strong>Các tỉnh thành khác:</strong> 3 - 5 ngày làm việc</li>\n" +
-                    "<li><strong>Khu vực vùng sâu, vùng xa:</strong> 5 - 7 ngày làm việc</li>\n" +
-                    "</ul>\n" +
-                    "<h3>3. Phí vận chuyển</h3>\n" +
-                    "<ul>\n" +
-                    "<li><strong>Miễn phí vận chuyển</strong> cho đơn hàng từ <strong>500.000đ</strong> trở lên</li>\n" +
-                    "<li>Đơn hàng dưới 500.000đ: phí ship theo bảng giá của đơn vị vận chuyển (thường từ 20.000đ - 35.000đ)</li>\n" +
-                    "</ul>\n" +
-                    "<h3>4. Theo dõi đơn hàng</h3>\n" +
-                    "<p>Sau khi đơn hàng được xác nhận, bạn sẽ nhận được mã vận đơn qua email và SMS để theo dõi trạng thái giao hàng theo thời gian thực.</p>\n" +
-                    "<h3>5. Lưu ý</h3>\n" +
-                    "<p>Trong trường hợp bất khả kháng (thiên tai, dịch bệnh, ngày lễ tết), thời gian giao hàng có thể bị ảnh hưởng. Chúng tôi sẽ thông báo cho bạn ngay khi có thay đổi.</p>"
+                    "<h5 class=\"mb-3\">CHÍNH SÁCH VẬN CHUYỂN:</h5>\n" +
+                    "<ol class=\"ps-3\">\n" +
+                    "    <li class=\"lead\">Điều khoản và điều kiện trả hàng</li>\n" +
+                    "    <ul>\n" +
+                    "        <li>Thời hạn đổi các mặt hàng đã mua tại <a href=\"#\">https://giaynhatchinhhang.vn/</a> là <strong>7 ngày</strong> kể từ ngày nhận hàng.</li>\n" +
+                    "        <li>Hàng được đổi phải đảm bảo còn mới 100%, chưa được sử dụng, còn nguyên nhãn mác, nguyên hộp, phụ kiện, phiếu bảo hành (nếu có). Giày Nhật Chính Hãng không đổi hàng đã sử dụng hoặc đã kích hoạt bảo hành.</li>\n" +
+                    "        <li>Sản phẩm mua ở tại showroom Giày Nhật Chính Hãng thì áp dụng đổi tại <strong>địa chỉ đã mua</strong> sản phẩm. Sản phẩm mua online thì liên hệ Zalo <strong>0984843218</strong> hoặc email <em>orders-confirm@giaynhatchinhhang.vn</em> để được hướng dẫn.</li>\n" +
+                    "        <li>Tổng giá trị các mặt hàng muốn đổi phải có giá trị tương đương với mặt hàng trả lại. <a href=\"#\">https://giaynhatchinhhang.vn/</a> không hoàn lại tiền thừa trong trường hợp sản phẩm mới có giá trị thấp hơn sản phẩm đã mua.</li>\n" +
+                    "        <li>Nếu sản phẩm có lỗi, quý khách cần thông báo cho <a href=\"#\">https://giaynhatchinhhang.vn/</a> trong vòng <strong>7 ngày</strong> kể từ ngày xuất bán.</li>\n" +
+                    "        <li>Giày Nhật Chính Hãng cam kết sẽ nhanh chóng thay thế sản phẩm ngay tức thì cho khách hàng (nếu hàng lỗi). Nếu như sản phẩm đó không còn hàng Giày Nhật Chính Hãng sẽ hoàn lại tiền mà không có lời hối nào trong trường hợp (không áp dụng cho khách hàng đặt order).</li>\n" +
+                    "        <li>Phí chuyển phát sẽ được hoàn trả trong trường hợp hàng hóa bán ra không đúng, lỗi hoặc hỏng hóc.</li>\n" +
+                    "    </ul>\n" +
+                    "    <li class=\"lead mt-3\"> Quy trình đổi/trả sản phẩm</li>\n" +
+                    "    <ul>\n" +
+                    "        <li>Bước 1: Khách hàng liên hệ trực tiếp tại địa chỉ cửa hàng hoặc Zalo <strong>0984843218</strong> hoặc email: <em>orders-confirm@giaynhatchinhhang.vn</em> để yêu cầu việc đổi sản phẩm. Giày Nhật Chính Hãng sẽ hướng dẫn bạn cách đổi sản phẩm. Nếu quá trình đổi sản phẩm của khách hợp lệ.</li>\n" +
+                    "        <li>Bước 2: Khách hàng gửi sản phẩm hàng hóa cho Giày Nhật Chính Hãng tiếp nhận theo chỉ dẫn phía trên (có thể tại cửa hàng hoặc gửi theo đường bưu điện với sản phẩm mua online).</li>\n" +
+                    "        <li>Bước 3: Giày Nhật Chính Hãng nhận sản phẩm và kiểm tra sản phẩm.</li>\n" +
+                    "        <li>Bước 4: Khách hàng nhận sản phẩm thay thế hoặc nhận tiền hoàn lại.</li>\n" +
+                    "    </ul>\n" +
+                    "    <h6 class=\"mt-3\">Một số lưu ý khi gửi sản phẩm đến bưu điện:</h6>\n" +
+                    "    <ol>\n" +
+                    "        <li>Đóng gói, chèn lót sản phẩm như ban đầu, nhưng không niêm phong bề mặt thùng trước khi hoàn tất quá trình gửi hàng vì có thể bưu điện cần kiểm tra trước khi nhận hàng từ khách hàng.</li>\n" +
+                    "        <li>Lưu ý không dán băng keo trực tiếp lên hộp sản phẩm vì yêu cầu đổi/trả có thể sẽ bị từ chối nếu hộp sản phẩm bị hư hỏng.</li>\n" +
+                    "        <li>Ghi note: Tên + số điện thoại khách hàng + nội dung yêu cầu đổi đính trong sản phẩm.</li>\n" +
+                    "    </ol>\n" +
+                    "    <p><strong>Lưu ý:</strong> Khách hàng vui lòng chỉ gửi sản phẩm qua đường bưu điện và chịu trách nhiệm về trạng thái nguyên vẹn của sản phẩm khi gửi về Giày Nhật Chính Hãng. Shop không chấp nhận các lý do như: Nhân viên bưu điện báo không cần bọc...etc.</p>\n" +
+                    "</ol>"
                 );
                 break;
 
@@ -97,64 +111,38 @@ public class SeedPolicyAdminServlet extends HttpServlet {
                 p.setSlug("chinh-sach-doi-tra");
                 p.setDisplayOrder(2);
                 p.setContent(
-                    "<h2>Chính sách đổi trả hàng</h2>\n" +
-                    "<p>Japan Sport cam kết mang đến trải nghiệm mua sắm tốt nhất. Chúng tôi hỗ trợ đổi trả trong các trường hợp sau:</p>\n" +
-                    "<h3>1. Điều kiện đổi trả</h3>\n" +
-                    "<ul>\n" +
-                    "<li>Sản phẩm còn nguyên tem, nhãn, chưa qua sử dụng</li>\n" +
-                    "<li>Sản phẩm bị lỗi do nhà sản xuất hoặc vận chuyển</li>\n" +
-                    "<li>Giao sai mẫu, sai size, sai màu so với đơn đặt hàng</li>\n" +
-                    "<li>Có hóa đơn mua hàng hoặc mã đơn hàng hợp lệ</li>\n" +
-                    "</ul>\n" +
-                    "<h3>2. Thời gian đổi trả</h3>\n" +
-                    "<ul>\n" +
-                    "<li><strong>Đổi size/màu:</strong> trong vòng <strong>7 ngày</strong> kể từ ngày nhận hàng</li>\n" +
-                    "<li><strong>Trả hàng hoàn tiền (lỗi sản xuất):</strong> trong vòng <strong>30 ngày</strong></li>\n" +
-                    "<li><strong>Bảo hành sản phẩm:</strong> theo chính sách của nhà sản xuất</li>\n" +
-                    "</ul>\n" +
-                    "<h3>3. Quy trình đổi trả</h3>\n" +
-                    "<ol>\n" +
-                    "<li>Liên hệ hotline <strong>1800-xxxx</strong> hoặc email <strong>support@japansport.vn</strong> trong giờ hành chính</li>\n" +
-                    "<li>Cung cấp mã đơn hàng và lý do đổi trả, kèm ảnh/video sản phẩm lỗi (nếu có)</li>\n" +
-                    "<li>Nhân viên xác nhận và cấp mã đổi trả</li>\n" +
-                    "<li>Gửi sản phẩm về kho theo địa chỉ được cung cấp</li>\n" +
-                    "<li>Nhận sản phẩm mới hoặc hoàn tiền trong 3-5 ngày làm việc</li>\n" +
-                    "</ol>\n" +
-                    "<h3>4. Trường hợp không áp dụng đổi trả</h3>\n" +
-                    "<ul>\n" +
-                    "<li>Sản phẩm đã qua sử dụng, giặt, tẩy</li>\n" +
-                    "<li>Sản phẩm thuộc danh mục đồ lót, tất, phụ kiện nhỏ</li>\n" +
-                    "<li>Sản phẩm mua trong chương trình khuyến mãi đặc biệt (có ghi rõ không đổi trả)</li>\n" +
-                    "</ul>"
+                    "<h5 class=\"mb-3\">CHÍNH SÁCH ĐỔI TRẢ:</h5>\n" +
+                    "<ol class=\"ps-3\">\n" +
+                    "    <li class=\"lead\">Điều khoản và điều kiện trả hàng</li>\n" +
+                    "    <ul>\n" +
+                    "        <li>Thời hạn đổi các mặt hàng đã mua tại <a href=\"#\">https://giaynhatchinhhang.vn/</a> là <strong>7 ngày</strong> kể từ ngày nhận hàng.</li>\n" +
+                    "        <li>Hàng được đổi phải đảm bảo còn mới 100%, chưa được sử dụng, còn nguyên nhãn mác, nguyên hộp, phụ kiện, phiếu bảo hành (nếu có).</li>\n" +
+                    "        <li>Sản phẩm mua ở tại showroom thì áp dụng đổi tại địa chỉ đã mua. Sản phẩm mua online thì liên hệ Zalo <strong>0984843218</strong>.</li>\n" +
+                    "    </ul>\n" +
+                    "    <li class=\"lead mt-3\">Quy trình đổi/trả sản phẩm</li>\n" +
+                    "    <ul>\n" +
+                    "        <li>Bước 1: Khách hàng liên hệ trực tiếp tại địa chỉ cửa hàng hoặc Zalo <strong>0984843218</strong>.</li>\n" +
+                    "        <li>Bước 2: Gửi sản phẩm hàng hóa cho Giày Nhật Chính Hãng tiếp nhận.</li>\n" +
+                    "        <li>Bước 3: Khách hàng nhận sản phẩm thay thế hoặc nhận tiền hoàn lại.</li>\n" +
+                    "    </ul>\n" +
+                    "</ol>"
                 );
                 break;
 
             case "PAYMENT":
-                p.setTitle("Chính sách thanh toán");
-                p.setSlug("chinh-sach-thanh-toan");
+                p.setTitle("Thông tin thanh toán");
+                p.setSlug("thong-tin-thanh-toan");
                 p.setDisplayOrder(3);
                 p.setContent(
-                    "<h2>Chính sách thanh toán</h2>\n" +
-                    "<p>Japan Sport hỗ trợ nhiều phương thức thanh toán linh hoạt, an toàn và tiện lợi.</p>\n" +
-                    "<h3>1. Các phương thức thanh toán</h3>\n" +
-                    "<h4>🏦 Chuyển khoản ngân hàng</h4>\n" +
+                    "<h4 style=\"font-size: medium\" class=\"fw-bold text-danger\">THÔNG TIN THANH TOÁN</h4>\n" +
+                    "<h5 class=\"mt-3 fw-bold\">THÔNG TIN CHUYỂN KHOẢN</h5>\n" +
+                    "<p>Quý khách hàng vui lòng chuyển khoản vào tài khoản số:</p>\n" +
                     "<ul>\n" +
-                    "<li>Ngân hàng: Vietcombank, Techcombank, MB Bank, VPBank, BIDV</li>\n" +
-                    "<li>Chủ tài khoản: CÔNG TY TNHH JAPAN SPORT VIỆT NAM</li>\n" +
-                    "<li>Nội dung chuyển khoản: [Mã đơn hàng] - [Họ tên]</li>\n" +
+                    "    <li><strong>1. Vietcombank</strong><br>Chủ TK: Lê Anh Tuấn<br>Số TK: 0011004133440<br>Chi nhánh: Vietcombank Sở Giao Dịch</li>\n" +
+                    "    <li class=\"mt-3\"><strong>2. Vietinbank</strong><br>Chủ TK: Lê Anh Tuấn<br>Số TK: 105006875976<br>Chi nhánh: Vietinbank Thăng Long</li>\n" +
+                    "    <li class=\"mt-3\"><strong>3. Agribank</strong><br>Chủ TK: Lê Anh Tuấn<br>Số TK: 3100205466231<br>Chi nhánh: Agribank Từ Liêm</li>\n" +
                     "</ul>\n" +
-                    "<h4>💳 Thanh toán thẻ trực tuyến</h4>\n" +
-                    "<p>Chấp nhận thẻ Visa, Mastercard, JCB, American Express qua cổng thanh toán bảo mật.</p>\n" +
-                    "<h4>📱 Ví điện tử</h4>\n" +
-                    "<p>MoMo, ZaloPay, VNPay, ShopeePay</p>\n" +
-                    "<h4>🏠 Thanh toán khi nhận hàng (COD)</h4>\n" +
-                    "<p>Áp dụng cho đơn hàng dưới 5.000.000đ tại các tỉnh thành có hỗ trợ COD.</p>\n" +
-                    "<h4>💰 Trả góp 0%</h4>\n" +
-                    "<p>Hỗ trợ trả góp 0% lãi suất qua thẻ tín dụng các ngân hàng đối tác cho đơn hàng từ 3.000.000đ.</p>\n" +
-                    "<h3>2. Bảo mật thanh toán</h3>\n" +
-                    "<p>Mọi giao dịch được mã hóa bằng công nghệ SSL 256-bit, đảm bảo thông tin thanh toán của bạn an toàn tuyệt đối.</p>\n" +
-                    "<h3>3. Xác nhận thanh toán</h3>\n" +
-                    "<p>Sau khi thanh toán thành công, hệ thống sẽ gửi email xác nhận đơn hàng trong vòng 5-15 phút. Nếu không nhận được, vui lòng kiểm tra hộp thư rác hoặc liên hệ hỗ trợ.</p>"
+                    "<p class=\"mt-3 text-muted\"><strong>Giá sản phẩm chưa bao gồm phí vận chuyển nội thành / liên tỉnh.</strong> Phí vận chuyển cụ thể shop sẽ báo khi chốt đơn đặt hàng. Cảm ơn quý khách đã sử dụng dịch vụ.</p>"
                 );
                 break;
 
@@ -262,41 +250,28 @@ public class SeedPolicyAdminServlet extends HttpServlet {
                 p.setSlug("huong-dan-dat-hang");
                 p.setDisplayOrder(7);
                 p.setContent(
-                    "<h2>Hướng dẫn đặt hàng trực tuyến</h2>\n" +
-                    "<p>Việc mua sắm tại Japan Sport rất đơn giản. Làm theo các bước sau để đặt hàng thành công:</p>\n" +
-                    "<h3>Bước 1: Tìm sản phẩm</h3>\n" +
-                    "<ul>\n" +
-                    "<li>Duyệt qua các danh mục hoặc sử dụng thanh tìm kiếm</li>\n" +
-                    "<li>Lọc theo thương hiệu, kích cỡ, màu sắc, giá tiền</li>\n" +
-                    "<li>Click vào sản phẩm để xem chi tiết, ảnh và thông số</li>\n" +
-                    "</ul>\n" +
-                    "<h3>Bước 2: Chọn và thêm vào giỏ hàng</h3>\n" +
-                    "<ul>\n" +
-                    "<li>Chọn size, màu sắc phù hợp</li>\n" +
-                    "<li>Điều chỉnh số lượng</li>\n" +
-                    "<li>Nhấn <strong>\"Thêm vào giỏ hàng\"</strong> hoặc <strong>\"Mua ngay\"</strong></li>\n" +
-                    "</ul>\n" +
-                    "<h3>Bước 3: Xem giỏ hàng và thanh toán</h3>\n" +
-                    "<ul>\n" +
-                    "<li>Click icon giỏ hàng ở góc trên phải để xem</li>\n" +
-                    "<li>Kiểm tra lại sản phẩm, số lượng</li>\n" +
-                    "<li>Nhập mã voucher nếu có</li>\n" +
-                    "<li>Nhấn <strong>\"Thanh toán\"</strong></li>\n" +
-                    "</ul>\n" +
-                    "<h3>Bước 4: Điền thông tin giao hàng</h3>\n" +
-                    "<ul>\n" +
-                    "<li>Đăng nhập hoặc tiếp tục với tư cách khách</li>\n" +
-                    "<li>Điền địa chỉ giao hàng đầy đủ và chính xác</li>\n" +
-                    "<li>Chọn phương thức vận chuyển</li>\n" +
-                    "</ul>\n" +
-                    "<h3>Bước 5: Chọn phương thức thanh toán và xác nhận</h3>\n" +
-                    "<ul>\n" +
-                    "<li>Chọn COD, chuyển khoản, ví điện tử hoặc thẻ tín dụng</li>\n" +
-                    "<li>Xem lại tóm tắt đơn hàng</li>\n" +
-                    "<li>Nhấn <strong>\"Đặt hàng\"</strong> để hoàn tất</li>\n" +
-                    "</ul>\n" +
-                    "<h3>Sau khi đặt hàng</h3>\n" +
-                    "<p>Bạn sẽ nhận được email xác nhận đơn hàng. Theo dõi trạng thái đơn hàng trong mục <strong>\"Đơn hàng của tôi\"</strong> trên website. Nếu cần hỗ trợ, hãy liên hệ CSKH của chúng tôi!</p>"
+                    "<div class=\"mb-3\"><h4 class=\"fw-bold text-danger\">HƯỚNG DẪN ĐẶT HÀNG</h4></div>\n" +
+                    "<div class=\"guide-step mb-4\">\n" +
+                    "    <h5 class=\"fw-bold\">Bước 1:</h5>\n" +
+                    "    <p>Truy cập website và lựa chọn sản phẩm cần mua để mua hàng. Trên web hiển thị size nào là còn size đó. Ngoài size web hiển thị sẽ <strong>KHÔNG CÓ HÀNG SẴN</strong>.</p>\n" +
+                    "    <figure class=\"text-center\"><img src=\"assets/images/return_policy/guide1.webp\" class=\"img-fluid guide-img\" alt=\"Hướng dẫn chọn size\"></figure>\n" +
+                    "</div>\n" +
+                    "<div class=\"guide-step mb-4\">\n" +
+                    "    <h5 class=\"fw-bold\">Bước 2:</h5>\n" +
+                    "    <p>Sau khi chọn sản phẩm và size phù hợp, nhấn <strong>“Mua ngay”</strong> để đưa sản phẩm vào giỏ hàng.</p>\n" +
+                    "    <figure class=\"text-center\"><img src=\"assets/images/return_policy/guide2.webp\" class=\"img-fluid guide-img\" alt=\"Hướng dẫn thêm vào giỏ\"></figure>\n" +
+                    "</div>\n" +
+                    "<div class=\"guide-step mb-4\">\n" +
+                    "    <h5 class=\"fw-bold\">Bước 3:</h5>\n" +
+                    "    <p>Lựa chọn thông tin tài khoản đặt hàng. Nếu chưa có tài khoản, điền trực tiếp thông tin địa chỉ nhận hàng, tên và số điện thoại.</p>\n" +
+                    "    <figure class=\"text-center\"><img src=\"assets/images/return_policy/guide3.webp\" class=\"img-fluid guide-img\" alt=\"Hướng dẫn bước 3\"></figure>\n" +
+                    "</div>\n" +
+                    "<div class=\"guide-step mb-4\">\n" +
+                    "    <h5 class=\"fw-bold\">Bước 4 & Bước 5:</h5>\n" +
+                    "    <p>Xem lại thông tin đặt hàng, điền chú thích sau đó bấm <strong>ĐẶT HÀNG</strong>.</p>\n" +
+                    "    <figure class=\"text-center\"><img src=\"assets/images/return_policy/guide4.webp\" class=\"img-fluid guide-img\" alt=\"Hướng dẫn bước 5\"></figure>\n" +
+                    "    <p>Sau khi nhận được đơn hàng bạn gửi chúng tôi sẽ liên hệ bằng cách gọi điện lại để xác nhận lại đơn hàng và địa chỉ của bạn. Trân trọng cảm ơn.</p>\n" +
+                    "</div>"
                 );
                 break;
 

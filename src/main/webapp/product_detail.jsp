@@ -456,7 +456,7 @@
             </div>
 
             <div class="modal-footer border-0 pt-0">
-                <a href="${ctx}/cart" class="btn btn-outline-secondary">Xem giỏ hàng</a>
+                <a href="<%=ctx%>/cart" class="btn btn-outline-secondary">Xem giỏ hàng</a>
                 <button class="btn btn-link text-muted" data-bs-dismiss="modal">Tiếp tục mua hàng</button>
             </div>
         </div>
@@ -1563,6 +1563,10 @@
         qs('#btnBuyNowProduct')?.addEventListener('click', (e) => {
             e.preventDefault();
             submitAddToCart(true);
+        });
+
+        qs('#mProceed')?.addEventListener('click', () => {
+            window.location.href = '<%=request.getContextPath()%>/checkout';
         });
         
         if (typeof window.initZoom === 'function') {

@@ -106,6 +106,8 @@ public class CheckoutController extends HttpServlet {
         String ward = req.getParameter("ward");
         String payMethod = req.getParameter("payMethod");
         String note = req.getParameter("note");
+        String ghnDistrictIdStr = req.getParameter("ghnDistrictId");
+        String ghnWardCode = req.getParameter("ghnWardCode");
 
         try {
             // Lấy giỏ hàng TRƯỚC KHI thanh toán để tính tổng tiền truyền vào email
@@ -115,18 +117,47 @@ public class CheckoutController extends HttpServlet {
             // Xử lý tính toán giảm giá (nếu có dùng Voucher) để ra số tiền cuối cùng
             String voucherCode = (String) req.getSession().getAttribute("appliedVoucherCode");
             double finalTotal = subtotal;
+            double discountAmount = 0;
             if (voucherCode != null && !voucherCode.trim().isEmpty()) {
                 Voucher appliedVoucher = voucherService.applyVoucher(voucherCode, BigDecimal.valueOf(subtotal));
                 if (appliedVoucher != null) {
                     BigDecimal discount = voucherService.calculateDiscount(appliedVoucher, BigDecimal.valueOf(subtotal));
-                    finalTotal = subtotal - discount.doubleValue();
+                    discountAmount = discount.doubleValue();
+                    finalTotal = subtotal - discountAmount;
                 }
             }
 
+            // Xử lý phí vận chuyển
+            String shippingFeeStr = req.getParameter("shippingFee");
+            double shippingFee = 0;
+            if (shippingFeeStr != null && !shippingFeeStr.trim().isEmpty()) {
+                try {
+                    shippingFee = Double.parseDouble(shippingFeeStr);
+                } catch (Exception e) {}
+            }
+            finalTotal += shippingFee;
+
             // 2. Thực hiện lưu đơn hàng vào database
             int orderId = orderDao.placeOrderFromCart(
-                    u.getId(), fullName, phone, addressLine, city, district, ward, payMethod, note
+                    u.getId(), fullName, phone, addressLine, city, district, ward, payMethod, note,
+                    discountAmount, shippingFee
             );
+
+            // 3. Đẩy đơn hàng sang GHN
+            try {
+                if (ghnDistrictIdStr != null && !ghnDistrictIdStr.trim().isEmpty() && ghnWardCode != null && !ghnWardCode.trim().isEmpty()) {
+                    int distId = Integer.parseInt(ghnDistrictIdStr);
+                    String fullAddr = addressLine + ", " + ward + ", " + district + ", " + city;
+                    double cod = "cod".equals(payMethod) ? finalTotal : 0; // Đã chuyển khoản thì thu hộ 0đ
+                    
+                    String ghnOrderCode = com.japansport.service.GhnApiService.createOrder(
+                            fullName, phone, fullAddr, distId, ghnWardCode, cod
+                    );
+                    System.out.println("TẠO ĐƠN GHN THÀNH CÔNG! Mã vận đơn GHN: " + ghnOrderCode + " cho Đơn hàng ID: " + orderId);
+                }
+            } catch (Exception e) {
+                System.err.println("Lỗi bắn đơn sang GHN (Đơn ID " + orderId + "): " + e.getMessage());
+            }
 
             // Trigger: gửi thông báo in-app cho User
             try {
