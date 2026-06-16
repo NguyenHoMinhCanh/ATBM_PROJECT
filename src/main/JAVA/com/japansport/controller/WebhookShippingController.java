@@ -76,6 +76,8 @@ public class WebhookShippingController extends HttpServlet {
                         systemStatus = "DONE";
                     } else if (status.equalsIgnoreCase("returned") || status.equalsIgnoreCase("hoan_hang")) {
                         systemStatus = "CANCEL";
+                    } else if (status.equalsIgnoreCase("paid") || status.equalsIgnoreCase("da_thanh_toan")) {
+                        systemStatus = "PAID";
                     }
 
                     // 4. Bỏ qua OrderDao để tự Update trực tiếp, giúp in ra mã lỗi SQL chi tiết lên Postman
@@ -88,6 +90,17 @@ public class WebhookShippingController extends HttpServlet {
                         m.setAccessible(true);
                         java.sql.Connection conn = (java.sql.Connection) m.invoke(orderDao); // Lỗi ở đây sẽ ném ra SQL Exception
                         
+                        // Lấy user_id để gửi thông báo
+                        int userId = -1;
+                        String getUserIdSql = "SELECT user_id FROM orders WHERE id = ?";
+                        java.sql.PreparedStatement psUserId = conn.prepareStatement(getUserIdSql);
+                        psUserId.setInt(1, orderId);
+                        java.sql.ResultSet rsUserId = psUserId.executeQuery();
+                        if (rsUserId.next()) {
+                            userId = rsUserId.getInt("user_id");
+                        }
+                        psUserId.close();
+
                         String updateSql = "UPDATE orders SET status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?";
                         java.sql.PreparedStatement ps = conn.prepareStatement(updateSql);
                         ps.setString(1, systemStatus);
@@ -95,6 +108,11 @@ public class WebhookShippingController extends HttpServlet {
                         int affected = ps.executeUpdate();
                         if (affected > 0) {
                             isSuccess = true;
+                            // Gọi NotificationDAO để gửi thông báo
+                            if (userId > 0) {
+                                com.japansport.dao.NotificationDAO notifDao = new com.japansport.dao.NotificationDAO();
+                                notifDao.pushOrderNotification(userId, orderId, systemStatus);
+                            }
                         } else {
                             errorDetail = "Lệnh Update chạy thành công nhưng không có dòng nào bị ảnh hưởng (Order ID không khớp)";
                         }

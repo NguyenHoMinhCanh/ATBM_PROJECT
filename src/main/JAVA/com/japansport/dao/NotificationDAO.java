@@ -18,10 +18,18 @@ public class NotificationDAO extends DAO {
         Notification n = new Notification();
         n.setId(rs.getInt("id"));
         n.setUserId(rs.getInt("user_id"));
-        n.setType(rs.getString("type"));
+        
+        // Bảng hiện tại không có cột type, ta có thể tự suy luận dựa vào link
+        String link = rs.getString("link");
+        if (link != null && link.contains("order")) {
+            n.setType(Notification.TYPE_ORDER);
+        } else {
+            n.setType(Notification.TYPE_SYSTEM);
+        }
+        
         n.setTitle(rs.getString("title"));
-        n.setContent(rs.getString("content"));
-        n.setLink(rs.getString("link"));
+        n.setContent(rs.getString("message")); // DB dùng cột 'message' thay vì 'content'
+        n.setLink(link);
         n.setRead(rs.getBoolean("is_read"));
         n.setCreatedAt(rs.getTimestamp("created_at"));
         return n;
@@ -78,15 +86,14 @@ public class NotificationDAO extends DAO {
      * @return ID của bản ghi vừa insert, hoặc -1 nếu lỗi.
      */
     public int insert(Notification n) {
-        String sql = "INSERT INTO notifications (user_id, type, title, content, link) " +
-                     "VALUES (?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO notifications (user_id, title, message, link) " +
+                     "VALUES (?, ?, ?, ?)";
         try {
             PreparedStatement ps = getPreparedStatement(sql, Statement.RETURN_GENERATED_KEYS);
             ps.setInt(1, n.getUserId());
-            ps.setString(2, n.getType());
-            ps.setString(3, n.getTitle());
-            ps.setString(4, n.getContent());
-            ps.setString(5, n.getLink());
+            ps.setString(2, n.getTitle());
+            ps.setString(3, n.getContent()); // Lưu content vào cột message
+            ps.setString(4, n.getLink());
             ps.executeUpdate();
             ResultSet keys = ps.getGeneratedKeys();
             if (keys.next()) return keys.getInt(1);
@@ -163,7 +170,7 @@ public class NotificationDAO extends DAO {
                 content = "Trạng thái đơn hàng của bạn đã được cập nhật.";
         }
         insert(new Notification(userId, Notification.TYPE_ORDER, title, content,
-                                "/orders?id=" + orderId));
+                                "/order-detail?id=" + orderId));
     }
 
     // ========== BACKWARD COMPATIBILITY (Tương thích với code của Phong) ==========
@@ -174,13 +181,12 @@ public class NotificationDAO extends DAO {
      */
     public void insertNotification(Connection conn, int userId, String title,
                                     String message, String link) throws SQLException {
-        String sql = "INSERT INTO notifications (user_id, type, title, content, link) VALUES (?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO notifications (user_id, title, message, link) VALUES (?, ?, ?, ?)";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, userId);
-            ps.setString(2, Notification.TYPE_SYSTEM); // Hoặc TYPE_ORDER nếu muốn
-            ps.setString(3, title);
-            ps.setString(4, message);
-            if (link == null) ps.setNull(5, Types.VARCHAR); else ps.setString(5, link);
+            ps.setString(2, title);
+            ps.setString(3, message);
+            if (link == null) ps.setNull(4, Types.VARCHAR); else ps.setString(4, link);
             ps.executeUpdate();
         }
     }

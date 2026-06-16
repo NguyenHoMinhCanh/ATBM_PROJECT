@@ -969,7 +969,8 @@
             .then(function(data) {
                 if (data.ok) {
                     showToast(data.msg);
-                    if (data.cartCount !== undefined) updateCartBadge(data.cartCount);
+                    if (window.updateCartCountFromServer) window.updateCartCountFromServer();
+                    else if (data.cartCount !== undefined) updateCartBadge(data.cartCount);
                 } else if (data.msg === 'login_required') {
                     window.location.href = CTX + '/login.jsp?back=' + encodeURIComponent(window.location.href);
                     return;
