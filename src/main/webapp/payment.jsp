@@ -241,39 +241,15 @@
                                 </label>
                             </div>
 
-                            <div id="bankInfoPanel" class="border rounded p-3 mb-3" style="background-color: #f8f9fa;">
-                                <div class="row align-items-center">
-                                    <div class="col-sm-4 text-center mb-3 mb-sm-0">
-                                        <img id="qrCodeImg" src="" alt="Mã QR Thanh Toán" class="img-fluid border rounded shadow-sm bg-white" style="max-width: 100%; height: auto; padding: 5px;">
+                            <div id="bankInfoPanel" class="border rounded p-3 mb-3" style="display: none; background-color: #f0f8ff;">
+                                <div class="d-flex align-items-start">
+                                    <i class="bi bi-shield-check text-primary fs-4 me-3"></i>
+                                    <div>
+                                        <h6 class="mb-1 text-primary">Thanh toán an toàn qua mã QR</h6>
+                                        <p class="mb-0 small text-muted">
+                                            Sau khi bạn kiểm tra thông tin và nhấn nút <strong>ĐẶT HÀNG</strong>, hệ thống sẽ tạo đơn và chuyển bạn đến trang <strong>quét mã QR (hỗ trợ tự động nhiều ngân hàng và ví điện tử)</strong>.
+                                        </p>
                                     </div>
-                                    <div class="col-sm-8">
-                                        <p class="mb-2 small"><strong>Ngân hàng:</strong> Vietcombank</p>
-                                        <p class="mb-2 small"><strong>Chủ tài khoản:</strong> JAPAN SPORT</p>
-
-                                        <div class="d-flex justify-content-between align-items-center mb-2 small">
-                                            <span><strong>Số tài khoản:</strong> 1234567890</span>
-                                            <button type="button" class="btn btn-sm btn-outline-secondary py-0 px-2 rounded-pill copy-btn" onclick="copyText('1234567890', this)">
-                                                <i class="bi bi-clipboard"></i> Copy
-                                            </button>
-                                        </div>
-
-                                        <div class="d-flex justify-content-between align-items-center mb-2 small">
-                                            <span><strong>Số tiền:</strong> <strong class="text-danger"><%=String.format("%,.0f", finalTotal)%>₫</strong></span>
-                                            <button type="button" class="btn btn-sm btn-outline-secondary py-0 px-2 rounded-pill copy-btn" onclick="copyText('<%=finalTotal.toPlainString()%>', this)">
-                                                <i class="bi bi-clipboard"></i> Copy
-                                            </button>
-                                        </div>
-
-                                        <div class="d-flex justify-content-between align-items-center small">
-                                            <span><strong>Nội dung:</strong> <span id="payContent">DH <%=shipPhone%></span></span>
-                                            <button type="button" class="btn btn-sm btn-outline-secondary py-0 px-2 rounded-pill copy-btn" onclick="copyText('DH <%=shipPhone%>', this)">
-                                                <i class="bi bi-clipboard"></i> Copy
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="alert alert-warning mt-3 mb-0 py-2 small border-0">
-                                    <i class="bi bi-info-circle-fill text-warning me-1"></i> Sau khi chuyển khoản thành công, vui lòng nhấn nút <strong>ĐẶT HÀNG</strong> ở bên dưới.
                                 </div>
                             </div>
 
@@ -583,63 +559,9 @@
 
         if (payBank.checked) {
             panel.style.display = 'block';
-            generateDynamicQR();
         } else {
             panel.style.display = 'none';
         }
-    }
-
-    function generateDynamicQR() {
-        const qrImg = document.getElementById('qrCodeImg');
-        if (!qrImg) return;
-
-        // Ép kiểu an toàn bằng ngoặc kép để tránh đứt gãy chuỗi trong JS
-        const rawAmount = "<%= (finalTotal != null) ? finalTotal.toPlainString() : "0" %>";
-        const rawPhone = "<%= (shipPhone != null && !shipPhone.isEmpty()) ? shipPhone : "KhachHang" %>";
-
-        // Chuyển thành số nguyên sạch sẽ
-        const cleanAmount = parseInt(rawAmount) || 0;
-
-        // Ghép chuỗi nội dung (Dùng nối chuỗi cơ bản cho an toàn tuyệt đối)
-        const qrText = "Chuyen khoan:\nNH: Vietcombank\nSTK: 1234567890\nTen: JAPAN SPORT\nTien: " + cleanAmount + " VND\nND: DH " + rawPhone;
-
-        // Đổi sang dùng QuickChart API - Siêu ổn định
-        const qrUrl = "https://quickchart.io/qr?size=300x300&text=" + encodeURIComponent(qrText);
-
-        // Gán link vào thẻ img
-        qrImg.src = qrUrl;
-
-        // Log ra màn hình console để debug
-        console.log("Đã tạo link QR:", qrUrl);
-    }
-
-    function copyText(text, btnElement) {
-        let textArea = document.createElement("textarea");
-        textArea.value = text;
-        textArea.style.top = "0";
-        textArea.style.left = "0";
-        textArea.style.position = "fixed";
-        textArea.style.opacity = "0";
-
-        document.body.appendChild(textArea);
-        textArea.focus();
-        textArea.select();
-
-        try {
-            document.execCommand('copy');
-            const originalHTML = btnElement.innerHTML;
-            btnElement.innerHTML = '<i class="bi bi-check2"></i> Đã chép';
-            btnElement.classList.replace('btn-outline-secondary', 'btn-success');
-
-            setTimeout(() => {
-                btnElement.innerHTML = originalHTML;
-                btnElement.classList.replace('btn-success', 'btn-outline-secondary');
-            }, 2000);
-        } catch (err) {
-            console.error('Lỗi khi copy', err);
-        }
-
-        document.body.removeChild(textArea);
     }
 
     document.addEventListener('DOMContentLoaded', function () {

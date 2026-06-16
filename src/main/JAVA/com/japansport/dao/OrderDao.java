@@ -972,4 +972,22 @@ public class OrderDao extends DAO {
         }
         return null;
     }
+    // Lấy trạng thái hiện tại của đơn hàng
+    public String getStatusByOrderId(int orderId) {
+        String status = "PENDING";
+        String sql = "SELECT status FROM orders WHERE id = ?";
+
+        try {
+            PreparedStatement ps = getPreparedStatement(sql);
+            ps.setInt(1, orderId);
+
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                status = rs.getString("status");
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return status;
+    }
 }
