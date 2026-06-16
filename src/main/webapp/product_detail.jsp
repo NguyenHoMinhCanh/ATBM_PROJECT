@@ -1505,7 +1505,9 @@
                 
                 if (data.ok) {
                     // Update số lượng giỏ hàng trên cục header
-                    if (data.cartCount !== undefined) {
+                    if (window.updateCartCountFromServer) {
+                        window.updateCartCountFromServer();
+                    } else if (data.cartCount !== undefined) {
                         const badge = qs('#cartCount');
                         if (badge) {
                             badge.textContent = data.cartCount;
