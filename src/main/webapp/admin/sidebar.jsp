@@ -31,6 +31,9 @@
             <li><a class="s-item" href="${pageContext.request.contextPath}/admin/orders">
                 <i class="bi bi-receipt me-2"></i>Đơn hàng
             </a></li>
+            <li><a class="s-item text-danger" href="${pageContext.request.contextPath}/admin/signatures">
+                <i class="bi bi-shield-lock-fill me-2"></i>Xác nhận chữ ký số
+            </a></li>
             <li><a class="s-item" href="${pageContext.request.contextPath}/admin/reviews">
                 <i class="bi bi-star me-2"></i>Đánh giá
             </a></li>
