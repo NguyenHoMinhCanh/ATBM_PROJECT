@@ -269,8 +269,27 @@
                             <textarea class="form-control" name="note" rows="3" placeholder="Ghi chú (tuỳ chọn)"></textarea>
                         </div>
 
+                        <!-- KHU VỰC CHỮ KÝ ĐIỆN TỬ -->
+                        <div class="mt-4 border border-danger rounded p-3" style="background-color: #fffafb;">
+                            <h5 class="text-danger mb-3"><i class="bi bi-shield-lock-fill me-2"></i>Chữ ký điện tử (Bắt buộc)</h5>
+                            
+                            <div class="mb-3">
+                                <label class="form-label small text-muted">1. Dữ liệu đơn hàng (Hash Data) - <i>Copy nội dung này để dán vào Tool</i></label>
+                                <div class="d-flex gap-2">
+                                    <input type="text" id="orderHashData" name="hashData" class="form-control bg-light font-monospace text-muted" readonly>
+                                    <button type="button" class="btn btn-outline-secondary btn-sm" onclick="copyHashData()">Copy</button>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label small text-muted">2. Mã chữ ký (Signature) - <i>Dán kết quả từ Tool Ký Offline vào đây</i></label>
+                                <textarea class="form-control font-monospace" name="signature" rows="2" placeholder="Dán mã Base64 vào đây..." required></textarea>
+                                <div class="invalid-feedback">Vui lòng nhập chữ ký điện tử.</div>
+                            </div>
+                        </div>
+
                         <div class="mt-4 d-grid">
-                            <button class="btn btn-primary" type="submit">ĐẶT HÀNG</button>
+                            <button class="btn btn-danger btn-lg" type="submit" onclick="generateHashData()">ĐẶT HÀNG & KÝ XÁC NHẬN</button>
                         </div>
                     </form>
                 </div>
@@ -572,7 +591,34 @@
 
         // Gọi ngay khi web load xong
         toggleBankInfo();
+        
+        // Gọi tạo hash khi load xong
+        generateHashData();
+        
+        // Cập nhật hash liên tục khi nhập liệu
+        const inputs = document.querySelectorAll('input[name="email"], input[name="fullName"], input[name="phone"]');
+        inputs.forEach(input => input.addEventListener('input', generateHashData));
     });
+
+    // Hàm tạo Hash Data tự động
+    function generateHashData() {
+        const email = document.querySelector('input[name="email"]').value || '';
+        const fullName = document.querySelector('input[name="fullName"]').value || '';
+        const phone = document.querySelector('input[name="phone"]').value || '';
+        const totalText = document.getElementById('uiTotal').innerText.replace(/[^0-9]/g, '');
+        const total = totalText || '0';
+        
+        const hashStr = email + "|" + fullName + "|" + phone + "|" + total;
+        document.getElementById('orderHashData').value = hashStr;
+    }
+
+    // Hàm copy
+    function copyHashData() {
+        const hashInput = document.getElementById('orderHashData');
+        hashInput.select();
+        document.execCommand('copy');
+        alert('Đã copy dữ liệu! Hãy dán vào Tool Offline.');
+    }
 </script>
 </body>
 </html>

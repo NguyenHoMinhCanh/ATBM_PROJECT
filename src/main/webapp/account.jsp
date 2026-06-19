@@ -230,6 +230,68 @@
                     </div>
                 </div>
 
+                <!-- BẢO MẬT & CHỮ KÝ ĐIỆN TỬ -->
+                <div class="card acc-card mb-3 border-danger" style="border-width: 2px;">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center justify-content-between mb-3">
+                            <div class="fw-semibold">
+                                <i class="bi bi-shield-lock-fill me-2 text-danger"></i> Bảo mật & Chữ ký điện tử
+                            </div>
+                            <div class="text-muted small">Bắt buộc để đặt hàng</div>
+                        </div>
+
+                        <div class="alert alert-light border border-danger-subtle rounded-4 p-3 mb-3">
+                            <h6 class="text-danger fw-bold"><i class="bi bi-exclamation-triangle-fill me-1"></i> Quan trọng:</h6>
+                            <p class="mb-1 small text-muted">Hệ thống yêu cầu bạn phải sử dụng chữ ký điện tử để tạo đơn hàng. Vui lòng làm theo 2 bước sau:</p>
+                            <ol class="mb-0 small text-muted ps-3 mt-2">
+                                <li class="mb-1">Tạo cặp khóa bảo mật (Hệ thống sẽ tải file Private Key về máy bạn).</li>
+                                <li>Tải công cụ Offline về máy tính để ký xác nhận đơn hàng khi thanh toán.</li>
+                            </ol>
+                        </div>
+
+                        <div class="d-flex flex-column gap-3">
+                            <div class="d-flex align-items-center justify-content-between border-bottom pb-3">
+                                <div>
+                                    <div class="fw-semibold">Trạng thái Public Key (Lưu trên Server)</div>
+                                    <div class="small mt-1">
+                                        <c:choose>
+                                            <c:when test="${not empty sessionScope.currentUser.publicKey}">
+                                                <span class="badge bg-success"><i class="bi bi-check-circle"></i> Đã cài đặt</span>
+                                            </c:when>
+                                            <c:otherwise>
+                                                <span class="badge bg-secondary"><i class="bi bi-x-circle"></i> Chưa cài đặt</span>
+                                            </c:otherwise>
+                                        </c:choose>
+                                    </div>
+                                </div>
+                                <form method="post" action="${ctx}/generate-key" class="m-0">
+                                    <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Bạn có chắc chắn muốn tạo cặp khóa mới? Khóa cũ sẽ bị vô hiệu hóa và bạn phải lưu file Private Key mới cẩn thận!')">
+                                        <c:choose>
+                                            <c:when test="${not empty sessionScope.currentUser.publicKey}">
+                                                <i class="bi bi-arrow-repeat"></i> Tạo lại khóa mới
+                                            </c:when>
+                                            <c:otherwise>
+                                                <i class="bi bi-key"></i> Tạo cặp khóa
+                                            </c:otherwise>
+                                        </c:choose>
+                                    </button>
+                                </form>
+                            </div>
+
+                            <div class="d-flex align-items-center justify-content-between">
+                                <div>
+                                    <div class="fw-semibold">Công cụ Ký Số Offline (Máy tính)</div>
+                                    <div class="small text-muted mt-1">Sử dụng file Private Key tải ở trên để ký hóa đơn.</div>
+                                </div>
+                                <a href="${ctx}/assets/tools/SignTool.jar" class="btn btn-outline-primary btn-sm" download>
+                                    <i class="bi bi-download"></i> Tải Tool (.jar)
+                                </a>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
                 <!-- Địa chỉ giao hàng mặc định (không phá layout: thêm 1 card giống style phía trên) -->
                 <c:set var="addr" value="${requestScope.defaultAddress}" />
                 <div class="card acc-card mb-3">
