@@ -5,12 +5,14 @@ import com.japansport.dao.NotificationDAO;
 import com.japansport.dao.OrderDao;
 import com.japansport.dao.UserAddressDao;
 import com.japansport.dao.VoucherDao;
+import com.japansport.dao.OrderSignatureDao;
 import com.japansport.model.Cart;
 import com.japansport.model.User;
 import com.japansport.model.UserAddress;
 import com.japansport.model.Voucher;
 import com.japansport.service.VoucherService;
 import com.japansport.util.MailUtil;
+import com.japansport.util.RSAUtil;
 
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -29,6 +31,7 @@ public class CheckoutController extends HttpServlet {
     private final VoucherService voucherService = new VoucherService();
     private final VoucherDao voucherDao = new VoucherDao();
     private final NotificationDAO notifDao = new NotificationDAO();
+    private final OrderSignatureDao signatureDao = new OrderSignatureDao();
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
@@ -108,6 +111,9 @@ public class CheckoutController extends HttpServlet {
         String note = req.getParameter("note");
         String ghnDistrictIdStr = req.getParameter("ghnDistrictId");
         String ghnWardCode = req.getParameter("ghnWardCode");
+        
+        String hashData = req.getParameter("hashData");
+        String signatureBase64 = req.getParameter("signature");
 
         try {
             // Lấy giỏ hàng TRƯỚC KHI thanh toán để tính tổng tiền truyền vào email
@@ -136,12 +142,42 @@ public class CheckoutController extends HttpServlet {
                 } catch (Exception e) {}
             }
             finalTotal += shippingFee;
+            
+            // XÁC THỰC CHỮ KÝ ĐIỆN TỬ
+            if (hashData == null || signatureBase64 == null || hashData.isEmpty() || signatureBase64.isEmpty()) {
+                throw new Exception("Vui lòng cung cấp chữ ký điện tử hợp lệ!");
+            }
+            if (u.getPublicKey() == null || u.getPublicKey().isEmpty()) {
+                throw new Exception("Bạn chưa thiết lập Khóa bảo mật (Public Key). Vui lòng vào trang Profile để tạo cặp khóa!");
+            }
+            
+            // Dựng lại chuỗi hashData y hệt JS (để đối chiếu)
+            String serverHashStr = email + "|" + fullName + "|" + phone + "|" + Math.round(finalTotal);
+            if (!hashData.equals(serverHashStr)) {
+                // Nếu User dùng Tool nhưng sửa lại tiền trên Tool thì hashData trên web (post lên) và serverHashStr sẽ khác.
+                // Tuy nhiên, ta verify chính xác những gì Client gửi lên (hashData). Nếu hợp lệ thì ta lưu, 
+                // nhưng sau đó đánh dấu IsValid = false nếu hashData != serverHashStr?
+                // Ở đây ta cứ verify với hashData mà người dùng gửi lên.
+            }
+            
+            java.security.PublicKey pubKey = RSAUtil.getPublicKeyFromBase64(u.getPublicKey());
+            boolean isSignatureValid = RSAUtil.verify(hashData, signatureBase64, pubKey);
+            
+            if (!isSignatureValid) {
+                throw new Exception("Chữ ký điện tử KHÔNG hợp lệ. Dữ liệu đã bị giả mạo hoặc sai khóa!");
+            }
+            
+            // Nếu chữ ký chuẩn nhưng thông tin bị sửa đổi (Hash mismatch)
+            boolean isDataIntact = hashData.equals(serverHashStr);
 
             // 2. Thực hiện lưu đơn hàng vào database
             int orderId = orderDao.placeOrderFromCart(
                     u.getId(), fullName, phone, addressLine, city, district, ward, payMethod, note,
                     discountAmount, shippingFee
             );
+            
+            // Lưu lịch sử chữ ký (order_signatures)
+            signatureDao.insertSignature(orderId, hashData, signatureBase64, isDataIntact);
 
             // 3. Đẩy đơn hàng sang GHN
             try {
