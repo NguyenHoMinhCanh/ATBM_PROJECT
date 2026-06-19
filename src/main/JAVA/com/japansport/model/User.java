@@ -16,6 +16,7 @@ public class User {
 
     // ✅ Role code lấy từ bảng roles (ADMIN/STAFF/USER...)
     String roleCode;
+    String publicKey;
 
     public User(int id, String email, String name, String password, int active) {
         this.active = active;
@@ -126,6 +127,14 @@ public class User {
 
     public void setRoleCode(String roleCode) {
         this.roleCode = (roleCode == null || roleCode.isBlank()) ? "USER" : roleCode;
+    }
+
+    public String getPublicKey() {
+        return publicKey;
+    }
+
+    public void setPublicKey(String publicKey) {
+        this.publicKey = publicKey;
     }
 
     // ✅ AdminAuthFilter sẽ gọi hàm này

@@ -11,7 +11,7 @@ import com.japansport.util.PasswordUtil;
 public class UserDao extends DAO implements IDAO<User> {
     @Override
     public List<User> getAll() {
-        String sql = "SELECT u.id, u.email, u.password, u.name, u.phone, u.avatar, u.gender, u.birthday, u.active, " +
+        String sql = "SELECT u.id, u.email, u.password, u.name, u.phone, u.avatar, u.gender, u.birthday, u.active, u.public_key, " +
                 "       (SELECT r.code FROM user_roles ur JOIN roles r ON r.id = ur.role_id " +
                 "         WHERE ur.user_id = u.id " +
                 "         ORDER BY CASE r.code WHEN 'ADMIN' THEN 1 WHEN 'STAFF' THEN 2 ELSE 3 END " +
@@ -34,6 +34,7 @@ public class UserDao extends DAO implements IDAO<User> {
                 u.setAvatar(rs.getString("avatar"));
                 u.setGender(rs.getString("gender"));
                 u.setBirthday(rs.getDate("birthday"));
+                u.setPublicKey(rs.getString("public_key"));
                 u.setRoleCode(rs.getString("role_code"));
                 users.add(u);
             }
@@ -45,7 +46,7 @@ public class UserDao extends DAO implements IDAO<User> {
 
     @Override
     public User getById(int id) {
-        String sql = "SELECT u.id, u.email, u.password, u.name, u.phone, u.avatar, u.gender, u.birthday, u.active, " +
+        String sql = "SELECT u.id, u.email, u.password, u.name, u.phone, u.avatar, u.gender, u.birthday, u.active, u.public_key, " +
                 "       (SELECT r.code FROM user_roles ur JOIN roles r ON r.id = ur.role_id " +
                 "         WHERE ur.user_id = u.id " +
                 "         ORDER BY CASE r.code WHEN 'ADMIN' THEN 1 WHEN 'STAFF' THEN 2 ELSE 3 END " +
@@ -69,6 +70,7 @@ public class UserDao extends DAO implements IDAO<User> {
                 u.setAvatar(rs.getString("avatar"));
                 u.setGender(rs.getString("gender"));
                 u.setBirthday(rs.getDate("birthday"));
+                u.setPublicKey(rs.getString("public_key"));
                 u.setRoleCode(rs.getString("role_code"));
                 return u;
             }
@@ -192,7 +194,7 @@ public class UserDao extends DAO implements IDAO<User> {
 
         // ✅ Join ra role_code từ bảng roles/user_roles
         // Nếu user có nhiều role -> ORDER ưu tiên ADMIN rồi STAFF rồi USER
-        String sql = "SELECT u.id, u.email, u.password, u.name, u.phone, u.avatar, u.gender, u.birthday, u.active, " +
+        String sql = "SELECT u.id, u.email, u.password, u.name, u.phone, u.avatar, u.gender, u.birthday, u.active, u.public_key, " +
                 "       r.code AS role_code " +
                 "FROM users u " +
                 "LEFT JOIN user_roles ur ON ur.user_id = u.id " +
@@ -229,6 +231,7 @@ public class UserDao extends DAO implements IDAO<User> {
                 u.setAvatar(rs.getString("avatar"));
                 u.setGender(rs.getString("gender"));
                 u.setBirthday(rs.getDate("birthday"));
+                u.setPublicKey(rs.getString("public_key"));
 
                 // ✅ set roleCode cho AdminAuthFilter
                 String roleCode = rs.getString("role_code");
@@ -287,7 +290,7 @@ public class UserDao extends DAO implements IDAO<User> {
     // Tìm user theo email, không lọc active (dùng cho OAuth check)
     public User findByEmail(String email) {
         String sql = "SELECT u.id, u.email, u.password, u.name, u.phone, u.avatar, " +
-                "u.gender, u.birthday, u.active, u.auth_provider, " +
+                "u.gender, u.birthday, u.active, u.auth_provider, u.public_key, " +
                 "(SELECT r.code FROM user_roles ur JOIN roles r ON r.id = ur.role_id " +
                 " WHERE ur.user_id = u.id ORDER BY CASE r.code " +
                 " WHEN 'ADMIN' THEN 1 WHEN 'STAFF' THEN 2 ELSE 3 END LIMIT 1) AS role_code " +
@@ -303,6 +306,7 @@ public class UserDao extends DAO implements IDAO<User> {
                 u.setAvatar(rs.getString("avatar"));
                 u.setGender(rs.getString("gender"));
                 u.setBirthday(rs.getDate("birthday"));
+                u.setPublicKey(rs.getString("public_key"));
                 u.setRoleCode(rs.getString("role_code"));
                 u.setAuthProvider(rs.getString("auth_provider"));
                 return u;
@@ -414,7 +418,7 @@ public class UserDao extends DAO implements IDAO<User> {
     }
 
     public User findActiveByEmail(String email) {
-        String sql = "SELECT id, email, password, name, phone, avatar, gender, birthday, active " +
+        String sql = "SELECT id, email, password, name, phone, avatar, gender, birthday, active, public_key " +
                 "FROM users WHERE email=? AND active=1 LIMIT 1";
         try (Connection cn = getConnection();
                 PreparedStatement ps = cn.prepareStatement(sql)) {
@@ -433,8 +437,21 @@ public class UserDao extends DAO implements IDAO<User> {
                 u.setAvatar(rs.getString("avatar"));
                 u.setGender(rs.getString("gender"));
                 u.setBirthday(rs.getDate("birthday"));
+                u.setPublicKey(rs.getString("public_key"));
                 return u;
             }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public boolean updatePublicKey(int userId, String publicKey) {
+        String sql = "UPDATE users SET public_key=? WHERE id=?";
+        try (Connection cn = getConnection();
+             PreparedStatement ps = cn.prepareStatement(sql)) {
+            ps.setString(1, publicKey);
+            ps.setInt(2, userId);
+            return ps.executeUpdate() > 0;
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }

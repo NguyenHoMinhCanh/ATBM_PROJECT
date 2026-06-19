@@ -11,7 +11,7 @@
  Target Server Version : 90600 (9.6.0)
  File Encoding         : 65001
 
- Date: 16/06/2026 23:10:40
+ Date: 19/06/2026 00:33:51
 */
 
 SET NAMES utf8mb4;
@@ -88,7 +88,7 @@ CREATE TABLE `cart_items`  (
   CONSTRAINT `fk_cart_items_cart` FOREIGN KEY (`cart_id`) REFERENCES `carts` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
   CONSTRAINT `fk_cart_items_product` FOREIGN KEY (`product_id`) REFERENCES `products` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
   CONSTRAINT `fk_cart_items_variant` FOREIGN KEY (`variant_id`) REFERENCES `product_variants` (`id`) ON DELETE SET NULL ON UPDATE CASCADE
-) ENGINE = InnoDB AUTO_INCREMENT = 40 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 42 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of cart_items
@@ -115,7 +115,7 @@ CREATE TABLE `carts`  (
   UNIQUE INDEX `uq_carts_active_key`(`active_key` ASC) USING BTREE,
   INDEX `idx_carts_user_active`(`user_id` ASC, `is_active` ASC) USING BTREE,
   CONSTRAINT `fk_carts_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT
-) ENGINE = InnoDB AUTO_INCREMENT = 26 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 28 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of carts
@@ -143,7 +143,9 @@ INSERT INTO `carts` VALUES (21, 8, '2026-06-16 14:59:03', '2026-06-16 15:05:37',
 INSERT INTO `carts` VALUES (22, 8, '2026-06-16 15:09:34', '2026-06-16 15:28:13', 'ORDERED', 0, NULL);
 INSERT INTO `carts` VALUES (23, 8, '2026-06-16 15:30:48', '2026-06-16 15:32:49', 'ORDERED', 0, NULL);
 INSERT INTO `carts` VALUES (24, 8, '2026-06-16 15:33:04', '2026-06-16 15:54:50', 'ORDERED', 0, NULL);
-INSERT INTO `carts` VALUES (25, 8, '2026-06-16 15:55:26', '2026-06-16 15:55:26', 'ACTIVE', 1, 8);
+INSERT INTO `carts` VALUES (25, 8, '2026-06-16 15:55:26', '2026-06-16 16:15:38', 'ORDERED', 0, NULL);
+INSERT INTO `carts` VALUES (26, 8, '2026-06-16 16:15:59', '2026-06-17 02:04:48', 'ORDERED', 0, NULL);
+INSERT INTO `carts` VALUES (27, 8, '2026-06-17 02:07:09', '2026-06-17 02:07:09', 'ACTIVE', 1, 8);
 
 -- ----------------------------
 -- Table structure for categories
@@ -267,7 +269,7 @@ CREATE TABLE `news_categories`  (
   `created_at` datetime NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE INDEX `uk_news_categories_slug`(`slug` ASC) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of news_categories
@@ -303,7 +305,7 @@ CREATE TABLE `news_comments`  (
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `news_id`(`news_id` ASC) USING BTREE,
   CONSTRAINT `news_comments_ibfk_1` FOREIGN KEY (`news_id`) REFERENCES `news` (`id`) ON DELETE CASCADE ON UPDATE RESTRICT
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of news_comments
@@ -322,11 +324,17 @@ CREATE TABLE `notifications`  (
   `created_at` datetime NULL DEFAULT CURRENT_TIMESTAMP,
   `link` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT 'Đường dẫn khi click vào thông báo',
   PRIMARY KEY (`id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 7 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of notifications
 -- ----------------------------
+INSERT INTO `notifications` VALUES (1, 8, 'Đặt hàng thành công! 🎉', 'Đơn hàng #18 đã được tiếp nhận và đang chờ xử lý.', 1, '2026-06-16 16:15:39', '/order-detail?id=18');
+INSERT INTO `notifications` VALUES (2, 8, 'Đơn hàng đã được xác nhận', 'Đơn hàng #18 đã thanh toán và đang được chuẩn bị.', 1, '2026-06-16 16:15:57', '/order-detail?id=18');
+INSERT INTO `notifications` VALUES (3, 8, 'Đơn hàng đang trên đường giao', 'Đơn hàng #16 đang được giao đến bạn. Vui lòng chú ý điện thoại!', 0, '2026-06-17 01:13:31', '/order-detail?id=16');
+INSERT INTO `notifications` VALUES (4, 8, 'Đặt hàng thành công! 🎉', 'Đơn hàng #19 đã được tiếp nhận và đang chờ xử lý.', 1, '2026-06-17 02:04:49', '/order-detail?id=19');
+INSERT INTO `notifications` VALUES (5, 8, 'Đơn hàng đã được xác nhận', 'Đơn hàng #16 đã thanh toán và đang được chuẩn bị.', 0, '2026-06-17 02:08:25', '/order-detail?id=16');
+INSERT INTO `notifications` VALUES (6, 8, 'Đơn hàng đã được xác nhận', 'Đơn hàng #19 đã thanh toán và đang được chuẩn bị.', 1, '2026-06-17 02:08:35', '/order-detail?id=19');
 
 -- ----------------------------
 -- Table structure for order_items
@@ -349,7 +357,7 @@ CREATE TABLE `order_items`  (
   CONSTRAINT `fk_order_items_order` FOREIGN KEY (`order_id`) REFERENCES `orders` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
   CONSTRAINT `fk_order_items_product` FOREIGN KEY (`product_id`) REFERENCES `products` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
   CONSTRAINT `fk_order_items_variant` FOREIGN KEY (`variant_id`) REFERENCES `product_variants` (`id`) ON DELETE SET NULL ON UPDATE CASCADE
-) ENGINE = InnoDB AUTO_INCREMENT = 19 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 21 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of order_items
@@ -372,6 +380,8 @@ INSERT INTO `order_items` VALUES (15, 14, 56, 688, 'Black Grey', '41', 1, 320000
 INSERT INTO `order_items` VALUES (16, 15, 41, 542, 'White Blue', '40', 1, 4500000, 4500000);
 INSERT INTO `order_items` VALUES (17, 16, 41, 548, 'Black Gold', '42', 1, 4500000, 4500000);
 INSERT INTO `order_items` VALUES (18, 17, 54, 666, 'Black', '41', 1, 3800000, 3800000);
+INSERT INTO `order_items` VALUES (19, 18, 44, 570, 'Navy', '40', 1, 3500000, 3500000);
+INSERT INTO `order_items` VALUES (20, 19, 104, 723, 'Trắng/Vàng', '39', 2, 4500000, 9000000);
 
 -- ----------------------------
 -- Table structure for orders
@@ -390,7 +400,7 @@ CREATE TABLE `orders`  (
   INDEX `fk_orders_address`(`address_id` ASC) USING BTREE,
   CONSTRAINT `fk_orders_address` FOREIGN KEY (`address_id`) REFERENCES `user_addresses` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
   CONSTRAINT `fk_orders_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT
-) ENGINE = InnoDB AUTO_INCREMENT = 18 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 20 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of orders
@@ -410,8 +420,10 @@ INSERT INTO `orders` VALUES (12, 8, 13, 3849500, 'PENDING', '2026-06-16 14:48:19
 INSERT INTO `orders` VALUES (13, 8, 14, 3282500, 'CANCEL', '2026-06-16 14:59:00', '2026-06-16 15:49:24');
 INSERT INTO `orders` VALUES (14, 8, 15, 3282500, 'PAID', '2026-06-16 15:05:37', '2026-06-16 15:29:20');
 INSERT INTO `orders` VALUES (15, 8, 16, 4560500, 'PAID', '2026-06-16 15:28:13', '2026-06-16 15:32:10');
-INSERT INTO `orders` VALUES (16, 8, 17, 4560500, 'PAID', '2026-06-16 15:32:49', '2026-06-16 15:33:03');
+INSERT INTO `orders` VALUES (16, 8, 17, 4560500, 'PAID', '2026-06-16 15:32:49', '2026-06-17 02:08:25');
 INSERT INTO `orders` VALUES (17, 8, 18, 3871500, 'PAID', '2026-06-16 15:54:50', '2026-06-16 15:55:23');
+INSERT INTO `orders` VALUES (18, 8, 19, 3571500, 'PAID', '2026-06-16 16:15:38', '2026-06-16 16:15:57');
+INSERT INTO `orders` VALUES (19, 8, 20, 9060500, 'PAID', '2026-06-17 02:04:48', '2026-06-17 02:08:35');
 
 -- ----------------------------
 -- Table structure for password_reset_tokens
@@ -994,7 +1006,7 @@ CREATE TABLE `product_variants`  (
   UNIQUE INDEX `uk_product_color_size`(`product_id` ASC, `color` ASC, `size` ASC) USING BTREE,
   INDEX `idx_variant_product`(`product_id` ASC) USING BTREE,
   CONSTRAINT `fk_variant_product` FOREIGN KEY (`product_id`) REFERENCES `products` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE = InnoDB AUTO_INCREMENT = 707 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 725 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of product_variants
@@ -1371,7 +1383,7 @@ INSERT INTO `product_variants` VALUES (566, 43, 'Blue', '39', 3, 'MB3-BLU-39', N
 INSERT INTO `product_variants` VALUES (567, 43, 'Blue', '40', 5, 'MB3-BLU-40', NULL, '2026-06-15 16:28:15', '2026-06-15 16:28:15');
 INSERT INTO `product_variants` VALUES (568, 43, 'Blue', '41', 7, 'MB3-BLU-41', NULL, '2026-06-15 16:28:15', '2026-06-15 16:28:15');
 INSERT INTO `product_variants` VALUES (569, 43, 'Blue', '42', 3, 'MB3-BLU-42', NULL, '2026-06-15 16:28:15', '2026-06-15 16:28:15');
-INSERT INTO `product_variants` VALUES (570, 44, 'Navy', '40', 8, 'TWO-NAV-40', NULL, '2026-06-15 16:28:15', '2026-06-15 16:28:15');
+INSERT INTO `product_variants` VALUES (570, 44, 'Navy', '40', 7, 'TWO-NAV-40', NULL, '2026-06-15 16:28:15', '2026-06-16 16:15:38');
 INSERT INTO `product_variants` VALUES (571, 44, 'Navy', '41', 13, 'TWO-NAV-41', NULL, '2026-06-15 16:28:15', '2026-06-15 16:28:15');
 INSERT INTO `product_variants` VALUES (572, 44, 'Navy', '42', 10, 'TWO-NAV-42', NULL, '2026-06-15 16:28:15', '2026-06-15 16:28:15');
 INSERT INTO `product_variants` VALUES (573, 44, 'Navy', '43', 5, 'TWO-NAV-43', NULL, '2026-06-15 16:28:15', '2026-06-15 16:28:15');
@@ -1508,6 +1520,24 @@ INSERT INTO `product_variants` VALUES (703, 58, 'Default', 'One Size', 50, 'KIT-
 INSERT INTO `product_variants` VALUES (704, 59, 'Default', 'One Size', 80, 'NANO-DEF-OS', NULL, '2026-06-15 16:28:15', '2026-06-15 16:28:15');
 INSERT INTO `product_variants` VALUES (705, 60, 'Multi', 'M (39-42)', 35, 'SOX-MUL-M', NULL, '2026-06-15 16:28:15', '2026-06-15 16:28:15');
 INSERT INTO `product_variants` VALUES (706, 60, 'Multi', 'L (43-46)', 28, 'SOX-MUL-L', NULL, '2026-06-15 16:28:15', '2026-06-15 16:28:15');
+INSERT INTO `product_variants` VALUES (707, 95, 'Đen/Trắng', '41', 250, 'SKU-95-BW-41', NULL, '2026-06-17 00:41:51', '2026-06-17 00:41:51');
+INSERT INTO `product_variants` VALUES (708, 96, 'Đỏ Đen', '40', 5, 'SKU-96-RB-40', NULL, '2026-06-17 00:41:51', '2026-06-17 00:41:51');
+INSERT INTO `product_variants` VALUES (709, 96, 'Đỏ Đen', '41', 8, 'SKU-96-RB-41', NULL, '2026-06-17 00:41:51', '2026-06-17 00:41:51');
+INSERT INTO `product_variants` VALUES (710, 97, 'Đa sắc', '42', 30, 'SKU-97-MUL-42', NULL, '2026-06-17 00:41:51', '2026-06-17 00:41:51');
+INSERT INTO `product_variants` VALUES (711, 98, 'Xám', '40', 45, 'SKU-98-GRY-40', NULL, '2026-06-17 00:41:51', '2026-06-17 00:41:51');
+INSERT INTO `product_variants` VALUES (712, 98, 'Xám', '41', 50, 'SKU-98-GRY-41', NULL, '2026-06-17 00:41:51', '2026-06-17 00:41:51');
+INSERT INTO `product_variants` VALUES (713, 98, 'Xám', '42', 20, 'SKU-98-GRY-42', NULL, '2026-06-17 00:41:51', '2026-06-17 00:41:51');
+INSERT INTO `product_variants` VALUES (714, 99, 'Trắng', '37', 300, 'SKU-99-WHT-37', NULL, '2026-06-17 00:41:51', '2026-06-17 00:41:51');
+INSERT INTO `product_variants` VALUES (715, 100, 'Navy', '39', 60, 'SKU-100-NAV-39', NULL, '2026-06-17 00:41:51', '2026-06-17 00:41:51');
+INSERT INTO `product_variants` VALUES (716, 100, 'Navy', '40', 80, 'SKU-100-NAV-40', NULL, '2026-06-17 00:41:51', '2026-06-17 00:41:51');
+INSERT INTO `product_variants` VALUES (717, 101, 'Xanh Rêu', '42', 15, 'SKU-101-OLV-42', NULL, '2026-06-17 00:41:51', '2026-06-17 00:41:51');
+INSERT INTO `product_variants` VALUES (718, 102, 'Đen', '40', 25, 'SKU-102-BLK-40', NULL, '2026-06-17 00:41:51', '2026-06-17 00:41:51');
+INSERT INTO `product_variants` VALUES (719, 102, 'Đen', '41', 30, 'SKU-102-BLK-41', NULL, '2026-06-17 00:41:51', '2026-06-17 00:41:51');
+INSERT INTO `product_variants` VALUES (720, 102, 'Trắng', '40', 10, 'SKU-102-WHT-40', NULL, '2026-06-17 00:41:51', '2026-06-17 00:41:51');
+INSERT INTO `product_variants` VALUES (721, 102, 'Trắng', '41', 12, 'SKU-102-WHT-41', NULL, '2026-06-17 00:41:51', '2026-06-17 00:41:51');
+INSERT INTO `product_variants` VALUES (722, 103, 'Đen/Cam', '41', 5, 'SKU-103-BO-41', NULL, '2026-06-17 00:41:51', '2026-06-17 00:41:51');
+INSERT INTO `product_variants` VALUES (723, 104, 'Trắng/Vàng', '39', 8, 'SKU-104-WG-39', NULL, '2026-06-17 00:41:51', '2026-06-17 02:04:48');
+INSERT INTO `product_variants` VALUES (724, 104, 'Trắng/Vàng', '40', 15, 'SKU-104-WG-40', NULL, '2026-06-17 00:41:51', '2026-06-17 00:41:51');
 
 -- ----------------------------
 -- Table structure for products
@@ -1531,7 +1561,7 @@ CREATE TABLE `products`  (
   INDEX `fk_products_brand`(`brand_id` ASC) USING BTREE,
   CONSTRAINT `fk_products_brand` FOREIGN KEY (`brand_id`) REFERENCES `brands` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
   CONSTRAINT `fk_products_category` FOREIGN KEY (`category_id`) REFERENCES `categories` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT
-) ENGINE = InnoDB AUTO_INCREMENT = 61 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 105 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of products
@@ -1596,6 +1626,16 @@ INSERT INTO `products` VALUES (57, 'Puma Fuse 3.0 Training', '<h3>PUMA FUSE 3.0 
 INSERT INTO `products` VALUES (58, 'Bộ Vệ Sinh Giày Chuyên Sâu Premium', '<h3>BỘ VỆ SINH GIÀY CHUYÊN SÂU - GIÀY SẠCH NHƯ MỚI</h3>\n<p>Bộ kit vệ sinh giày cao cấp bao gồm tất cả những gì bạn cần để giữ cho đôi sneaker yêu quý luôn sạch sẽ và mới đẹp như ngày đầu. Dung dịch vệ sinh gốc thực vật an toàn cho <strong>mọi loại chất liệu</strong>: da, vải, mesh, suede, canvas, knit.</p>\n\n<h3>📦 BỘ KIT BAO GỒM</h3>\n<ul>\n  <li><strong>1x Dung dịch vệ sinh 150ml:</strong> Gốc thực vật, không chứa hóa chất mạnh, an toàn cho mọi vật liệu</li>\n  <li><strong>1x Bàn chải lông heo tự nhiên:</strong> Lông mềm không làm xước vải và da, phù hợp upper giày</li>\n  <li><strong>1x Bàn chải cứng nhỏ:</strong> Dùng cho đế và midsole cáu bẩn nặng</li>\n  <li><strong>1x Khăn microfiber:</strong> Siêu mềm, hút nước tốt, dùng lau khô giày sau khi vệ sinh</li>\n  <li><strong>1x Túi đựng giày du lịch:</strong> Vải dù chống bụi, tiện mang đi travel</li>\n</ul>\n\n<h3>📋 HƯỚNG DẪN SỬ DỤNG</h3>\n<p>1. Pha dung dịch với nước theo tỉ lệ 1:10 → 2. Nhúng bàn chải vào dung dịch → 3. Chà nhẹ theo vòng tròn → 4. Lau sạch bằng khăn microfiber → 5. Phơi khô thoáng gió (KHÔNG phơi nắng trực tiếp).</p>', 550000, 650000, 'https://bizweb.dktcdn.net/thumb/1024x1024/100/347/092/products/bot-ve-sinh-giay-tien-loi-150ml-01.jpg?v=1694779868303', 'unisex', 8, 10, 1, '2026-06-15 16:28:15', '2026-06-15 16:28:15');
 INSERT INTO `products` VALUES (59, 'Bình Xịt Nano Chống Thấm Nước Giày', '<h3>BÌNH XỊT NANO CHỐNG THẤM NƯỚC - BẢO VỆ GIÀY DƯỚI MƯA</h3>\n<p>Xịt nano siêu kỵ nước tạo lớp bảo vệ vô hình trên bề mặt giày, giúp đôi sneaker của bạn <strong>hoàn toàn không thấm nước</strong> khi gặp mưa hoặc nước bắn. Nước sẽ lăn ra khỏi giày như giọt nước trên lá sen.</p>\n\n<h3>🔥 ĐẶC ĐIỂM</h3>\n<ul>\n  <li><strong>Dung tích:</strong> 250ml, đủ xịt cho 8-10 đôi giày</li>\n  <li><strong>Công nghệ:</strong> Nano Fluorocarbon tạo lớp phủ siêu kỵ nước vô hình</li>\n  <li><strong>Tương thích:</strong> Mọi loại vải: canvas, mesh, suede, leather, knit</li>\n  <li><strong>Hiệu lực:</strong> Kéo dài 3-4 tuần cho mỗi lần xịt</li>\n  <li><strong>Không mùi:</strong> Không gây dị ứng, an toàn cho da tay</li>\n</ul>', 280000, 350000, 'https://bizweb.dktcdn.net/thumb/1024x1024/100/347/092/products/bot-ve-sinh-giay-tien-loi-150ml-01.jpg?v=1694779868303', 'unisex', 8, 10, 1, '2026-06-15 16:28:15', '2026-06-15 16:28:15');
 INSERT INTO `products` VALUES (60, 'Pack 3 đôi Vớ Thể Thao Nike Everyday Cushion', '<h3>VỚ NIKE EVERYDAY CUSHION - BẠN ĐỒNG HÀNH HOÀN HẢO CỦA MỌI ĐÔI GIÀY</h3>\n<p>Đôi giày tốt cần đi kèm đôi vớ tốt. Nike Everyday Cushion là dòng vớ thể thao <strong>bán chạy nhất của Nike</strong>, được hàng triệu vận động viên và người dùng tin tưởng sử dụng hằng ngày.</p>\n\n<h3>📦 GÓI SẢN PHẨM</h3>\n<ul>\n  <li><strong>Số lượng:</strong> Pack 3 đôi (1 Trắng + 1 Đen + 1 Xám)</li>\n  <li><strong>Cổ vớ:</strong> Crew (cổ lửng ngang bắp chân)</li>\n  <li><strong>Chất liệu:</strong> 71% Cotton + 26% Polyester + 3% Spandex</li>\n</ul>\n\n<h3>🔥 TÍNH NĂNG</h3>\n<ul>\n  <li><strong>Dri-FIT:</strong> Công nghệ thấm hút mồ hôi cực mạnh, giữ chân luôn khô ráo dù tập luyện căng thẳng</li>\n  <li><strong>Cushioning:</strong> Đệm lót ở lòng bàn chân giảm phồng rộp khi chạy bộ hoặc chơi thể thao</li>\n  <li><strong>Arch Support:</strong> Dải đàn hồi ôm vòm bàn chân tạo cảm giác chắc chắn</li>\n  <li><strong>Ribbed Cuff:</strong> Cổ vớ đàn hồi không bị tuột xuống khi vận động</li>\n</ul>', 350000, 420000, 'https://bizweb.dktcdn.net/thumb/1024x1024/100/347/092/products/a068a1a8-ed4e-4ba2-b69b-be6d8986da29.jpg', 'unisex', 8, 1, 1, '2026-06-15 16:28:15', '2026-06-15 16:28:15');
+INSERT INTO `products` VALUES (95, 'Nike ZoomX Invincible Run Flyknit', 'Giày chạy bộ với bộ đệm ZoomX dày dặn, hỗ trợ tối đa cho các chặng đường dài và phục hồi.', 4600000, 4990000, 'https://bizweb.dktcdn.net/thumb/1024x1024/100/347/092/products/air-zoom-pegasus-40-older-road-running-shoes-jqwr5f.jpg', 'men', 1, 1, 1, '2026-06-16 22:00:00', '2026-06-16 22:00:00');
+INSERT INTO `products` VALUES (96, 'Adidas Copa Sense.1 FG', 'Đôi giày đá bóng sân cỏ tự nhiên với chất liệu da Kangaroo kết hợp đệm Sensepods tăng cảm giác bóng.', 5200000, 5800000, 'https://bizweb.dktcdn.net/thumb/1024x1024/100/347/092/products/z-f36199-02-35ee1fca-baf2-4bfc-86c1-5c0abfbf920f.jpg', 'men', 2, 2, 1, '2026-06-16 22:00:00', '2026-06-16 22:00:00');
+INSERT INTO `products` VALUES (97, 'Puma RS-Dreamer', 'Mẫu giày bóng rổ hợp tác cùng J. Cole, thiết kế bắt mắt và bộ đệm ProFoam bám sân tuyệt đối.', 3200000, 3600000, 'https://bizweb.dktcdn.net/thumb/1024x1024/100/347/092/products/giay-puma-pounce-lite-sneakers-310778-14-1.jpg', 'unisex', 3, 3, 1, '2026-06-16 22:00:00', '2026-06-16 22:00:00');
+INSERT INTO `products` VALUES (98, 'New Balance 990v5 Core', 'Huyền thoại 990v5 đại diện cho sự tinh tế của New Balance, chất liệu da lộn heo (pigskin) cao cấp.', 4900000, 5200000, 'https://bizweb.dktcdn.net/thumb/1024x1024/100/347/092/products/mch796n4-nb-02-1.jpg', 'men', 4, 4, 1, '2026-06-16 22:00:00', '2026-06-16 22:00:00');
+INSERT INTO `products` VALUES (99, 'Converse Chuck Taylor All Star Move', 'Giày Chuck Taylor phiên bản nâng đế siêu nhẹ, mang lại góc nhìn hiện đại và sự thoải mái cho phái nữ.', 1800000, 2100000, 'https://bizweb.dktcdn.net/thumb/1024x1024/100/347/092/products/giay-vans-vn0007nty52-01.jpg', 'women', 4, 5, 1, '2026-06-16 22:00:00', '2026-06-16 22:00:00');
+INSERT INTO `products` VALUES (100, 'Vans Authentic', 'Thiết kế nguyên bản và thuần túy nhất của Vans, đơn giản, dễ mang, phù hợp mọi hoàn cảnh.', 1500000, 1650000, 'https://bizweb.dktcdn.net/thumb/1024x1024/100/347/092/products/giay-vans-vn0007nvfgn-01.jpg', 'unisex', 4, 6, 1, '2026-06-16 22:00:00', '2026-06-16 22:00:00');
+INSERT INTO `products` VALUES (101, 'Asics Gel-Trabuco 11', 'Giày chạy trail (địa hình) bám đường cực tốt nhờ đế ASICSGRIP, tích hợp đệm FF BLAST bảo vệ chân.', 3600000, 4000000, 'https://bizweb.dktcdn.net/thumb/1024x1024/100/347/092/products/evoride-women-s-1012a677-020-01-9a37e53d-622b-4d5c-a4a6-37b1a8848b2b.jpg', 'men', 1, 7, 1, '2026-06-16 22:00:00', '2026-06-16 22:00:00');
+INSERT INTO `products` VALUES (102, 'Reebok Zig Kinetica 3', 'Thiết kế đế Zigzag hoàn trả năng lượng độc đáo, đem lại sự linh hoạt cho cả tập luyện lẫn dạo phố.', 2900000, 3300000, 'https://bizweb.dktcdn.net/thumb/1024x1024/100/347/092/products/giay-ultraboost-1-0-mau-xanh-la-if5258-01-standard.jpg', 'unisex', 4, 8, 1, '2026-06-16 22:00:00', '2026-06-16 22:00:00');
+INSERT INTO `products` VALUES (103, 'Under Armour Project Rock 5', 'Phiên bản tập luyện mạnh mẽ hợp tác cùng The Rock, hỗ trợ nâng tạ ổn định và bảo vệ gót chân.', 4200000, 4600000, 'https://bizweb.dktcdn.net/thumb/1024x1024/100/347/092/products/giay-nike-air-max-2017-849559-005-1.jpg', 'men', 7, 9, 1, '2026-06-16 22:00:00', '2026-06-16 22:00:00');
+INSERT INTO `products` VALUES (104, 'Mizuno Morelia Sala Japan TF', 'Dòng giày sân cỏ nhân tạo huyền thoại làm hoàn toàn thủ công tại Nhật Bản với da Kangaroo siêu mềm.', 4500000, 4900000, 'https://bizweb.dktcdn.net/thumb/1024x1024/100/347/092/products/11271239-r1.jpg', 'men', 2, 10, 1, '2026-06-16 22:00:00', '2026-06-16 22:00:00');
 
 -- ----------------------------
 -- Table structure for promotions
@@ -1681,7 +1721,7 @@ CREATE TABLE `user_addresses`  (
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `fk_user_addresses_user`(`user_id` ASC) USING BTREE,
   CONSTRAINT `fk_user_addresses_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT
-) ENGINE = InnoDB AUTO_INCREMENT = 19 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 21 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of user_addresses
@@ -1703,7 +1743,9 @@ INSERT INTO `user_addresses` VALUES (14, 8, 'Bùi Trọng Linh', '0342406654', '
 INSERT INTO `user_addresses` VALUES (15, 8, 'Bùi Trọng Linh', '0342406654', '123L', 'Sơn La', 'Huyện Quỳnh Nhai', 'Xã Chiềng Ơn', 0, '2026-06-16 15:05:37');
 INSERT INTO `user_addresses` VALUES (16, 8, 'Bùi Trọng Linh', '0342406654', '123L', 'Bạc Liêu', 'Huyện Phước Long', 'Xã Phước Long', 0, '2026-06-16 15:28:13');
 INSERT INTO `user_addresses` VALUES (17, 8, 'Bùi Trọng Linh', '0342406654', '123L', 'Hậu Giang', 'Thành phố Ngã Bảy', 'Xã Đại Thành', 0, '2026-06-16 15:32:49');
-INSERT INTO `user_addresses` VALUES (18, 8, 'Bùi Trọng Linh', '0342406654', '123L', 'Bắc Ninh', 'Huyện Tiên Du', 'Xã Đại Đồng', 1, '2026-06-16 15:54:50');
+INSERT INTO `user_addresses` VALUES (18, 8, 'Bùi Trọng Linh', '0342406654', '123L', 'Bắc Ninh', 'Huyện Tiên Du', 'Xã Đại Đồng', 0, '2026-06-16 15:54:50');
+INSERT INTO `user_addresses` VALUES (19, 8, 'Bùi Trọng Linh', '0342406654', '123L', 'Bắc Ninh', 'Thị xã Từ Sơn', 'Phường Đồng Kỵ', 0, '2026-06-16 16:15:38');
+INSERT INTO `user_addresses` VALUES (20, 8, 'Bùi Trọng Linh', '0342406654', '123L', 'Bình Định', 'Thị xã An Nhơn', 'Phường Đập Đá', 1, '2026-06-17 02:04:48');
 
 -- ----------------------------
 -- Table structure for user_roles
@@ -1744,6 +1786,7 @@ CREATE TABLE `users`  (
   `created_at` datetime NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` datetime NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `auth_provider` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT 'local',
+  `public_key` text CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL,
   PRIMARY KEY (`id`) USING BTREE
 ) ENGINE = InnoDB AUTO_INCREMENT = 10 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = DYNAMIC;
 
@@ -1790,5 +1833,21 @@ CREATE TABLE `vouchers`  (
 INSERT INTO `vouchers` VALUES (1, 'WELCOME10', 'Giảm 10% cho đơn đầu tiên', 'percent', 10.00, 500000.00, 200000.00, '2026-01-01 00:00:00', '2026-12-31 23:59:59', 100, 0, 1, '2026-06-15 16:27:31', '2026-06-15 16:27:31');
 INSERT INTO `vouchers` VALUES (2, 'FREESHIP', 'Miễn phí ship toàn quốc', 'fixed', 30000.00, 800000.00, NULL, '2026-05-01 00:00:00', '2026-05-30 23:59:59', 50, 0, 0, '2026-06-15 16:27:31', '2026-06-15 16:28:25');
 INSERT INTO `vouchers` VALUES (3, 'SALE20', 'Giảm 20% cho đơn từ 1 triệu', 'percent', 20.00, 1000000.00, 500000.00, '2026-05-01 00:00:00', '2026-05-20 23:59:59', 200, 0, 0, '2026-06-15 16:27:31', '2026-06-15 16:28:25');
+
+-- ----------------------------
+-- Table structure for order_signatures
+-- ----------------------------
+DROP TABLE IF EXISTS `order_signatures`;
+CREATE TABLE `order_signatures`  (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `order_id` int NOT NULL,
+  `hash_data` text CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+  `signature` text CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+  `is_valid` tinyint(1) NULL DEFAULT 1,
+  `created_at` datetime NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`) USING BTREE,
+  INDEX `fk_order_signatures_order`(`order_id` ASC) USING BTREE,
+  CONSTRAINT `fk_order_signatures_order` FOREIGN KEY (`order_id`) REFERENCES `orders` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT
+) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = DYNAMIC;
 
 SET FOREIGN_KEY_CHECKS = 1;
