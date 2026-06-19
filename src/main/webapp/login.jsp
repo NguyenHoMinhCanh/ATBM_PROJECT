@@ -141,19 +141,39 @@
                                 <label class="form-check-label" for="remember">Ghi nhớ đăng nhập</label>
                             </div>
 
-                            <div class="d-flex gap-3">
+                            <div class="d-flex gap-3 mb-3">
                                 <button type="submit" class="btn btn-danger px-4">Đăng nhập</button>
                                 <%
                                     String error = (String) request.getAttribute("errorMessage");
                                     if (error != null) {
                                 %>
-                                <p style="color:red; text-align:center;"><%= error %>
+                                <p style="color:red; text-align:center; margin: 0; align-self: center;"><%= error %>
                                 </p>
                                 <%
                                     }
                                 %>
                                 <a href="<%=ctx%>/register.jsp"
-                                   class="btn btn-link text-decoration-none p-0 align-self-center">Đăng ký</a>
+                                   class="btn btn-link text-decoration-none p-0 align-self-center ms-auto">Đăng ký</a>
+                            </div>
+
+                            <!-- Đăng nhập bằng mạng xã hội -->
+                            <div class="d-flex align-items-center my-3 gap-2">
+                                <hr class="flex-grow-1 m-0">
+                                <span class="text-muted small">hoặc</span>
+                                <hr class="flex-grow-1 m-0">
+                            </div>
+                            <div class="d-flex gap-2">
+                                <a href="<%= ctx %>/auth/google"
+                                   class="btn btn-outline-secondary w-50 d-flex align-items-center justify-content-center gap-2">
+                                    <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
+                                         width="20" alt="Google"> Google
+                                </a>
+                                <a href="<%= ctx %>/auth/facebook"
+                                   class="btn btn-outline-primary w-50 d-flex align-items-center justify-content-center gap-2"
+                                   style="color: #1877f2; border-color: #1877f2;">
+                                    <img src="https://upload.wikimedia.org/wikipedia/commons/b/b8/2021_Facebook_icon.svg"
+                                         width="20" alt="Facebook"> Facebook
+                                </a>
                             </div>
                         </form>
                     </div>

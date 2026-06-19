@@ -11,7 +11,7 @@
                 <p class="text-muted mb-0 small">Nhận thông tin cập nhật về ưu đãi mới nhất và khuyến mãi đặc biệt.</p>
             </div>
             <div class="col-lg-6">
-                <form action="#" method="post" class="d-flex">
+                <form action="#" method="post" class="d-flex" onsubmit="alert('Cảm ơn bạn đã đăng ký nhận tin từ JapanSport!'); return false;">
                     <input type="email" class="form-control me-2 py-2" placeholder="Nhập địa chỉ email của bạn..." required>
                     <button type="submit" class="btn btn-danger px-4 fw-bold text-nowrap">Đăng Ký</button>
                 </form>
@@ -32,7 +32,7 @@
                 </div>
                 <!-- Logo Bộ Công Thương -->
                 <div class="mt-4">
-                    <a href="#">
+                    <a href="http://online.gov.vn/" target="_blank">
                         <img src="${ctx}/assets/images/bo-cong-thuong.png" alt="Đã thông báo Bộ Công Thương" style="max-width: 140px;" onerror="this.src='https://laptoptcc.com/wp-content/uploads/2018/06/logo-bct-2.png'">
                     </a>
                 </div>
@@ -94,17 +94,17 @@
                         <img src="${ctx}/assets/images/qr-code.png" alt="QR Code" style="width: 70px; height: 70px;" onerror="this.src='https://upload.wikimedia.org/wikipedia/commons/d/d0/QR_code_for_mobile_English_Wikipedia.svg'">
                     </div>
                     <div class="d-flex flex-column gap-2">
-                        <a href="#"><img src="${ctx}/assets/images/app-store.png" alt="App Store" style="height: 30px;" onerror="this.src='https://developer.apple.com/assets/elements/badges/download-on-the-app-store.svg'"></a>
-                        <a href="#"><img src="${ctx}/assets/images/google-play.png" alt="Google Play" style="height: 30px;" onerror="this.src='https://upload.wikimedia.org/wikipedia/commons/7/78/Google_Play_Store_badge_EN.svg'"></a>
+                        <a href="javascript:void(0)" onclick="alert('Tính năng đang phát triển!')"><img src="${ctx}/assets/images/app-store.png" alt="App Store" style="height: 30px;" onerror="this.src='https://developer.apple.com/assets/elements/badges/download-on-the-app-store.svg'"></a>
+                        <a href="javascript:void(0)" onclick="alert('Tính năng đang phát triển!')"><img src="${ctx}/assets/images/google-play.png" alt="Google Play" style="height: 30px;" onerror="this.src='https://upload.wikimedia.org/wikipedia/commons/7/78/Google_Play_Store_badge_EN.svg'"></a>
                     </div>
                 </div>
 
                 <h5 class="text-uppercase mb-3 fw-bold border-start border-danger border-3 ps-2">Kết Nối Với Chúng Tôi</h5>
                 <div class="d-flex gap-2 mb-3">
-                    <a href="#" class="social-icon bg-primary text-white"><i class="bi bi-facebook"></i></a>
-                    <a href="#" class="social-icon text-white" style="background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);"><i class="bi bi-instagram"></i></a>
-                    <a href="#" class="social-icon bg-danger text-white"><i class="bi bi-youtube"></i></a>
-                    <a href="#" class="social-icon bg-dark text-white border border-light"><i class="bi bi-tiktok"></i></a>
+                    <a href="https://facebook.com" target="_blank" class="social-icon bg-primary text-white"><i class="bi bi-facebook"></i></a>
+                    <a href="https://instagram.com" target="_blank" class="social-icon text-white" style="background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);"><i class="bi bi-instagram"></i></a>
+                    <a href="https://youtube.com" target="_blank" class="social-icon bg-danger text-white"><i class="bi bi-youtube"></i></a>
+                    <a href="https://tiktok.com" target="_blank" class="social-icon bg-dark text-white border border-light"><i class="bi bi-tiktok"></i></a>
                 </div>
                 
                 <div class="text-muted small">
@@ -167,14 +167,58 @@
     (function () {
         function updateCartCountFromServer() {
             const badge = document.getElementById('cartCount');
-            if (!badge) return;
+            const popupContent = document.getElementById('miniCartContent');
+            const CTX = '${pageContext.request.contextPath}';
 
-            fetch('${pageContext.request.contextPath}/cart?mode=count')
-                .then(r => r.ok ? r.json() : {count: 0})
+            fetch(CTX + '/cart?mode=mini')
+                .then(r => r.ok ? r.json() : {count: 0, items: []})
                 .then(data => {
                     const total = Number(data.count || 0);
-                    badge.textContent = total;
-                    badge.style.display = total > 0 ? 'inline-block' : 'none';
+                    
+                    if (badge) {
+                        badge.textContent = total;
+                        badge.style.display = total > 0 ? 'inline-block' : 'none';
+                    }
+
+                    // Update all badges (for products page)
+                    var badges = document.querySelectorAll('.cart-count-badge');
+                    badges.forEach(function(b) {
+                        b.textContent = total;
+                        b.style.display = total > 0 ? '' : 'none';
+                    });
+
+                    if (popupContent) {
+                        if (total === 0 || !data.items || data.items.length === 0) {
+                            popupContent.innerHTML = '<i class="bi bi-cart3 text-muted" style="font-size: 3rem; opacity: 0.3;"></i><p class="text-muted mb-0 small mt-2">Chưa có sản phẩm</p>';
+                        } else {
+                            let html = '<div class="text-start" style="max-height: 250px; overflow-y: auto;">';
+                            data.items.forEach(item => {
+                                let variantInfo = '';
+                                if(item.color || item.size) {
+                                    let c = item.color || '';
+                                    let s = item.size || '';
+                                    let sep = (c && s) ? ' - ' : '';
+                                    variantInfo = '<div class="text-muted" style="font-size:0.7rem;">' + c + sep + s + '</div>';
+                                }
+                                let imgSrc = item.imageUrl;
+                                if (!imgSrc.startsWith('http')) {
+                                    imgSrc = imgSrc.startsWith('/') ? CTX + imgSrc : CTX + '/' + imgSrc;
+                                }
+                                html += '<div class="d-flex align-items-center mb-2 pb-2 border-bottom">' +
+                                    '<img src="' + imgSrc + '" alt="Product" style="width: 40px; height: 40px; object-fit: cover;" class="rounded me-2 border">' +
+                                    '<div class="flex-grow-1 overflow-hidden">' +
+                                        '<div class="text-truncate" style="font-size:0.8rem; font-weight:600;" title="' + item.name + '">' + item.name + '</div>' +
+                                        variantInfo +
+                                        '<div class="text-danger" style="font-size:0.8rem; font-weight:bold;">' +
+                                            Number(item.price).toLocaleString('vi-VN') + 'đ <span class="text-muted" style="font-size:0.7rem; font-weight:normal;">x ' + item.quantity + '</span>' +
+                                        '</div>' +
+                                    '</div>' +
+                                '</div>';
+                            });
+                            html += '</div>';
+                            popupContent.innerHTML = html;
+                        }
+                    }
                 })
                 .catch(() => {});
         }
@@ -283,10 +327,23 @@
             }
 
             /* --- Cập nhật badge số đỏ --- */
+            let lastUnread = 0;
             function updateBadge(count) {
                 if (!badge) return;
                 badge.textContent = count > 99 ? '99+' : count;
                 badge.style.display = count > 0 ? 'inline-block' : 'none';
+                if (count > lastUnread) {
+                    isLoaded = false; // Bắt buộc tải lại danh sách nếu có thông báo mới
+                    // Hiển thị một toast nếu có thông báo mới
+                    if (count > 0 && typeof bootstrap !== 'undefined') {
+                        var notifEl = document.getElementById('globalNotifToast');
+                        if (notifEl) {
+                            var notifToast = new bootstrap.Toast(notifEl, { delay: 5000 });
+                            notifToast.show();
+                        }
+                    }
+                }
+                lastUnread = count;
             }
 
             /* --- Polling: chỉ lấy số chưa đọc --- */
@@ -371,6 +428,18 @@
         });
     })();
 </script>
+
+<!-- Toast Thông báo mới (Global) -->
+<div class="toast-container position-fixed bottom-0 start-0 p-3" style="z-index: 9999;">
+    <div id="globalNotifToast" class="toast align-items-center text-bg-primary border-0 shadow" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="d-flex">
+            <div class="toast-body fw-bold fs-6">
+                <i class="bi bi-bell-fill me-2"></i> Bạn có thông báo mới!
+            </div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+    </div>
+</div>
 
 <!-- Nút tròn dưới góc phải -->
 <style>

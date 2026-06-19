@@ -27,13 +27,38 @@ public class CartController extends HttpServlet {
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         User u = (User) req.getSession().getAttribute("currentUser");
 
-        // badge count: /cart?mode=count
-        if ("count".equalsIgnoreCase(req.getParameter("mode"))) {
+        String mode = req.getParameter("mode");
+        if ("count".equalsIgnoreCase(mode) || "mini".equalsIgnoreCase(mode)) {
             resp.setContentType("application/json;charset=UTF-8");
             try {
                 int count = (u == null) ? 0 : cartDao.getCartCount(u.getId());
-                resp.getWriter().write("{\"count\":" + count + "}");
+                if ("mini".equalsIgnoreCase(mode) && u != null) {
+                    Cart cart = cartDao.getActiveCart(u.getId());
+                    List<CartItem> items = cart.getItems();
+                    StringBuilder json = new StringBuilder();
+                    json.append("{\"count\":").append(count).append(",\"items\":[");
+                    // Chỉ lấy tối đa 5 sản phẩm mới nhất cho mini cart
+                    int maxItems = Math.min(items.size(), 5);
+                    for (int i = 0; i < maxItems; i++) {
+                        CartItem item = items.get(items.size() - 1 - i); // Lấy từ cuối để hiển thị mới nhất
+                        if (i > 0) json.append(",");
+                        json.append("{");
+                        json.append("\"productId\":").append(item.getProductId()).append(",");
+                        json.append("\"name\":").append(esc(item.getProductName())).append(",");
+                        json.append("\"imageUrl\":\"").append(item.getImageUrl() != null ? item.getImageUrl() : "").append("\",");
+                        json.append("\"color\":\"").append(item.getColor() == null ? "" : item.getColor()).append("\",");
+                        json.append("\"size\":\"").append(item.getSize() == null ? "" : item.getSize()).append("\",");
+                        json.append("\"quantity\":").append(item.getQuantity()).append(",");
+                        json.append("\"price\":").append(item.getUnitPrice());
+                        json.append("}");
+                    }
+                    json.append("]}");
+                    resp.getWriter().write(json.toString());
+                } else {
+                    resp.getWriter().write("{\"count\":" + count + "}");
+                }
             } catch (Exception e) {
+                e.printStackTrace();
                 resp.getWriter().write("{\"count\":0}");
             }
             return;
@@ -155,5 +180,11 @@ public class CartController extends HttpServlet {
             req.getSession().setAttribute("cartError", e.getMessage());
             resp.sendRedirect(req.getContextPath() + "/cart");
         }
+    }
+
+    private String esc(String s) {
+        if (s == null) return "null";
+        return "\"" + s.replace("\\", "\\\\").replace("\"", "\\\"")
+                       .replace("\n", "\\n").replace("\r", "\\r") + "\"";
     }
 }

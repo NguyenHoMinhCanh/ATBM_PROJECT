@@ -130,7 +130,7 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.10.0/font/bootstrap-icons.min.css"
           rel="stylesheet"/>
     <!-- App CSS -->
-    <link href="assets/css/style.css" rel="stylesheet"/>
+    <link href="assets/css/style.css?v=1.4" rel="stylesheet"/>
 </head>
 <body>
 
@@ -456,7 +456,7 @@
             </div>
 
             <div class="modal-footer border-0 pt-0">
-                <a href="${ctx}/cart" class="btn btn-outline-secondary">Xem giỏ hàng</a>
+                <a href="<%=ctx%>/cart" class="btn btn-outline-secondary">Xem giỏ hàng</a>
                 <button class="btn btn-link text-muted" data-bs-dismiss="modal">Tiếp tục mua hàng</button>
             </div>
         </div>
@@ -1505,7 +1505,9 @@
                 
                 if (data.ok) {
                     // Update số lượng giỏ hàng trên cục header
-                    if (data.cartCount !== undefined) {
+                    if (window.updateCartCountFromServer) {
+                        window.updateCartCountFromServer();
+                    } else if (data.cartCount !== undefined) {
                         const badge = qs('#cartCount');
                         if (badge) {
                             badge.textContent = data.cartCount;
@@ -1563,6 +1565,10 @@
         qs('#btnBuyNowProduct')?.addEventListener('click', (e) => {
             e.preventDefault();
             submitAddToCart(true);
+        });
+
+        qs('#mProceed')?.addEventListener('click', () => {
+            window.location.href = '<%=request.getContextPath()%>/checkout';
         });
         
         if (typeof window.initZoom === 'function') {

@@ -1,0 +1,15 @@
+db.host=localhost
+db.port=3306
+db.username=root
+db.password=mat_khau_cua_ban_o_day
+db.dbName=web
+
+# Google OAuth2
+google.clientId=nhap_client_id_cua_ban_vao_day
+google.clientSecret=nhap_client_secret_cua_ban_vao_day
+google.redirectUri=http://localhost:8080/auth/google/callback
+
+# Facebook OAuth2
+facebook.appId=nhap_app_id_cua_ban_vao_day
+facebook.appSecret=nhap_app_secret_cua_ban_vao_day
+facebook.redirectUri=https://jps.id.vn/demo-1.0-SNAPSHOT/auth/facebook/callback
