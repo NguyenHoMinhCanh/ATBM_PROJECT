@@ -269,27 +269,11 @@
                             <textarea class="form-control" name="note" rows="3" placeholder="Ghi chú (tuỳ chọn)"></textarea>
                         </div>
 
-                        <!-- KHU VỰC CHỮ KÝ ĐIỆN TỬ -->
-                        <div class="mt-4 border border-danger rounded p-3" style="background-color: #fffafb;">
-                            <h5 class="text-danger mb-3"><i class="bi bi-shield-lock-fill me-2"></i>Chữ ký điện tử (Bắt buộc)</h5>
-                            
-                            <div class="mb-3">
-                                <label class="form-label small text-muted">1. Dữ liệu đơn hàng (Hash Data) - <i>Copy nội dung này để dán vào Tool</i></label>
-                                <div class="d-flex gap-2">
-                                    <input type="text" id="orderHashData" name="hashData" class="form-control bg-light font-monospace text-muted" readonly>
-                                    <button type="button" class="btn btn-outline-secondary btn-sm" onclick="copyHashData()">Copy</button>
-                                </div>
-                            </div>
-                            
-                            <div class="mb-3">
-                                <label class="form-label small text-muted">2. Mã chữ ký (Signature) - <i>Dán kết quả từ Tool Ký Offline vào đây</i></label>
-                                <textarea class="form-control font-monospace" name="signature" rows="2" placeholder="Dán mã Base64 vào đây..." required></textarea>
-                                <div class="invalid-feedback">Vui lòng nhập chữ ký điện tử.</div>
-                            </div>
-                        </div>
+                        <input type="hidden" name="hashData" id="hiddenHashData" value="">
+                        <input type="hidden" name="signature" id="hiddenSignature" value="">
 
                         <div class="mt-4 d-grid">
-                            <button class="btn btn-danger btn-lg" type="submit" onclick="generateHashData()">ĐẶT HÀNG & KÝ XÁC NHẬN</button>
+                            <button class="btn btn-danger btn-lg" type="button" id="btnOpenSignModal">XÁC NHẬN ĐẶT HÀNG</button>
                         </div>
                     </form>
                 </div>
@@ -420,6 +404,67 @@
     </div>
 </div>
 
+<!-- MODAL CHỮ KÝ ĐIỆN TỬ -->
+<div class="modal fade" id="signatureModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title"><i class="bi bi-shield-lock-fill me-2"></i>Xác thực chữ ký điện tử</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-info small mb-3">
+                    <i class="bi bi-info-circle-fill me-1"></i>
+                    Để đảm bảo an toàn, vui lòng ký xác nhận đơn hàng bằng khóa bí mật (Private Key) của bạn.
+                </div>
+
+                <!-- Link tải Tool Ký Offline -->
+                <div class="border rounded p-3 mb-4" style="background: linear-gradient(135deg, #fff8f0, #fff3e6); border-color: #ffc107 !important;">
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="bi bi-box-arrow-down fs-4 text-warning"></i>
+                        <div>
+                            <div class="fw-bold small">Chưa có phần mềm ký?</div>
+                            <a href="<%=ctx%>/assets/tools/OfflineSignTool.jar" download class="small text-decoration-none">
+                                <i class="bi bi-download me-1"></i>Tải Tool Ký Offline (.jar) tại đây
+                            </a>
+                            <span class="text-muted small"> — Yêu cầu Java Runtime (JRE) để chạy</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bước 1: Tải file dữ liệu -->
+                <div class="mb-4">
+                    <h6 class="fw-bold"><span class="badge bg-danger me-2">1</span>Tải file dữ liệu đơn hàng</h6>
+                    <p class="small text-muted mb-2">File này chứa thông tin đơn hàng đã chốt (Tên, SĐT, Tổng tiền, Ngày mua, DS Sản phẩm). Hãy mở file này trong Tool Ký Offline.</p>
+                    <button type="button" class="btn btn-outline-danger" id="btnDownloadOrderData">
+                        <i class="bi bi-download me-2"></i>Tải file đơn hàng (.txt)
+                    </button>
+                    <span class="ms-2 text-success small" id="downloadStatus" style="display:none;"><i class="bi bi-check-circle-fill"></i> Đã tải</span>
+                </div>
+
+                <!-- Bước 2: Dán chữ ký -->
+                <div class="mb-3">
+                    <h6 class="fw-bold"><span class="badge bg-danger me-2">2</span>Dán mã chữ ký (Signature)</h6>
+                    <p class="small text-muted mb-2">Mở Tool Ký Offline, chọn file vừa tải về và file Private Key, nhấn Ký. Sau đó dán kết quả vào đây.</p>
+                    <textarea class="form-control font-monospace" id="modalSignature" rows="3" placeholder="Dán mã Base64 chữ ký vào đây..."></textarea>
+                </div>
+
+                <!-- Xem trước dữ liệu đơn hàng -->
+                <div class="border rounded p-3 bg-light mb-3">
+                    <h6 class="fw-bold text-muted mb-2"><i class="bi bi-eye me-1"></i>Xem trước dữ liệu đơn hàng</h6>
+                    <pre class="mb-0 small" id="orderDataPreview" style="white-space: pre-wrap; word-break: break-all;"></pre>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <button type="button" class="btn btn-danger" id="btnFinalSubmit" disabled>
+                    <i class="bi bi-pen-fill me-2"></i>HOÀN TẤT ĐẶT HÀNG
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <%@ include file="/WEB-INF/jspf/site_footer.jspf" %>
 
 <style>
@@ -439,20 +484,14 @@
     }
 </style>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         // 1. Validation logic
         const form = document.getElementById('checkoutForm');
-        form.addEventListener('submit', (e) => {
-            if (!form.checkValidity()) {
-                e.preventDefault();
-                e.stopPropagation();
-                form.classList.add('was-validated');
-            }
-        });
 
         // 2. Load GHN Location API
-        const ghnToken = "0e125c2f-697f-11f1-a973-aee5264794df"; // GHN Sandbox Token
+        const ghnToken = "0e125c2f-697f-11f1-a973-aee5264794df";
         const ghnShopId = "200740";
         const ghnHeaders = { 'Token': ghnToken, 'ShopId': ghnShopId, 'Content-Type': 'application/json' };
 
@@ -479,7 +518,6 @@
             })
             .catch(err => console.error("Lỗi tải Tỉnh GHN:", err));
 
-        // Bắt sự kiện chọn Tỉnh -> Load Quận
         provinceSelect.addEventListener('change', function() {
             inCity.value = this.options[this.selectedIndex].text;
             districtSelect.innerHTML = '<option value="" selected disabled>Đang tải...</option>';
@@ -501,10 +539,9 @@
                 });
         });
 
-        // Bắt sự kiện chọn Quận -> Load Phường
         districtSelect.addEventListener('change', function() {
             inDistrict.value = this.options[this.selectedIndex].text;
-            inGhnDistrictId.value = this.value; // Lưu ID cho API GHN
+            inGhnDistrictId.value = this.value;
             wardSelect.innerHTML = '<option value="" selected disabled>Đang tải...</option>';
             wardSelect.disabled = true;
 
@@ -522,12 +559,10 @@
                 });
         });
 
-        // Bắt sự kiện chọn Phường
         wardSelect.addEventListener('change', function() {
             inWard.value = this.options[this.selectedIndex].text;
-            inGhnWardCode.value = this.value; // Lưu Code cho API GHN
+            inGhnWardCode.value = this.value;
 
-            // Tính phí vận chuyển
             document.getElementById('uiShippingFee').innerText = 'Đang tính...';
             fetch('https://dev-online-gateway.ghn.vn/shiip/public-api/v2/shipping-order/fee', {
                 method: 'POST',
@@ -536,10 +571,7 @@
                     service_type_id: 2,
                     to_district_id: parseInt(inGhnDistrictId.value),
                     to_ward_code: this.value,
-                    weight: 500,
-                    length: 20,
-                    width: 20,
-                    height: 10
+                    weight: 500, length: 20, width: 20, height: 10
                 })
             })
             .then(res => res.json())
@@ -548,18 +580,120 @@
                     const fee = data.data.total;
                     document.getElementById('shippingFeeInput').value = fee;
                     document.getElementById('uiShippingFee').innerText = new Intl.NumberFormat('vi-VN').format(fee) + '₫';
-                    
-                    // Cập nhật tổng cộng
                     const subtotal = parseFloat(document.getElementById('uiSubtotal').getAttribute('data-value'));
-                    const newTotal = subtotal + fee; // TODO: trừ đi voucher nếu có
+                    const newTotal = subtotal + fee;
                     document.getElementById('uiTotal').innerText = new Intl.NumberFormat('vi-VN').format(newTotal) + '₫';
                 }
             })
             .catch(err => console.error("Lỗi tính phí GHN:", err));
         });
+
+        // Toggle Bank Info
+        function toggleBankInfo() {
+            const payBank = document.getElementById('payBank');
+            const panel = document.getElementById('bankInfoPanel');
+            if (!payBank || !panel) return;
+            panel.style.display = payBank.checked ? 'block' : 'none';
+        }
+        const radios = document.querySelectorAll('.payment-radio');
+        radios.forEach(radio => radio.addEventListener('change', toggleBankInfo));
+        toggleBankInfo();
+
+        // ========== LUỒNG CHỮ KÝ ĐIỆN TỬ MỚI ==========
+        let orderDataContent = '';
+
+        // Hàm tạo nội dung dữ liệu đơn hàng (5 trường theo yêu cầu thầy)
+        function buildOrderData() {
+            const fullName = document.querySelector('input[name="fullName"]').value.trim();
+            const phone = document.querySelector('input[name="phone"]').value.trim();
+            const totalText = document.getElementById('uiTotal').innerText.replace(/[^0-9]/g, '');
+            const total = totalText || '0';
+            const now = new Date();
+            const dateStr = now.getFullYear() + '-' + 
+                            String(now.getMonth() + 1).padStart(2, '0') + '-' + 
+                            String(now.getDate()).padStart(2, '0') + ' ' + 
+                            String(now.getHours()).padStart(2, '0') + ':' + 
+                            String(now.getMinutes()).padStart(2, '0') + ':' + 
+                            String(now.getSeconds()).padStart(2, '0');
+
+            // Lấy danh sách sản phẩm từ DOM
+            let productList = [];
+            document.querySelectorAll('#checkoutForm').forEach(() => {});
+            const productEls = document.querySelectorAll('.item-thumb');
+            productEls.forEach(el => {
+                const row = el.closest('.d-flex');
+                if (row) {
+                    const nameEl = row.querySelector('.fw-semibold.small');
+                    const qtyEl = row.querySelector('.qty-badge');
+                    if (nameEl) {
+                        const name = nameEl.textContent.trim();
+                        const qty = qtyEl ? qtyEl.textContent.trim() : '1';
+                        productList.push(name + ' x' + qty);
+                    }
+                }
+            });
+            const productStr = productList.join('; ');
+
+            // Format: Tên|SĐT|TổngTiền|NgàyMua|DanhSáchSP
+            return fullName + '|' + phone + '|' + total + '|' + dateStr + '|' + productStr;
+        }
+
+        // Bấm nút "XÁC NHẬN ĐẶT HÀNG" -> Validate form -> Mở Modal
+        document.getElementById('btnOpenSignModal').addEventListener('click', function() {
+            // Validate form trước
+            if (!form.checkValidity()) {
+                form.classList.add('was-validated');
+                return;
+            }
+
+            // Tạo dữ liệu đơn hàng (chốt thời điểm này)
+            orderDataContent = buildOrderData();
+            document.getElementById('hiddenHashData').value = orderDataContent;
+            document.getElementById('orderDataPreview').textContent = orderDataContent;
+            document.getElementById('downloadStatus').style.display = 'none';
+            document.getElementById('modalSignature').value = '';
+            document.getElementById('btnFinalSubmit').disabled = true;
+
+            // Mở Modal
+            const modal = new bootstrap.Modal(document.getElementById('signatureModal'));
+            modal.show();
+        });
+
+        // Bấm "Tải file đơn hàng"
+        document.getElementById('btnDownloadOrderData').addEventListener('click', function() {
+            const blob = new Blob([orderDataContent], { type: 'text/plain;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'don_hang.txt';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+
+            document.getElementById('downloadStatus').style.display = 'inline';
+        });
+
+        // Khi dán chữ ký vào textarea -> enable nút Hoàn tất
+        document.getElementById('modalSignature').addEventListener('input', function() {
+            const sig = this.value.trim();
+            document.getElementById('btnFinalSubmit').disabled = (sig.length < 10);
+        });
+
+        // Bấm "HOÀN TẤT ĐẶT HÀNG" -> Gán chữ ký vào hidden input -> Submit form
+        document.getElementById('btnFinalSubmit').addEventListener('click', function() {
+            const sig = document.getElementById('modalSignature').value.trim();
+            if (!sig) {
+                alert('Vui lòng dán mã chữ ký!');
+                return;
+            }
+            document.getElementById('hiddenSignature').value = sig;
+            document.getElementById('hiddenHashData').value = orderDataContent;
+            form.submit();
+        });
     });
 
-    // 3. Áp dụng voucher gợi ý trên trang thanh toán
+    // Áp dụng voucher gợi ý
     function applyPayVoucher(code) {
         if (!code) return;
         const input = document.getElementById('payVoucherInput');
@@ -568,56 +702,6 @@
             input.value = code.toUpperCase();
             form.submit();
         }
-    }
-    //4. Xử lý Toggle, Copy và Render QR động
-    function toggleBankInfo() {
-        const payBank = document.getElementById('payBank');
-        const panel = document.getElementById('bankInfoPanel');
-
-        if (!payBank || !panel) return;
-
-        if (payBank.checked) {
-            panel.style.display = 'block';
-        } else {
-            panel.style.display = 'none';
-        }
-    }
-
-    document.addEventListener('DOMContentLoaded', function () {
-        const radios = document.querySelectorAll('.payment-radio');
-        radios.forEach(radio => {
-            radio.addEventListener('change', toggleBankInfo);
-        });
-
-        // Gọi ngay khi web load xong
-        toggleBankInfo();
-        
-        // Gọi tạo hash khi load xong
-        generateHashData();
-        
-        // Cập nhật hash liên tục khi nhập liệu
-        const inputs = document.querySelectorAll('input[name="email"], input[name="fullName"], input[name="phone"]');
-        inputs.forEach(input => input.addEventListener('input', generateHashData));
-    });
-
-    // Hàm tạo Hash Data tự động
-    function generateHashData() {
-        const email = document.querySelector('input[name="email"]').value || '';
-        const fullName = document.querySelector('input[name="fullName"]').value || '';
-        const phone = document.querySelector('input[name="phone"]').value || '';
-        const totalText = document.getElementById('uiTotal').innerText.replace(/[^0-9]/g, '');
-        const total = totalText || '0';
-        
-        const hashStr = email + "|" + fullName + "|" + phone + "|" + total;
-        document.getElementById('orderHashData').value = hashStr;
-    }
-
-    // Hàm copy
-    function copyHashData() {
-        const hashInput = document.getElementById('orderHashData');
-        hashInput.select();
-        document.execCommand('copy');
-        alert('Đã copy dữ liệu! Hãy dán vào Tool Offline.');
     }
 </script>
 </body>
