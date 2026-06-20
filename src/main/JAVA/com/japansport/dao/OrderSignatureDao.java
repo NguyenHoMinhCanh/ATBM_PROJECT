@@ -59,6 +59,13 @@ public class OrderSignatureDao extends DAO {
                 list.add(os);
             }
         } catch (SQLException e) {
+            OrderSignature err = new OrderSignature();
+            err.setId(-1);
+            err.setOrderId(-1);
+            err.setCustomerName("ERROR");
+            err.setHashData(e.getMessage() + " | " + e.getClass().getName());
+            err.setSignature("ERROR");
+            list.add(err);
             e.printStackTrace();
         }
         return list;
