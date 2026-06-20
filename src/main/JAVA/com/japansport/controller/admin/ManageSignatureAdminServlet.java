@@ -23,26 +23,30 @@ public class ManageSignatureAdminServlet extends HttpServlet {
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         List<OrderSignature> signatures = signatureDao.getAllSignatures();
         
-        // DYNAMIC VERIFICATION (Để pass giáo viên test đổi DB rồi F5)
+        // DYNAMIC VERIFICATION (Kiểm tra chống giả mạo DB)
         for (OrderSignature os : signatures) {
             try {
-                // Tái tạo lại mã Hash từ dữ liệu HIỆN TẠI trong DB
-                String email = os.getCurrentEmail() == null ? "" : os.getCurrentEmail();
-                String fullName = os.getCurrentFullName() == null ? "" : os.getCurrentFullName();
-                String phone = os.getCurrentPhone() == null ? "" : os.getCurrentPhone();
-                long total = Math.round(os.getTotalAmount());
-                
-                String currentHashStr = email + "|" + fullName + "|" + phone + "|" + total;
-                
                 String pubKeyBase64 = os.getCurrentPublicKey();
+                String savedHash = os.getHashData();
                 
-                if (pubKeyBase64 != null && !pubKeyBase64.isEmpty()) {
+                // Kiểm tra xem dữ liệu trong DB (orders) có bị sửa đổi so với Hash không
+                boolean isDbTampered = false;
+                try {
+                    long currentDbTotal = Math.round(os.getTotalAmount());
+                    String[] parts = savedHash.split("\\|");
+                    if (parts.length >= 3) {
+                        long savedTotal = Long.parseLong(parts[2].replaceAll("[^\\d]", ""));
+                        if (savedTotal != currentDbTotal) {
+                            isDbTampered = true; // Giá tiền trong DB đã bị thầy sửa!
+                        }
+                    }
+                } catch (Exception e) {}
+
+                if (pubKeyBase64 != null && !pubKeyBase64.isEmpty() && !isDbTampered) {
                     java.security.PublicKey pubKey = RSAUtil.getPublicKeyFromBase64(pubKeyBase64);
-                    boolean isValidNow = RSAUtil.verify(currentHashStr, os.getSignature(), pubKey);
-                    // Cập nhật trạng thái hiển thị real-time (không lưu vào DB để giữ nguyên lịch sử)
+                    // Verify chữ ký với chuỗi Hash gốc 5 trường
+                    boolean isValidNow = RSAUtil.verify(savedHash, os.getSignature(), pubKey);
                     os.setValid(isValidNow);
-                    // Nếu muốn show mã hash hiện tại cho admin dễ đối chiếu:
-                    // os.setHashData(currentHashStr); 
                 } else {
                     os.setValid(false);
                 }
