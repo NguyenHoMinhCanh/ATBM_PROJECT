@@ -50,6 +50,10 @@
             <i class="bi bi-receipt"></i><span>Đơn hàng</span>
         </a>
 
+        <a class="adm-item text-danger font-weight-bold" href="${ctx}/admin/signatures" style="color: #dc3545 !important;">
+            <i class="bi bi-shield-lock-fill"></i><span>Xác nhận chữ ký số</span>
+        </a>
+
         <div class="adm-section">HỆ THỐNG</div>
         <a class="adm-item <%= activePolicies %>" href="${ctx}/admin/policies">
             <i class="bi bi-shield-check"></i><span>Chính sách</span>
