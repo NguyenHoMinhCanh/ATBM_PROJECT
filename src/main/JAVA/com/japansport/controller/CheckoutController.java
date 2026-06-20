@@ -151,24 +151,30 @@ public class CheckoutController extends HttpServlet {
                 throw new Exception("Bạn chưa thiết lập Khóa bảo mật (Public Key). Vui lòng vào trang Profile để tạo cặp khóa!");
             }
             
-            // Dựng lại chuỗi hashData y hệt JS (để đối chiếu)
-            String serverHashStr = email + "|" + fullName + "|" + phone + "|" + Math.round(finalTotal);
-            if (!hashData.equals(serverHashStr)) {
-                // Nếu User dùng Tool nhưng sửa lại tiền trên Tool thì hashData trên web (post lên) và serverHashStr sẽ khác.
-                // Tuy nhiên, ta verify chính xác những gì Client gửi lên (hashData). Nếu hợp lệ thì ta lưu, 
-                // nhưng sau đó đánh dấu IsValid = false nếu hashData != serverHashStr?
-                // Ở đây ta cứ verify với hashData mà người dùng gửi lên.
+            // Clean inputs
+            hashData = hashData.trim();
+            String cleanSignature = signatureBase64.replaceAll("\\s+", "");
+            
+            // hashData format mới: Tên|SĐT|TổngTiền|NgàyMua|DanhSáchSP
+            // Kiểm tra tổng tiền trong hashData có khớp với server không
+            String[] hashParts = hashData.split("\\|", 5);
+            boolean isDataIntact = true;
+            if (hashParts.length >= 3) {
+                try {
+                    long hashTotal = Long.parseLong(hashParts[2]);
+                    long serverTotal = Math.round(finalTotal);
+                    isDataIntact = (hashTotal == serverTotal);
+                } catch (NumberFormatException e) {
+                    isDataIntact = false;
+                }
             }
             
             java.security.PublicKey pubKey = RSAUtil.getPublicKeyFromBase64(u.getPublicKey());
-            boolean isSignatureValid = RSAUtil.verify(hashData, signatureBase64, pubKey);
+            boolean isSignatureValid = RSAUtil.verify(hashData, cleanSignature, pubKey);
             
             if (!isSignatureValid) {
                 throw new Exception("Chữ ký điện tử KHÔNG hợp lệ. Dữ liệu đã bị giả mạo hoặc sai khóa!");
             }
-            
-            // Nếu chữ ký chuẩn nhưng thông tin bị sửa đổi (Hash mismatch)
-            boolean isDataIntact = hashData.equals(serverHashStr);
 
             // 2. Thực hiện lưu đơn hàng vào database
             int orderId = orderDao.placeOrderFromCart(
