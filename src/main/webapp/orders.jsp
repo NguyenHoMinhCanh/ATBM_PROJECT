@@ -50,8 +50,7 @@
                                 <a href="${ctx}/account"><i class="bi bi-person-badge"></i> Hồ sơ tài khoản</a>
                                 <a class="active" href="${ctx}/orders"><i class="bi bi-receipt"></i> Đơn hàng của
                                     tôi</a>
-                                <a href="${ctx}/change-password"><i class="bi bi-shield-lock"></i> Bảo mật & mật
-                                    khẩu</a>
+                                <a href="${ctx}/change-password"><i class="bi bi-shield-lock"></i> Bảo mật & chữ ký điện tử</a>
                                 <a href="${ctx}/logout"><i class="bi bi-box-arrow-right"></i> Đăng xuất</a>
                             </div>
                         </div>
