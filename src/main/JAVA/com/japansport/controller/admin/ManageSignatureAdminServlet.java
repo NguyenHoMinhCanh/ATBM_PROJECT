@@ -26,7 +26,10 @@ public class ManageSignatureAdminServlet extends HttpServlet {
         // DYNAMIC VERIFICATION (Kiểm tra chống giả mạo DB)
         for (OrderSignature os : signatures) {
             try {
-                String pubKeyBase64 = os.getCurrentPublicKey();
+                String pubKeyBase64 = os.getPublicKeySnapshot();
+                if (pubKeyBase64 == null || pubKeyBase64.isEmpty()) {
+                    pubKeyBase64 = os.getCurrentPublicKey();
+                }
                 String savedHash = os.getHashData();
                 
                 // Kiểm tra xem dữ liệu trong DB (orders) có bị sửa đổi so với Hash không
