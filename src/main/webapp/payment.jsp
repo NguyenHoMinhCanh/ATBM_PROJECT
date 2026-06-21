@@ -449,10 +449,18 @@
                     <textarea class="form-control font-monospace" id="modalSignature" rows="3" placeholder="Dán mã Base64 chữ ký vào đây..."></textarea>
                 </div>
 
-                <!-- Xem trước dữ liệu đơn hàng -->
+            <!-- Xem trước dữ liệu đơn hàng -->
                 <div class="border rounded p-3 bg-light mb-3">
                     <h6 class="fw-bold text-muted mb-2"><i class="bi bi-eye me-1"></i>Xem trước dữ liệu đơn hàng</h6>
                     <pre class="mb-0 small" id="orderDataPreview" style="white-space: pre-wrap; word-break: break-all;"></pre>
+                </div>
+
+                <!-- Thông báo lỗi / thành công hiển thị ngay trong popup -->
+                <div id="modalAlert" class="alert d-none mb-0" role="alert">
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="bi" id="modalAlertIcon"></i>
+                        <span id="modalAlertMsg"></span>
+                    </div>
                 </div>
             </div>
             <div class="modal-footer">
@@ -464,6 +472,25 @@
         </div>
     </div>
 </div>
+
+<style>
+    @keyframes shakeModal {
+        0%, 100% { transform: translateX(0); }
+        15% { transform: translateX(-8px); }
+        30% { transform: translateX(8px); }
+        45% { transform: translateX(-6px); }
+        60% { transform: translateX(6px); }
+        75% { transform: translateX(-3px); }
+        90% { transform: translateX(3px); }
+    }
+    .shake-it .modal-content {
+        animation: shakeModal 0.5s ease-in-out;
+    }
+    #modalAlert {
+        border-radius: 10px;
+        transition: all 0.3s ease;
+    }
+</style>
 
 <%@ include file="/WEB-INF/jspf/site_footer.jspf" %>
 
@@ -680,17 +707,94 @@
             document.getElementById('btnFinalSubmit').disabled = (sig.length < 10);
         });
 
-        // Bấm "HOÀN TẤT ĐẶT HÀNG" -> Gán chữ ký vào hidden input -> Submit form
+        // Bấm "HOÀN TẤT ĐẶT HÀNG" -> Gửi AJAX thay vì submit form truyền thống
         document.getElementById('btnFinalSubmit').addEventListener('click', function() {
             const sig = document.getElementById('modalSignature').value.trim();
             if (!sig) {
-                alert('Vui lòng dán mã chữ ký!');
+                showModalAlert('error', 'Vui lòng dán mã chữ ký!');
                 return;
             }
+
+            // Gán chữ ký vào hidden input để FormData lấy được
             document.getElementById('hiddenSignature').value = sig;
             document.getElementById('hiddenHashData').value = orderDataContent;
-            form.submit();
+
+            // Đổi nút thành trạng thái Loading (vô hiệu hóa bấm lần 2)
+            const btn = this;
+            const originalText = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Đang xử lý...';
+
+            // Ẩn thông báo lỗi cũ (nếu có)
+            hideModalAlert();
+
+            // Gửi form bằng fetch (AJAX) thay vì tải lại trang
+            // Dùng URLSearchParams thay vì FormData để Server đọc được req.getParameter()
+            const formData = new URLSearchParams(new FormData(form));
+            fetch(form.action, {
+                method: 'POST',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: formData
+            })
+            .then(response => response.json().then(data => ({ ok: response.ok, data })))
+            .then(({ ok, data }) => {
+                if (ok && data.status === 'success') {
+                    // Thành công: Hiện thông báo xanh rồi chuyển trang
+                    showModalAlert('success', data.message + ' Đang chuyển hướng...');
+                    btn.innerHTML = '<i class="bi bi-check-circle-fill me-2"></i>Thành công!';
+                    btn.classList.remove('btn-danger');
+                    btn.classList.add('btn-success');
+                    setTimeout(() => { window.location.href = data.redirectUrl; }, 800);
+                } else {
+                    // Lỗi: Hiện thông báo đỏ ngay trong popup + rung popup
+                    showModalAlert('error', data.message || 'Đã xảy ra lỗi không xác định.');
+                    shakeModal();
+                    btn.disabled = false;
+                    btn.innerHTML = originalText;
+                }
+            })
+            .catch(err => {
+                showModalAlert('error', 'Lỗi kết nối đến Server. Vui lòng thử lại!');
+                shakeModal();
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+            });
         });
+
+        // Hàm hiển thị thông báo trong popup
+        function showModalAlert(type, message) {
+            const alertEl = document.getElementById('modalAlert');
+            const iconEl = document.getElementById('modalAlertIcon');
+            const msgEl = document.getElementById('modalAlertMsg');
+
+            alertEl.className = 'alert mb-0';
+            if (type === 'error') {
+                alertEl.classList.add('alert-danger');
+                iconEl.className = 'bi bi-exclamation-triangle-fill fs-5';
+                msgEl.innerHTML = '<strong>Lỗi!</strong> ' + message;
+            } else {
+                alertEl.classList.add('alert-success');
+                iconEl.className = 'bi bi-check-circle-fill fs-5';
+                msgEl.innerHTML = '<strong>Thành công!</strong> ' + message;
+            }
+            alertEl.style.display = 'block';
+            // Cuộn xuống để user thấy thông báo
+            alertEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+
+        function hideModalAlert() {
+            const alertEl = document.getElementById('modalAlert');
+            alertEl.className = 'alert d-none mb-0';
+        }
+
+        // Hiệu ứng rung popup khi lỗi
+        function shakeModal() {
+            const dialog = document.querySelector('#signatureModal .modal-dialog');
+            dialog.classList.add('shake-it');
+            setTimeout(() => dialog.classList.remove('shake-it'), 600);
+        }
     });
 
     // Áp dụng voucher gợi ý

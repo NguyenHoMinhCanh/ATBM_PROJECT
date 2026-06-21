@@ -89,11 +89,38 @@ public class CheckoutController extends HttpServlet {
         }
     }
 
+    // Kiểm tra request có phải gửi từ AJAX (fetch) không
+    private boolean isAjaxRequest(HttpServletRequest req) {
+        return "XMLHttpRequest".equals(req.getHeader("X-Requested-With"));
+    }
+
+    // Trả JSON cho AJAX request
+    private void sendJsonResponse(HttpServletResponse resp, int httpStatus, String status, String message, String redirectUrl) throws IOException {
+        resp.setStatus(httpStatus);
+        resp.setContentType("application/json");
+        resp.setCharacterEncoding("UTF-8");
+        // Tự build JSON bằng tay để tránh phải thêm thư viện bên ngoài
+        StringBuilder json = new StringBuilder("{");
+        json.append("\"status\":\"").append(status).append("\"");
+        json.append(",\"message\":\"").append(message.replace("\"", "\\\"")).append("\"");
+        if (redirectUrl != null) {
+            json.append(",\"redirectUrl\":\"").append(redirectUrl.replace("\"", "\\\"")).append("\"");
+        }
+        json.append("}");
+        resp.getWriter().write(json.toString());
+    }
+
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        boolean ajax = isAjaxRequest(req);
+
         User u = (User) req.getSession().getAttribute("currentUser");
         if (u == null) {
-            resp.sendRedirect(req.getContextPath() + "/login.jsp?back=" + req.getContextPath() + "/checkout");
+            if (ajax) {
+                sendJsonResponse(resp, 401, "error", "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại!", null);
+            } else {
+                resp.sendRedirect(req.getContextPath() + "/login.jsp?back=" + req.getContextPath() + "/checkout");
+            }
             return;
         }
 
@@ -222,23 +249,30 @@ public class CheckoutController extends HttpServlet {
 
             HttpSession session = req.getSession();
 
-            // LOGIC MỚI: Kiểm tra phương thức thanh toán
+            // Xác định URL chuyển hướng sau khi đặt hàng thành công
+            String redirectUrl;
             if ("bank".equals(payMethod)) {
-                // Làm tròn số tiền để mất đi dấu thập phân (Ví dụ 2990000.0 thành 2990000)
                 long amountToSend = Math.round(finalTotal);
-
-                // Truyền thêm tham số amount vào URL
-                resp.sendRedirect(req.getContextPath() + "/checkout-qr.jsp?orderId=" + orderId + "&amount=" + amountToSend);
-            }else {
-                // Nếu là COD (thanh toán tiền mặt) thì về thẳng trang chi tiết đơn
+                redirectUrl = req.getContextPath() + "/checkout-qr.jsp?orderId=" + orderId + "&amount=" + amountToSend;
+            } else {
                 session.setAttribute("FLASH_MSG", "Đặt hàng thành công. Mã đơn #" + orderId);
                 session.setAttribute("FLASH_TYPE", "success");
-                resp.sendRedirect(req.getContextPath() + "/order-detail?id=" + orderId);
+                redirectUrl = req.getContextPath() + "/order-detail?id=" + orderId;
+            }
+
+            if (ajax) {
+                sendJsonResponse(resp, 200, "success", "Đặt hàng thành công!", redirectUrl);
+            } else {
+                resp.sendRedirect(redirectUrl);
             }
 
         } catch (Exception e) {
-            req.setAttribute("errorMessage", "Đặt hàng thất bại: " + e.getMessage());
-            doGet(req, resp);
+            if (ajax) {
+                sendJsonResponse(resp, 400, "error", "Đặt hàng thất bại: " + e.getMessage(), null);
+            } else {
+                req.setAttribute("errorMessage", "Đặt hàng thất bại: " + e.getMessage());
+                doGet(req, resp);
+            }
         }
     }
 }

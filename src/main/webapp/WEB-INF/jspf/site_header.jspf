@@ -72,7 +72,7 @@
                         <div class="dropdown account-dropdown d-inline-block">
                             <c:choose>
                                 <c:when test="${not empty sessionScope.currentUser}">
-                                    <a href="#" class="d-flex align-items-center text-decoration-none account-btn" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <a href="#" class="d-flex align-items-center text-decoration-none account-btn" role="button" data-bs-toggle="dropdown" data-bs-display="static" aria-expanded="false">
                                         <div class="header-icon-btn d-inline-flex align-items-center justify-content-center border border-danger bg-white text-danger">
                                             <c:choose>
                                                 <c:when test="${not empty sessionScope.currentUser.avatar}">
