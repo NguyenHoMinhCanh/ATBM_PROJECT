@@ -140,7 +140,7 @@
                     <div class="acc-menu">
                         <a class="active" href="${ctx}/account"><i class="bi bi-person"></i> Hồ sơ tài khoản</a>
                         <a href="${ctx}/orders"><i class="bi bi-receipt"></i> Đơn hàng của tôi</a>
-                        <a href="${ctx}/change-password"><i class="bi bi-shield-lock"></i> Bảo mật & mật khẩu</a>
+                        <a href="${ctx}/change-password"><i class="bi bi-shield-lock"></i> Bảo mật & chữ ký điện tử</a>
                         <a href="#"><i class="bi bi-arrow-repeat"></i> Chính sách đổi trả</a>
                         <a class="text-danger" href="${ctx}/logout"><i class="bi bi-box-arrow-right"></i> Đăng xuất</a>
                     </div>
@@ -223,114 +223,10 @@
                                     <i class="bi bi-check2-circle me-1"></i> Lưu thay đổi
                                 </button>
                                 <a href="${ctx}/change-password" class="btn btn-outline-secondary">
-                                    <i class="bi bi-shield-lock me-1"></i> Đổi mật khẩu
+                                    <i class="bi bi-shield-lock me-1"></i> Bảo mật & chữ ký điện tử
                                 </a>
                             </div>
                         </form>
-                    </div>
-                </div>
-
-                <!-- BẢO MẬT & CHỮ KÝ ĐIỆN TỬ -->
-                <div class="card acc-card mb-3 border-danger" style="border-width: 2px;">
-                    <div class="card-body">
-                        <div class="d-flex align-items-center justify-content-between mb-3">
-                            <div class="fw-semibold">
-                                <i class="bi bi-shield-lock-fill me-2 text-danger"></i> Bảo mật & Chữ ký điện tử
-                            </div>
-                            <div class="text-muted small">Bắt buộc để đặt hàng</div>
-                        </div>
-
-                        <div class="alert alert-light border border-danger-subtle rounded-4 p-3 mb-3">
-                            <h6 class="text-danger fw-bold"><i class="bi bi-exclamation-triangle-fill me-1"></i> Quan trọng:</h6>
-                            <p class="mb-1 small text-muted">Hệ thống yêu cầu bạn phải sử dụng chữ ký điện tử để tạo đơn hàng. Vui lòng làm theo 2 bước sau:</p>
-                            <ol class="mb-0 small text-muted ps-3 mt-2">
-                                <li class="mb-1">Tạo cặp khóa bảo mật (Hệ thống sẽ tải file Private Key về máy bạn).</li>
-                                <li>Tải công cụ Offline về máy tính để ký xác nhận đơn hàng khi thanh toán.</li>
-                            </ol>
-                        </div>
-
-                        <div class="d-flex flex-column gap-3">
-
-                            <%-- === TRẠNG THÁI KHÓA + CÁC NÚT HÀNH ĐỘNG === --%>
-                            <div class="d-flex align-items-center justify-content-between border-bottom pb-3 gap-2 flex-wrap">
-                                <div>
-                                    <div class="fw-semibold">Trạng thái Public Key (Lưu trên Server)</div>
-                                    <div class="small mt-1">
-                                        <c:choose>
-                                            <c:when test="${not empty sessionScope.currentUser.publicKey}">
-                                                <span class="badge bg-success"><i class="bi bi-check-circle-fill"></i> Đã cài đặt – Khóa đang hoạt động</span>
-                                            </c:when>
-                                            <c:otherwise>
-                                                <span class="badge bg-secondary"><i class="bi bi-x-circle"></i> Chưa cài đặt – Cần tạo khóa để đặt hàng</span>
-                                            </c:otherwise>
-                                        </c:choose>
-                                    </div>
-                                </div>
-
-                                <div class="d-flex gap-2 flex-wrap">
-                                    <c:choose>
-                                        <%-- === ĐÃ CÓ KHÓA: disable nút tạo, hiện nút báo mất === --%>
-                                        <c:when test="${not empty sessionScope.currentUser.publicKey}">
-                                            <%-- Nút tạo khóa – bị vô hiệu hóa --%>
-                                            <button type="button" class="btn btn-danger btn-sm" disabled
-                                                    title="Bạn đã có khóa. Hãy báo mất khóa trước nếu muốn tạo lại.">
-                                                <i class="bi bi-key"></i> Tạo cặp khóa
-                                            </button>
-
-                                            <%-- Nút báo mất khóa --%>
-                                            <form method="post" action="${ctx}/generate-key" class="m-0">
-                                                <input type="hidden" name="action" value="reset"/>
-                                                <button type="submit" class="btn btn-outline-warning btn-sm"
-                                                        onclick="return confirm('⚠️ Bạn có chắc muốn báo MẤT KHÓA?\n\nPublic Key hiện tại sẽ bị XÓA khỏi hệ thống và bạn cần tạo cặp khóa mới.\nCác chữ ký cũ sẽ không còn hợp lệ.\n\nXác nhận báo mất?')">
-                                                    <i class="bi bi-exclamation-triangle-fill"></i> Báo mất khóa
-                                                </button>
-                                            </form>
-                                        </c:when>
-
-                                        <%-- === CHƯA CÓ KHÓA: hiện nút tạo khóa === --%>
-                                        <c:otherwise>
-                                            <form method="post" action="${ctx}/generate-key" class="m-0">
-                                                <button type="submit" class="btn btn-danger btn-sm"
-                                                        onclick="return confirm('Hệ thống sẽ tạo cặp khóa RSA cho bạn và tự động tải file Private Key về máy.\n\nHãy lưu file này cẩn thận – bạn sẽ cần nó để ký xác nhận đơn hàng.\n\nXác nhận tạo khóa?')">
-                                                    <i class="bi bi-key-fill"></i> Tạo cặp khóa
-                                                </button>
-                                            </form>
-                                        </c:otherwise>
-                                    </c:choose>
-                                </div>
-                            </div>
-
-                            <%-- === HƯỚNG DẪN KHI ĐÃ CÓ KHÓA === --%>
-                            <c:if test="${not empty sessionScope.currentUser.publicKey}">
-                                <div class="alert alert-success alert-sm py-2 px-3 mb-0 rounded-3 small">
-                                    <i class="bi bi-info-circle me-1"></i>
-                                    Khóa của bạn đang <strong>hoạt động bình thường</strong>.
-                                    Nếu bị mất file Private Key, hãy nhấn <strong>"Báo mất khóa"</strong>
-                                    để vô hiệu hóa khóa cũ và tạo cặp khóa mới.
-                                </div>
-                            </c:if>
-
-                            <%-- === HƯỚNG DẪN KHI CHƯA CÓ KHÓA === --%>
-                            <c:if test="${empty sessionScope.currentUser.publicKey}">
-                                <div class="alert alert-warning alert-sm py-2 px-3 mb-0 rounded-3 small">
-                                    <i class="bi bi-exclamation-triangle me-1"></i>
-                                    Bạn <strong>chưa có khóa bảo mật</strong>. Vui lòng tạo cặp khóa để có thể đặt hàng.
-                                    File Private Key sẽ được tải về máy – hãy <strong>lưu cẩn thận</strong>, không chia sẻ cho ai.
-                                </div>
-                            </c:if>
-
-                            <%-- === CÔNG CỤ KÝ SỐ OFFLINE === --%>
-                            <div class="d-flex align-items-center justify-content-between">
-                                <div>
-                                    <div class="fw-semibold">Công cụ Ký Số Offline (Máy tính)</div>
-                                    <div class="small text-muted mt-1">Sử dụng file Private Key tải ở trên để ký hóa đơn.</div>
-                                </div>
-                                <a href="${ctx}/assets/tools/SignTool.jar" class="btn btn-outline-primary btn-sm" download>
-                                    <i class="bi bi-download"></i> Tải Tool (.jar)
-                                </a>
-                            </div>
-                        </div>
-
                     </div>
                 </div>
 
