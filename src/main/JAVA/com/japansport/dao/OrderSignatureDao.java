@@ -11,14 +11,15 @@ import java.util.List;
 
 public class OrderSignatureDao extends DAO {
 
-    public boolean insertSignature(int orderId, String hashData, String signature, boolean isValid) {
-        String sql = "INSERT INTO order_signatures(order_id, hash_data, signature, is_valid) VALUES(?, ?, ?, ?)";
+    public boolean insertSignature(int orderId, String hashData, String signature, boolean isValid, String publicKeySnapshot) {
+        String sql = "INSERT INTO order_signatures(order_id, hash_data, signature, is_valid, public_key_snapshot) VALUES(?, ?, ?, ?, ?)";
         try (Connection cn = getConnection();
              PreparedStatement ps = cn.prepareStatement(sql)) {
             ps.setInt(1, orderId);
             ps.setString(2, hashData);
             ps.setString(3, signature);
             ps.setInt(4, isValid ? 1 : 0);
+            ps.setString(5, publicKeySnapshot);
             return ps.executeUpdate() > 0;
         } catch (SQLException e) {
             e.printStackTrace();
@@ -55,6 +56,7 @@ public class OrderSignatureDao extends DAO {
                 os.setCurrentFullName(rs.getString("full_name"));
                 os.setCurrentPhone(rs.getString("phone"));
                 os.setCurrentPublicKey(rs.getString("public_key"));
+                os.setPublicKeySnapshot(rs.getString("public_key_snapshot"));
                 
                 list.add(os);
             }

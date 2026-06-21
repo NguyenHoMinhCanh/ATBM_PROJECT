@@ -183,7 +183,7 @@ public class CheckoutController extends HttpServlet {
             );
             
             // Lưu lịch sử chữ ký (order_signatures)
-            signatureDao.insertSignature(orderId, hashData, signatureBase64, isDataIntact);
+            signatureDao.insertSignature(orderId, hashData, signatureBase64, isDataIntact, u.getPublicKey());
 
             // 3. Đẩy đơn hàng sang GHN
             try {

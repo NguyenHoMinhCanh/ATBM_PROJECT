@@ -19,6 +19,7 @@ public class OrderSignature {
     private String currentFullName;
     private String currentPhone;
     private String currentPublicKey;
+    private String publicKeySnapshot;
 
     public OrderSignature() {
     }
@@ -107,4 +108,7 @@ public class OrderSignature {
 
     public String getCurrentPublicKey() { return currentPublicKey; }
     public void setCurrentPublicKey(String currentPublicKey) { this.currentPublicKey = currentPublicKey; }
+
+    public String getPublicKeySnapshot() { return publicKeySnapshot; }
+    public void setPublicKeySnapshot(String publicKeySnapshot) { this.publicKeySnapshot = publicKeySnapshot; }
 }
