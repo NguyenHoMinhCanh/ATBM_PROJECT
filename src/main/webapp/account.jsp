@@ -250,34 +250,76 @@
                         </div>
 
                         <div class="d-flex flex-column gap-3">
-                            <div class="d-flex align-items-center justify-content-between border-bottom pb-3">
+
+                            <%-- === TRẠNG THÁI KHÓA + CÁC NÚT HÀNH ĐỘNG === --%>
+                            <div class="d-flex align-items-center justify-content-between border-bottom pb-3 gap-2 flex-wrap">
                                 <div>
                                     <div class="fw-semibold">Trạng thái Public Key (Lưu trên Server)</div>
                                     <div class="small mt-1">
                                         <c:choose>
                                             <c:when test="${not empty sessionScope.currentUser.publicKey}">
-                                                <span class="badge bg-success"><i class="bi bi-check-circle"></i> Đã cài đặt</span>
+                                                <span class="badge bg-success"><i class="bi bi-check-circle-fill"></i> Đã cài đặt – Khóa đang hoạt động</span>
                                             </c:when>
                                             <c:otherwise>
-                                                <span class="badge bg-secondary"><i class="bi bi-x-circle"></i> Chưa cài đặt</span>
+                                                <span class="badge bg-secondary"><i class="bi bi-x-circle"></i> Chưa cài đặt – Cần tạo khóa để đặt hàng</span>
                                             </c:otherwise>
                                         </c:choose>
                                     </div>
                                 </div>
-                                <form method="post" action="${ctx}/generate-key" class="m-0">
-                                    <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Bạn có chắc chắn muốn tạo cặp khóa mới? Khóa cũ sẽ bị vô hiệu hóa và bạn phải lưu file Private Key mới cẩn thận!')">
-                                        <c:choose>
-                                            <c:when test="${not empty sessionScope.currentUser.publicKey}">
-                                                <i class="bi bi-arrow-repeat"></i> Tạo lại khóa mới
-                                            </c:when>
-                                            <c:otherwise>
+
+                                <div class="d-flex gap-2 flex-wrap">
+                                    <c:choose>
+                                        <%-- === ĐÃ CÓ KHÓA: disable nút tạo, hiện nút báo mất === --%>
+                                        <c:when test="${not empty sessionScope.currentUser.publicKey}">
+                                            <%-- Nút tạo khóa – bị vô hiệu hóa --%>
+                                            <button type="button" class="btn btn-danger btn-sm" disabled
+                                                    title="Bạn đã có khóa. Hãy báo mất khóa trước nếu muốn tạo lại.">
                                                 <i class="bi bi-key"></i> Tạo cặp khóa
-                                            </c:otherwise>
-                                        </c:choose>
-                                    </button>
-                                </form>
+                                            </button>
+
+                                            <%-- Nút báo mất khóa --%>
+                                            <form method="post" action="${ctx}/generate-key" class="m-0">
+                                                <input type="hidden" name="action" value="reset"/>
+                                                <button type="submit" class="btn btn-outline-warning btn-sm"
+                                                        onclick="return confirm('⚠️ Bạn có chắc muốn báo MẤT KHÓA?\n\nPublic Key hiện tại sẽ bị XÓA khỏi hệ thống và bạn cần tạo cặp khóa mới.\nCác chữ ký cũ sẽ không còn hợp lệ.\n\nXác nhận báo mất?')">
+                                                    <i class="bi bi-exclamation-triangle-fill"></i> Báo mất khóa
+                                                </button>
+                                            </form>
+                                        </c:when>
+
+                                        <%-- === CHƯA CÓ KHÓA: hiện nút tạo khóa === --%>
+                                        <c:otherwise>
+                                            <form method="post" action="${ctx}/generate-key" class="m-0">
+                                                <button type="submit" class="btn btn-danger btn-sm"
+                                                        onclick="return confirm('Hệ thống sẽ tạo cặp khóa RSA cho bạn và tự động tải file Private Key về máy.\n\nHãy lưu file này cẩn thận – bạn sẽ cần nó để ký xác nhận đơn hàng.\n\nXác nhận tạo khóa?')">
+                                                    <i class="bi bi-key-fill"></i> Tạo cặp khóa
+                                                </button>
+                                            </form>
+                                        </c:otherwise>
+                                    </c:choose>
+                                </div>
                             </div>
 
+                            <%-- === HƯỚNG DẪN KHI ĐÃ CÓ KHÓA === --%>
+                            <c:if test="${not empty sessionScope.currentUser.publicKey}">
+                                <div class="alert alert-success alert-sm py-2 px-3 mb-0 rounded-3 small">
+                                    <i class="bi bi-info-circle me-1"></i>
+                                    Khóa của bạn đang <strong>hoạt động bình thường</strong>.
+                                    Nếu bị mất file Private Key, hãy nhấn <strong>"Báo mất khóa"</strong>
+                                    để vô hiệu hóa khóa cũ và tạo cặp khóa mới.
+                                </div>
+                            </c:if>
+
+                            <%-- === HƯỚNG DẪN KHI CHƯA CÓ KHÓA === --%>
+                            <c:if test="${empty sessionScope.currentUser.publicKey}">
+                                <div class="alert alert-warning alert-sm py-2 px-3 mb-0 rounded-3 small">
+                                    <i class="bi bi-exclamation-triangle me-1"></i>
+                                    Bạn <strong>chưa có khóa bảo mật</strong>. Vui lòng tạo cặp khóa để có thể đặt hàng.
+                                    File Private Key sẽ được tải về máy – hãy <strong>lưu cẩn thận</strong>, không chia sẻ cho ai.
+                                </div>
+                            </c:if>
+
+                            <%-- === CÔNG CỤ KÝ SỐ OFFLINE === --%>
                             <div class="d-flex align-items-center justify-content-between">
                                 <div>
                                     <div class="fw-semibold">Công cụ Ký Số Offline (Máy tính)</div>
