@@ -92,20 +92,10 @@ public class DBConnect {
     public static void main(String[] args) {
         Statement statement = DBConnect.getInstance().createStatement();
         try {
-            ResultSet rs = statement.executeQuery("SELECT * FROM user_key_history");
-            System.out.println("--- KEY HISTORY RECORD LIST ---");
-            while (rs.next()) {
-                String pk = rs.getString("public_key");
-                String pkSub = pk != null && pk.length() > 20 ? pk.substring(0, 20) + "..." + pk.substring(pk.length() - 20) : pk;
-                System.out.println("ID: " + rs.getInt("id") + 
-                                   " | UserID: " + rs.getInt("user_id") + 
-                                   " | PK: " + pkSub + 
-                                   " | Created: " + rs.getTimestamp("created_at") + 
-                                   " | Expired: " + rs.getTimestamp("expired_at"));
-            }
-            System.out.println("--- END OF LIST ---");
+            final int execute = statement.executeUpdate("insert into users (email, password,name, active) values ('xyz1@gmail.com',123,'xyz',1)");
+            System.out.println(execute);
         } catch (SQLException e) {
-            e.printStackTrace();
+            throw new RuntimeException(e);
         }
     }
 }
