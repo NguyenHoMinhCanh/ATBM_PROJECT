@@ -31,6 +31,24 @@ public class KeyManagementServlet extends HttpServlet {
             return;
         }
 
+        String action = req.getParameter("action");
+        if ("reset".equals(action)) {
+            userDao.updatePublicKey(currentUser.getId(), null);
+            currentUser.setPublicKey(null);
+            session.setAttribute("currentUser", currentUser);
+            session.setAttribute("FLASH_MSG", "Khóa cũ đã bị xóa. Bạn có thể tạo khóa mới.");
+            session.setAttribute("FLASH_TYPE", "success");
+            resp.sendRedirect(req.getContextPath() + "/account");
+            return;
+        }
+
+        if (currentUser.getPublicKey() != null && !currentUser.getPublicKey().isEmpty()) {
+            session.setAttribute("FLASH_MSG", "Bạn đã có khóa. Vui lòng báo mất khóa nếu muốn tạo lại.");
+            session.setAttribute("FLASH_TYPE", "error");
+            resp.sendRedirect(req.getContextPath() + "/account");
+            return;
+        }
+
         try {
             // Generate Key Pair
             KeyPair keyPair = RSAUtil.generateKeyPair();
