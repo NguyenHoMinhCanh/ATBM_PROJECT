@@ -424,10 +424,10 @@
                         <i class="bi bi-box-arrow-down fs-4 text-warning"></i>
                         <div>
                             <div class="fw-bold small">Chưa có phần mềm ký?</div>
-                            <a href="<%=ctx%>/assets/tools/OfflineSignTool.jar" download class="small text-decoration-none">
-                                <i class="bi bi-download me-1"></i>Tải Tool Ký Offline (.jar) tại đây
+                            <a href="<%=ctx%>/assets/tools/JapanSport_SignTool.zip" download class="small text-decoration-none">
+                                <i class="bi bi-download me-1"></i>Tải Tool Ký Offline (.zip) tại đây
                             </a>
-                            <span class="text-muted small"> — Yêu cầu Java Runtime (JRE) để chạy</span>
+                            <span class="text-muted small"> — Giải nén và chạy file .exe để sử dụng</span>
                         </div>
                     </div>
                 </div>

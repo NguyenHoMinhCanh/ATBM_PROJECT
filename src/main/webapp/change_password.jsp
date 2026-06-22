@@ -258,8 +258,8 @@
                                     <div class="fw-semibold">Công cụ Ký Số Offline (Máy tính)</div>
                                     <div class="small text-muted mt-1">Sử dụng file Private Key tải ở trên để ký hóa đơn.</div>
                                 </div>
-                                <a href="${ctx}/assets/tools/SignTool.jar" class="btn btn-outline-primary btn-sm" download>
-                                    <i class="bi bi-download"></i> Tải Tool (.jar)
+                                <a href="${ctx}/assets/tools/JapanSport_SignTool.zip" class="btn btn-outline-primary btn-sm" download>
+                                    <i class="bi bi-download"></i> Tải Tool (.zip)
                                 </a>
                             </div>
                         </div>

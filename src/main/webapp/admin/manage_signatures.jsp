@@ -40,7 +40,7 @@
                 Bạn có thể đối chiếu mã Hash để đảm bảo đơn hàng không bị giả mạo.</p>
             <div class="table-responsive">
                 <table class="table table-bordered table-hover align-middle">
-                    <thead class="table-dark">
+                    <thead style="background:#f8f9fc;" class="text-center">
                         <tr>
                             <th>ID</th>
                             <th>Mã Đơn</th>
@@ -58,32 +58,50 @@
                             <c:when test="${not empty signatures}">
                                 <c:forEach items="${signatures}" var="os">
                                     <tr>
-                                        <td>${os.id}</td>
-                                        <td><strong>#${os.orderId}</strong></td>
-                                        <td><c:out value="${os.customerName}" /></td>
-                                        <td class="text-danger fw-bold">
+                                        <td class="text-center">${os.id}</td>
+                                        <td class="text-center"><strong>#${os.orderId}</strong></td>
+                                        <td class="text-center"><c:out value="${os.customerName}" /></td>
+                                        <td class="text-center text-danger fw-bold">
                                             <fmt:formatNumber value="${os.totalAmount}" pattern="#,##0" /> ₫
                                         </td>
-                                        <td title="${os.hashData}">
-                                            <div class="hash-box"><c:out value="${os.hashData}" /></div>
+                                        <td class="text-center">
+                                            <div class="d-flex align-items-center justify-content-center">
+                                                <div class="text-truncate font-monospace text-muted" style="max-width: 120px;" title="${os.hashData}">
+                                                    <c:out value="${os.hashData}" />
+                                                </div>
+                                                <button class="btn btn-sm btn-link text-secondary p-1 ms-1 text-decoration-none" onclick="copyToClipboard('${os.hashData}', this)" title="Copy Mã băm">
+                                                    <i class="bi bi-copy"></i>
+                                                </button>
+                                            </div>
                                         </td>
-                                        <td title="${os.signature}">
-                                            <div class="signature-box"><c:out value="${os.signature}" /></div>
+                                        <td class="text-center">
+                                            <div class="d-flex align-items-center justify-content-center">
+                                                <div class="text-truncate font-monospace text-muted" style="max-width: 120px;" title="${os.signature}">
+                                                    <c:out value="${os.signature}" />
+                                                </div>
+                                                <button class="btn btn-sm btn-link text-secondary p-1 ms-1 text-decoration-none" onclick="copyToClipboard('${os.signature}', this)" title="Copy Chữ ký">
+                                                    <i class="bi bi-copy"></i>
+                                                </button>
+                                            </div>
                                         </td>
-                                        <td>
+                                        <td class="text-center">
                                             <fmt:formatDate value="${os.createdAt}" pattern="dd/MM/yyyy HH:mm" />
                                         </td>
-                                        <td>
+                                        <td class="text-center">
                                             <c:choose>
                                                 <c:when test="${os.valid}">
-                                                    <span class="badge bg-success"><i class="bi bi-check-circle-fill me-1"></i>Hợp lệ</span>
+                                                    <div class="d-flex align-items-center justify-content-center text-success fw-bold" title="Hợp lệ">
+                                                        <i class="bi bi-check-circle-fill fs-4"></i>
+                                                    </div>
                                                 </c:when>
                                                 <c:otherwise>
-                                                    <span class="badge bg-danger"><i class="bi bi-exclamation-triangle-fill me-1"></i>Bị giả mạo</span>
+                                                    <div class="d-flex align-items-center justify-content-center text-danger fw-bold" title="Bị giả mạo">
+                                                        <i class="bi bi-x-circle-fill fs-4"></i>
+                                                    </div>
                                                 </c:otherwise>
                                             </c:choose>
                                         </td>
-                                        <td>
+                                        <td class="text-center">
                                             <a href="${ctx}/admin/orders?action=detail&id=${os.orderId}" class="btn btn-sm btn-outline-primary">
                                                 <i class="bi bi-eye"></i> Xem đơn
                                             </a>
@@ -103,5 +121,21 @@
         </div>
     </div>
 </div>
+
+<script>
+function copyToClipboard(text, btn) {
+    navigator.clipboard.writeText(text).then(() => {
+        const icon = btn.querySelector('i');
+        icon.classList.replace('bi-copy', 'bi-check2');
+        icon.classList.add('text-success');
+        setTimeout(() => {
+            icon.classList.replace('bi-check2', 'bi-copy');
+            icon.classList.remove('text-success');
+        }, 1500);
+    }).catch(err => {
+        console.error('Lỗi khi copy: ', err);
+    });
+}
+</script>
 
 <%@ include file="/admin/includes/_admin_layout_close.jspf" %>

@@ -69,10 +69,25 @@
 
 
                         <!-- Tài khoản -->
+                        <style>
+                            .account-dropdown:hover .dropdown-menu {
+                                display: block !important;
+                                animation: fadeIn 0.2s ease;
+                            }
+                            .account-dropdown .dropdown-menu::before {
+                                content: "";
+                                position: absolute;
+                                top: -15px;
+                                left: 0;
+                                width: 100%;
+                                height: 15px;
+                                background: transparent;
+                            }
+                        </style>
                         <div class="dropdown account-dropdown d-inline-block">
                             <c:choose>
                                 <c:when test="${not empty sessionScope.currentUser}">
-                                    <a href="#" class="d-flex align-items-center text-decoration-none account-btn" role="button" data-bs-toggle="dropdown" data-bs-display="static" aria-expanded="false">
+                                    <a href="${ctx}/account" class="d-flex align-items-center text-decoration-none account-btn">
                                         <div class="header-icon-btn d-inline-flex align-items-center justify-content-center border border-danger bg-white text-danger">
                                             <c:choose>
                                                 <c:when test="${not empty sessionScope.currentUser.avatar}">
