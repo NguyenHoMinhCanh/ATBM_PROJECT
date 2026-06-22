@@ -1,7 +1,9 @@
 package com.japansport.controller;
 
 import com.japansport.dao.UserDao;
+import com.japansport.dao.UserKeyHistoryDao;
 import com.japansport.model.User;
+import com.japansport.model.UserKeyHistory;
 import com.japansport.util.PasswordUtil;
 
 import jakarta.servlet.ServletException;
@@ -11,6 +13,7 @@ import jakarta.servlet.http.*;
 import java.io.IOException;
 import java.security.SecureRandom;
 import java.util.Base64;
+import java.util.List;
 
 @WebServlet("/change-password")
 public class ChangePasswordServlet extends HttpServlet {
@@ -37,6 +40,17 @@ public class ChangePasswordServlet extends HttpServlet {
         resp.sendRedirect(req.getContextPath() + "/login.jsp?back=" + backPath);
     }
 
+    private void forwardToChangePassword(HttpServletRequest req, HttpServletResponse resp, User u) throws ServletException, IOException {
+        try {
+            UserKeyHistoryDao historyDao = new UserKeyHistoryDao();
+            List<UserKeyHistory> keyHistory = historyDao.getHistoryByUserId(u.getId());
+            req.setAttribute("keyHistory", keyHistory);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        req.getRequestDispatcher("/change_password.jsp").forward(req, resp);
+    }
+
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         HttpSession session = req.getSession();
@@ -48,7 +62,7 @@ public class ChangePasswordServlet extends HttpServlet {
             return;
         }
 
-        req.getRequestDispatcher("/change_password.jsp").forward(req, resp);
+        forwardToChangePassword(req, resp, u);
     }
 
     @Override
@@ -65,7 +79,7 @@ public class ChangePasswordServlet extends HttpServlet {
 
         if (!validCsrf(req)) {
             req.setAttribute("errorMessage", "CSRF token không hợp lệ. Vui lòng tải lại trang và thử lại.");
-            req.getRequestDispatcher("/change_password.jsp").forward(req, resp);
+            forwardToChangePassword(req, resp, u);
             return;
         }
 
@@ -75,19 +89,19 @@ public class ChangePasswordServlet extends HttpServlet {
 
         if (oldPass == null || oldPass.isBlank() || newPass == null || newPass.isBlank() || confirm == null || confirm.isBlank()) {
             req.setAttribute("errorMessage", "Vui lòng nhập đầy đủ thông tin.");
-            req.getRequestDispatcher("/change_password.jsp").forward(req, resp);
+            forwardToChangePassword(req, resp, u);
             return;
         }
 
         if (newPass.length() < 8) {
             req.setAttribute("errorMessage", "Mật khẩu mới tối thiểu 8 ký tự.");
-            req.getRequestDispatcher("/change_password.jsp").forward(req, resp);
+            forwardToChangePassword(req, resp, u);
             return;
         }
 
         if (!newPass.equals(confirm)) {
             req.setAttribute("errorMessage", "Xác nhận mật khẩu không khớp.");
-            req.getRequestDispatcher("/change_password.jsp").forward(req, resp);
+            forwardToChangePassword(req, resp, u);
             return;
         }
 
@@ -96,13 +110,13 @@ public class ChangePasswordServlet extends HttpServlet {
             User dbUser = dao.getById(u.getId());
             if (dbUser == null || dbUser.getActive() != 1) {
                 req.setAttribute("errorMessage", "Tài khoản không hợp lệ.");
-                req.getRequestDispatcher("/change_password.jsp").forward(req, resp);
+                forwardToChangePassword(req, resp, u);
                 return;
             }
 
             if (!PasswordUtil.verify(oldPass, dbUser.getPassword())) {
                 req.setAttribute("errorMessage", "Mật khẩu hiện tại không đúng.");
-                req.getRequestDispatcher("/change_password.jsp").forward(req, resp);
+                forwardToChangePassword(req, resp, u);
                 return;
             }
 
@@ -115,11 +129,11 @@ public class ChangePasswordServlet extends HttpServlet {
                 resp.sendRedirect(req.getContextPath() + "/account");
             } else {
                 req.setAttribute("errorMessage", "Đổi mật khẩu thất bại. Vui lòng thử lại.");
-                req.getRequestDispatcher("/change_password.jsp").forward(req, resp);
+                forwardToChangePassword(req, resp, u);
             }
         } catch (Exception e) {
             req.setAttribute("errorMessage", "Có lỗi hệ thống. Vui lòng thử lại.");
-            req.getRequestDispatcher("/change_password.jsp").forward(req, resp);
+            forwardToChangePassword(req, resp, u);
         }
     }
 }

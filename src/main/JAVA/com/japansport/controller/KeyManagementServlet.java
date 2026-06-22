@@ -36,16 +36,19 @@ public class KeyManagementServlet extends HttpServlet {
             userDao.updatePublicKey(currentUser.getId(), null);
             currentUser.setPublicKey(null);
             session.setAttribute("currentUser", currentUser);
+            
+            new com.japansport.dao.UserKeyHistoryDao().logLoss(currentUser.getId());
+            
             session.setAttribute("FLASH_MSG", "Khóa cũ đã bị xóa. Bạn có thể tạo khóa mới.");
             session.setAttribute("FLASH_TYPE", "success");
-            resp.sendRedirect(req.getContextPath() + "/account");
+            resp.sendRedirect(req.getContextPath() + "/change-password");
             return;
         }
 
         if (currentUser.getPublicKey() != null && !currentUser.getPublicKey().isEmpty()) {
             session.setAttribute("FLASH_MSG", "Bạn đã có khóa. Vui lòng báo mất khóa nếu muốn tạo lại.");
             session.setAttribute("FLASH_TYPE", "error");
-            resp.sendRedirect(req.getContextPath() + "/account");
+            resp.sendRedirect(req.getContextPath() + "/change-password");
             return;
         }
 
@@ -58,6 +61,8 @@ public class KeyManagementServlet extends HttpServlet {
             // Store Public Key to Database
             String publicKeyBase64 = RSAUtil.keyToBase64(publicKey);
             userDao.updatePublicKey(currentUser.getId(), publicKeyBase64);
+            
+            new com.japansport.dao.UserKeyHistoryDao().logGeneration(currentUser.getId(), publicKeyBase64);
             
             // Update the session user
             currentUser.setPublicKey(publicKeyBase64);
@@ -78,7 +83,7 @@ public class KeyManagementServlet extends HttpServlet {
             e.printStackTrace();
             session.setAttribute("FLASH_MSG", "Lỗi tạo khóa. Vui lòng thử lại.");
             session.setAttribute("FLASH_TYPE", "error");
-            resp.sendRedirect(req.getContextPath() + "/account");
+            resp.sendRedirect(req.getContextPath() + "/change-password");
         }
     }
 }
