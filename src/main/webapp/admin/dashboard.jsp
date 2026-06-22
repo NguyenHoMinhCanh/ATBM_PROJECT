@@ -73,6 +73,38 @@
         </div>
     </div>
 
+    <!-- Bộ lọc thời gian cho sản phẩm bán chạy -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-body py-3">
+            <form method="get" action="${ctx}/admin/dashboard" class="row g-3 align-items-end">
+                <div class="col-12 col-sm-auto">
+                    <h6 class="mb-0 fw-semibold text-primary"><i class="bi bi-funnel-fill me-1"></i> Bộ lọc thống kê</h6>
+                </div>
+                <div class="col-6 col-sm-auto">
+                    <label class="form-label small text-muted mb-1">Từ ngày</label>
+                    <input type="date" name="startDate" class="form-control form-control-sm" value="${startDate}" required />
+                </div>
+                <div class="col-6 col-sm-auto">
+                    <label class="form-label small text-muted mb-1">Đến ngày</label>
+                    <input type="date" name="endDate" class="form-control form-control-sm" value="${endDate}" required />
+                </div>
+                <div class="col-12 col-sm-auto">
+                    <button type="submit" class="btn btn-primary btn-sm w-100">
+                        <i class="bi bi-filter"></i> Áp dụng
+                    </button>
+                </div>
+                <div class="col-12 col-sm-auto ms-sm-auto">
+                    <div class="btn-group btn-group-sm w-100" role="group">
+                        <button type="button" class="btn btn-outline-secondary" onclick="setQuickFilter('today')">Hôm nay</button>
+                        <button type="button" class="btn btn-outline-secondary" onclick="setQuickFilter('month')">Tháng này</button>
+                        <button type="button" class="btn btn-outline-secondary" onclick="setQuickFilter('lastmonth')">Tháng trước</button>
+                        <button type="button" class="btn btn-outline-secondary" onclick="setQuickFilter('all')">Tất cả</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- KPI cards -->
     <div class="row g-3 mb-3">
         <div class="col-12 col-md-6 col-xl-3">
@@ -228,6 +260,66 @@
                 </div>
             </div>
         </div>
+        <!-- Top bán chạy -->
+        <div class="col-12">
+            <div class="card shadow-sm mb-3">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h6 class="mb-0 fw-bold"><i class="bi bi-fire text-danger me-1"></i> Top 10 Sản phẩm bán chạy nhất</h6>
+                        <span class="badge bg-light text-dark">Lọc từ: ${startDate} đến: ${endDate}</span>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light">
+                            <tr>
+                                <th style="width:50px">STT</th>
+                                <th>Ảnh</th>
+                                <th>Tên sản phẩm</th>
+                                <th>Thương hiệu / Danh mục</th>
+                                <th>Đơn giá</th>
+                                <th class="text-center">Đã bán</th>
+                                <th class="text-end">Doanh thu</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <c:forEach items="${bestSellers}" var="p" varStatus="loop">
+                                <tr>
+                                    <td>${loop.index + 1}</td>
+                                    <td>
+                                        <c:choose>
+                                            <c:when test="${not empty p['imageUrl']}">
+                                                <img src="${p['imageUrl']}" alt="product" class="rounded-3" style="width:48px;height:48px;object-fit:cover;"/>
+                                            </c:when>
+                                            <c:otherwise>
+                                                <div class="bg-secondary rounded-3 text-white d-flex align-items-center justify-content-center" style="width:48px;height:48px;">N/A</div>
+                                            </c:otherwise>
+                                        </c:choose>
+                                    </td>
+                                    <td>
+                                        <div class="fw-semibold"><c:out value="${p['name']}"/></div>
+                                        <div class="text-muted small">ID: #${p['id']}</div>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-secondary-subtle text-secondary"><c:out value="${p['brandName']}" default="N/A"/></span>
+                                        <span class="badge bg-primary-subtle text-primary"><c:out value="${p['categoryName']}" default="N/A"/></span>
+                                    </td>
+                                    <td><fmt:formatNumber value="${p['price']}" pattern="#,##0"/> ₫</td>
+                                    <td class="text-center fw-bold text-success">${p['soldQty']}</td>
+                                    <td class="text-end fw-bold text-danger"><fmt:formatNumber value="${p['totalRevenue']}" pattern="#,##0"/> ₫</td>
+                                </tr>
+                            </c:forEach>
+                            <c:if test="${empty bestSellers}">
+                                <tr>
+                                    <td colspan="7" class="text-center text-muted py-4">Không tìm thấy sản phẩm bán chạy nào trong khoảng thời gian này</td>
+                                </tr>
+                            </c:if>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Recent orders -->
         <div class="col-12">
             <div class="card shadow-sm">
@@ -476,5 +568,44 @@
         }
     });
 })();
+</script>
+
+<script>
+function setQuickFilter(type) {
+    const startInput = document.querySelector('input[name="startDate"]');
+    const endInput   = document.querySelector('input[name="endDate"]');
+    const now = new Date();
+    let start, end;
+    if (type === 'today') {
+        const yyyy = now.getFullYear();
+        const mm = String(now.getMonth() + 1).padStart(2, '0');
+        const dd = String(now.getDate()).padStart(2, '0');
+        start = yyyy + '-' + mm + '-' + dd;
+        end   = start;
+    } else if (type === 'month') {
+        const yyyy = now.getFullYear();
+        const mm = String(now.getMonth() + 1).padStart(2, '0');
+        start = yyyy + '-' + mm + '-01';
+        end   = yyyy + '-' + mm + '-' + String(now.getDate()).padStart(2, '0');
+    } else if (type === 'lastmonth') {
+        const prev = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+        const yyyy = prev.getFullYear();
+        const mm   = String(prev.getMonth() + 1).padStart(2, '0');
+        start = yyyy + '-' + mm + '-01';
+        const lastDay = new Date(now.getFullYear(), now.getMonth(), 0).getDate();
+        end   = yyyy + '-' + mm + '-' + String(lastDay).padStart(2, '0');
+    } else if (type === 'all') {
+        start = '2020-01-01';
+        const yyyy = now.getFullYear();
+        const mm = String(now.getMonth() + 1).padStart(2, '0');
+        const dd = String(now.getDate()).padStart(2, '0');
+        end = yyyy + '-' + mm + '-' + dd;
+    }
+    if (start && end) {
+        startInput.value = start;
+        endInput.value   = end;
+        startInput.form.submit();
+    }
+}
 </script>
 <%@ include file="/admin/includes/_admin_layout_close.jspf" %>

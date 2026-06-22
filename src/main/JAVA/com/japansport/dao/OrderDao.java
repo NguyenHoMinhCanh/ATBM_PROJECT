@@ -990,4 +990,51 @@ public class OrderDao extends DAO {
         }
         return status;
     }
+
+    /**
+     * Top sản phẩm bán chạy theo khoảng thời gian.
+     * Chỉ tính đơn PAID hoặc DONE.
+     */
+    public List<java.util.Map<String, Object>> getBestSellingProductsReport(
+            String startDate, String endDate, int limit) {
+
+        List<java.util.Map<String, Object>> list = new java.util.ArrayList<>();
+        String sql =
+            "SELECT p.id, p.name, p.price, p.image_url, " +
+            "       b.name AS brand_name, c.name AS category_name, " +
+            "       SUM(oi.quantity) AS sold_qty, " +
+            "       SUM(oi.quantity * oi.price) AS total_revenue " +
+            "FROM order_items oi " +
+            "JOIN orders o ON oi.order_id = o.id " +
+            "JOIN products p ON oi.product_id = p.id " +
+            "LEFT JOIN brands b ON p.brand_id = b.id " +
+            "LEFT JOIN categories c ON p.category_id = c.id " +
+            "WHERE o.status IN ('PAID','DONE') " +
+            "  AND DATE(o.created_at) BETWEEN ? AND ? " +
+            "GROUP BY p.id, p.name, p.price, p.image_url, b.name, c.name " +
+            "ORDER BY sold_qty DESC " +
+            "LIMIT ?";
+        try {
+            PreparedStatement ps = getPreparedStatement(sql);
+            ps.setString(1, startDate);
+            ps.setString(2, endDate);
+            ps.setInt(3, limit);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                java.util.Map<String, Object> row = new java.util.HashMap<>();
+                row.put("id",           rs.getInt("id"));
+                row.put("name",         rs.getString("name"));
+                row.put("price",        rs.getDouble("price"));
+                row.put("imageUrl",     rs.getString("image_url"));
+                row.put("brandName",    rs.getString("brand_name"));
+                row.put("categoryName", rs.getString("category_name"));
+                row.put("soldQty",      rs.getLong("sold_qty"));
+                row.put("totalRevenue", rs.getDouble("total_revenue"));
+                list.add(row);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
 }
