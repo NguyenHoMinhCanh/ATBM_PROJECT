@@ -1003,7 +1003,7 @@ public class OrderDao extends DAO {
             "SELECT p.id, p.name, p.price, p.image_url, " +
             "       b.name AS brand_name, c.name AS category_name, " +
             "       SUM(oi.quantity) AS sold_qty, " +
-            "       SUM(oi.quantity * oi.price) AS total_revenue " +
+            "       SUM(oi.quantity * oi.unit_price) AS total_revenue " +
             "FROM order_items oi " +
             "JOIN orders o ON oi.order_id = o.id " +
             "JOIN products p ON oi.product_id = p.id " +
