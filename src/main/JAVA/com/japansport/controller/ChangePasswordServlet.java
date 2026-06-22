@@ -44,6 +44,10 @@ public class ChangePasswordServlet extends HttpServlet {
         try {
             UserKeyHistoryDao historyDao = new UserKeyHistoryDao();
             List<UserKeyHistory> keyHistory = historyDao.getHistoryByUserId(u.getId());
+            if (keyHistory.isEmpty() && u.getPublicKey() != null && !u.getPublicKey().trim().isEmpty()) {
+                historyDao.logGeneration(u.getId(), u.getPublicKey());
+                keyHistory = historyDao.getHistoryByUserId(u.getId());
+            }
             req.setAttribute("keyHistory", keyHistory);
         } catch (Exception e) {
             e.printStackTrace();

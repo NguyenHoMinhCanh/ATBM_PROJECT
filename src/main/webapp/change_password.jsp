@@ -381,12 +381,11 @@
                                         </div>
                                     </div>
 
-                                    <!-- LỊCH SỬ THAY ĐỔI KHÓA CARD -->
+                                    <!-- LỊCH SỬ KHÓA CARD -->
                                     <div class="card acc-card mb-4">
                                         <div class="card-body">
                                             <div class="fw-semibold mb-3">
-                                                <i class="bi bi-clock-history me-2 text-danger"></i> Lịch sử thay đổi
-                                                khóa
+                                                <i class="bi bi-clock-history me-2 text-danger"></i> Lịch sử khóa
                                             </div>
                                             <div class="table-responsive">
                                                 <table class="table table-bordered table-hover align-middle small mb-0">
@@ -439,7 +438,7 @@
                                                             <c:otherwise>
                                                                 <tr>
                                                                     <td colspan="4" class="text-center text-muted py-3">
-                                                                        Chưa có lịch sử thay đổi khóa nào.</td>
+                                                                        Chưa có lịch sử khóa nào.</td>
                                                                 </tr>
                                                             </c:otherwise>
                                                         </c:choose>
