@@ -95,7 +95,7 @@ public class OfflineSignTool extends JFrame {
         btnSign.setPreferredSize(new Dimension(200, 45));
         btnSign.setFont(new Font("Arial", Font.BOLD, 14));
         btnSign.setBackground(new Color(220, 53, 69));
-        btnSign.setForeground(Color.WHITE);
+        btnSign.setForeground(Color.RED); // Text màu đỏ nổi bật trên nền mặc định
         btnSign.setFocusPainted(false);
         signPanel.add(btnSign);
         
@@ -182,11 +182,14 @@ public class OfflineSignTool extends JFrame {
     }
 
     private void loadOrderData() {
-        JFileChooser fileChooser = new JFileChooser();
-        fileChooser.setFileFilter(new javax.swing.filechooser.FileNameExtensionFilter("Text files (*.txt)", "txt"));
-        int result = fileChooser.showOpenDialog(this);
-        if (result == JFileChooser.APPROVE_OPTION) {
-            File file = fileChooser.getSelectedFile();
+        FileDialog fd = new FileDialog(this, "Chọn file dữ liệu đơn hàng (.txt)", FileDialog.LOAD);
+        fd.setFile("*.txt");
+        fd.setVisible(true);
+        String filename = fd.getFile();
+        String directory = fd.getDirectory();
+        
+        if (filename != null && directory != null) {
+            File file = new File(directory, filename);
             try {
                 orderData = new String(Files.readAllBytes(file.toPath()), "UTF-8").trim();
                 txtDataFilePath.setText(file.getAbsolutePath());
@@ -200,11 +203,14 @@ public class OfflineSignTool extends JFrame {
     }
 
     private void loadPrivateKey() {
-        JFileChooser fileChooser = new JFileChooser();
-        fileChooser.setFileFilter(new javax.swing.filechooser.FileNameExtensionFilter("PEM files (*.pem)", "pem"));
-        int result = fileChooser.showOpenDialog(this);
-        if (result == JFileChooser.APPROVE_OPTION) {
-            File file = fileChooser.getSelectedFile();
+        FileDialog fd = new FileDialog(this, "Chọn file Private Key (.pem)", FileDialog.LOAD);
+        fd.setFile("*.pem");
+        fd.setVisible(true);
+        String filename = fd.getFile();
+        String directory = fd.getDirectory();
+        
+        if (filename != null && directory != null) {
+            File file = new File(directory, filename);
             try {
                 String keyStr = new String(Files.readAllBytes(file.toPath()));
                 keyStr = keyStr.replaceAll("-----BEGIN PRIVATE KEY-----", "")
