@@ -7,7 +7,7 @@ import java.util.Properties;
 public class DBConnect {
 
     private static DBConnect instance;
-    private Connection conn;
+    private final ThreadLocal<Connection> connHolder = new ThreadLocal<>();
 
     private DBConnect() {
     }
@@ -19,24 +19,16 @@ public class DBConnect {
         return instance;
     }
 
-    public Statement createStatement() {
-        Connection conn = getConnect();
-        if (conn == null) {
-            return null;
-        }
-        try {
-            return conn.createStatement();
-        } catch (SQLException e) {
-            return null;
-        }
-    }
-
     public Connection getConnect() {
         try {
+            Connection conn = connHolder.get();
             if (conn == null || conn.isClosed()) {
                 Class.forName("com.mysql.cj.jdbc.Driver");
-                String url = "jdbc:mysql://" + DBProperties.host() + ":" + DBProperties.port() + "/" + DBProperties.database() + "?useUnicode=true&characterEncoding=utf-8";
+                String url = "jdbc:mysql://" + DBProperties.host() + ":" + DBProperties.port()
+                        + "/" + DBProperties.database()
+                        + "?useUnicode=true&characterEncoding=utf-8";
                 conn = DriverManager.getConnection(url, DBProperties.username(), DBProperties.password());
+                connHolder.set(conn);
             }
             return conn;
         } catch (ClassNotFoundException | SQLException e) {
@@ -90,17 +82,17 @@ public class DBConnect {
     }
 
     public static void main(String[] args) {
-        Statement statement = DBConnect.getInstance().createStatement();
         try {
+            Statement statement = DBConnect.getInstance().getConnect().createStatement();
             ResultSet rs = statement.executeQuery("SELECT * FROM user_key_history");
             System.out.println("--- KEY HISTORY RECORD LIST ---");
             while (rs.next()) {
                 String pk = rs.getString("public_key");
                 String pkSub = pk != null && pk.length() > 20 ? pk.substring(0, 20) + "..." + pk.substring(pk.length() - 20) : pk;
-                System.out.println("ID: " + rs.getInt("id") + 
-                                   " | UserID: " + rs.getInt("user_id") + 
-                                   " | PK: " + pkSub + 
-                                   " | Created: " + rs.getTimestamp("created_at") + 
+                System.out.println("ID: " + rs.getInt("id") +
+                                   " | UserID: " + rs.getInt("user_id") +
+                                   " | PK: " + pkSub +
+                                   " | Created: " + rs.getTimestamp("created_at") +
                                    " | Expired: " + rs.getTimestamp("expired_at"));
             }
             System.out.println("--- END OF LIST ---");

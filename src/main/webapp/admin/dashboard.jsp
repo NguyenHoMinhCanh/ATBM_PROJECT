@@ -320,6 +320,81 @@
             </div>
         </div>
 
+        <!-- Cảnh báo tồn kho -->
+        <div class="col-12" id="lowStockSection">
+            <div class="card shadow-sm mb-3 border-danger-subtle">
+                <div class="card-header bg-danger-subtle text-danger-emphasis fw-bold d-flex justify-content-between align-items-center">
+                    <span><i class="bi bi-exclamation-octagon-fill me-1"></i> Cảnh báo hàng tồn kho (Hết hàng / Sắp hết hàng)</span>
+                    <c:if test="${lowStockCount > 0}">
+                        <span class="badge bg-danger"><c:out value="${lowStockCount}"/> biến thể cần nhập hàng</span>
+                    </c:if>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light">
+                            <tr>
+                                <th style="width: 80px;">STT</th>
+                                <th>Sản phẩm</th>
+                                <th>Biến thể (Màu / Size)</th>
+                                <th>Mã SKU</th>
+                                <th class="text-center">Số lượng tồn</th>
+                                <th class="text-center">Trạng thái</th>
+                                <th class="text-end">Thao tác</th>
+                            </tr>
+                            </thead>
+                            <tbody id="lowStockTableBody">
+                            <c:forEach items="${lowStockProducts}" var="lp" varStatus="loop">
+                                <tr>
+                                    <td>${loop.index + 1}</td>
+                                    <td>
+                                        <div class="fw-semibold"><c:out value="${lp['productName']}"/></div>
+                                        <div class="text-muted small">ID sản phẩm: #${lp['productId']}</div>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-secondary-subtle text-secondary"><c:out value="${lp['color']}" default="Mặc định"/></span>
+                                        <span class="badge bg-primary-subtle text-primary">Size: <c:out value="${lp['size']}" default="N/A"/></span>
+                                    </td>
+                                    <td>
+                                        <c:choose>
+                                            <c:when test="${not empty lp['sku']}"><code><c:out value="${lp['sku']}"/></code></c:when>
+                                            <c:otherwise><span class="text-muted">N/A</span></c:otherwise>
+                                        </c:choose>
+                                    </td>
+                                    <td class="text-center fw-bold ${lp['stockQty'] == 0 ? 'text-danger' : 'text-warning'}">${lp['stockQty']}</td>
+                                    <td class="text-center">
+                                        <c:choose>
+                                            <c:when test="${lp['stockQty'] == 0}"><span class="badge bg-danger">Hết hàng</span></c:when>
+                                            <c:otherwise><span class="badge bg-warning text-dark">Sắp hết hàng</span></c:otherwise>
+                                        </c:choose>
+                                    </td>
+                                    <td class="text-end">
+                                        <a class="btn btn-sm btn-outline-danger" href="${ctx}/admin/product-detail?id=${lp['productId']}">
+                                            <i class="bi bi-pencil-square"></i> Nhập hàng
+                                        </a>
+                                    </td>
+                                </tr>
+                            </c:forEach>
+                            <c:if test="${empty lowStockProducts}">
+                                <tr><td colspan="7" class="text-center text-success py-4"><i class="bi bi-check-circle-fill me-1"></i> Tất cả sản phẩm đều đủ hàng tồn kho</td></tr>
+                            </c:if>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <!-- Phân trang tồn kho AJAX -->
+                <div class="card-footer bg-transparent d-flex justify-content-between align-items-center py-2 px-3">
+                    <span class="text-muted small">
+                        Trang <strong id="lsCurrentPageLabel">${lowStockCurrentPage}</strong> / <strong id="lsTotalPagesLabel">${lowStockTotalPages}</strong>
+                        &mdash; Tổng: <strong>${lowStockCount}</strong> biến thể cần nhập hàng
+                    </span>
+                    <nav aria-label="Low stock pagination">
+                        <ul class="pagination pagination-sm mb-0" id="lowStockPaginationList"></ul>
+                    </nav>
+                </div>
+            </div>
+        </div>
+
         <!-- Recent orders -->
         <div class="col-12">
             <div class="card shadow-sm">
@@ -606,6 +681,106 @@ function setQuickFilter(type) {
         endInput.value   = end;
         startInput.form.submit();
     }
+}
+</script>
+
+<script>
+(function () {
+    var CTX = '${ctx}';
+    var lsPage = ${lowStockCurrentPage};
+    var lsTotalPages = ${lowStockTotalPages};
+    var lsLoading = false;
+
+    function renderRow(item, stt) {
+        var skuHtml = item.sku ? '<code>' + esc(item.sku) + '</code>' : '<span class="text-muted">N/A</span>';
+        var stockClass = item.stockQty === 0 ? 'text-danger' : 'text-warning';
+        var badgeHtml  = item.stockQty === 0
+            ? '<span class="badge bg-danger">Hết hàng</span>'
+            : '<span class="badge bg-warning text-dark">Sắp hết hàng</span>';
+        var tr = document.createElement('tr');
+        tr.innerHTML =
+            '<td>' + stt + '</td>' +
+            '<td><div class="fw-semibold">' + esc(item.productName) + '</div>' +
+                '<div class="text-muted small">ID sản phẩm: #' + item.productId + '</div></td>' +
+            '<td><span class="badge bg-secondary-subtle text-secondary me-1">' + esc(item.color || 'Mặc định') + '</span>' +
+                '<span class="badge bg-primary-subtle text-primary">Size: ' + esc(item.size || 'N/A') + '</span></td>' +
+            '<td>' + skuHtml + '</td>' +
+            '<td class="text-center fw-bold ' + stockClass + '">' + item.stockQty + '</td>' +
+            '<td class="text-center">' + badgeHtml + '</td>' +
+            '<td class="text-end"><a class="btn btn-sm btn-outline-danger" href="' + CTX + '/admin/product-detail?id=' + item.productId + '">' +
+                '<i class="bi bi-pencil-square"></i> Nhập hàng</a></td>';
+        return tr;
+    }
+
+    function renderPagination(cur, total) {
+        var ul = document.getElementById('lowStockPaginationList');
+        if (!ul) return;
+        if (total <= 1) { ul.innerHTML = ''; return; }
+        var html = '';
+        html += cur <= 1
+            ? '<li class="page-item disabled"><span class="page-link"><i class="bi bi-chevron-left"></i></span></li>'
+            : '<li class="page-item"><a class="page-link ls-btn" href="#" data-page="' + (cur-1) + '"><i class="bi bi-chevron-left"></i></a></li>';
+        var shown = {};
+        for (var p = 1; p <= total; p++) {
+            var d = p - cur;
+            if (p === 1 || p === total || (d >= -2 && d <= 2)) shown[p] = true;
+        }
+        var prev = false;
+        for (var p = 1; p <= total; p++) {
+            if (shown[p]) {
+                if (!prev && p > 1) html += '<li class="page-item disabled"><span class="page-link">&hellip;</span></li>';
+                html += p === cur
+                    ? '<li class="page-item active"><span class="page-link">' + p + '</span></li>'
+                    : '<li class="page-item"><a class="page-link ls-btn" href="#" data-page="' + p + '">' + p + '</a></li>';
+                prev = true;
+            } else {
+                if (prev && p < total) html += '<li class="page-item disabled"><span class="page-link">&hellip;</span></li>';
+                prev = false;
+            }
+        }
+        html += cur >= total
+            ? '<li class="page-item disabled"><span class="page-link"><i class="bi bi-chevron-right"></i></span></li>'
+            : '<li class="page-item"><a class="page-link ls-btn" href="#" data-page="' + (cur+1) + '"><i class="bi bi-chevron-right"></i></a></li>';
+        ul.innerHTML = html;
+        ul.querySelectorAll('.ls-btn').forEach(function(a) {
+            a.addEventListener('click', function(e) {
+                e.preventDefault();
+                goPage(parseInt(this.getAttribute('data-page')));
+            });
+        });
+    }
+
+    function goPage(page) {
+        if (lsLoading || page < 1 || page > lsTotalPages) return;
+        lsLoading = true;
+        var tbody = document.getElementById('lowStockTableBody');
+        if (tbody) { tbody.style.opacity = '0.4'; tbody.style.pointerEvents = 'none'; }
+        fetch(CTX + '/admin/dashboard?lowStockJson=true&lowStockPage=' + page)
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                tbody.innerHTML = '';
+                if (!data || data.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted py-4">Không có dữ liệu</td></tr>';
+                } else {
+                    data.forEach(function(item, i) { tbody.appendChild(renderRow(item, (page-1)*5+i+1)); });
+                }
+                tbody.style.opacity = '1'; tbody.style.pointerEvents = '';
+                lsPage = page;
+                var lbl = document.getElementById('lsCurrentPageLabel');
+                if (lbl) lbl.textContent = lsPage;
+                renderPagination(lsPage, lsTotalPages);
+                lsLoading = false;
+            })
+            .catch(function() { tbody.style.opacity='1'; tbody.style.pointerEvents=''; lsLoading=false; });
+    }
+
+    renderPagination(lsPage, lsTotalPages);
+    window.goLowStockPage = goPage;
+})();
+
+function esc(t) {
+    if (!t) return '';
+    return String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');
 }
 </script>
 <%@ include file="/admin/includes/_admin_layout_close.jspf" %>

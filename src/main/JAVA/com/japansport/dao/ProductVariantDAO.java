@@ -182,4 +182,57 @@ public class ProductVariantDAO extends DAO {
             return false;
         }
     }
+
+    /**
+     * Lấy danh sách biến thể hàng tồn kho thấp có phân trang.
+     * threshold: ngưỡng cảnh báo (mặc định 5)
+     */
+    public List<java.util.Map<String, Object>> getLowStockPaged(int page, int pageSize, int threshold) {
+        List<java.util.Map<String, Object>> list = new java.util.ArrayList<>();
+        String sql =
+            "SELECT pv.id, pv.color, pv.size, pv.stock_qty, pv.sku, " +
+            "       p.id AS product_id, p.name AS product_name " +
+            "FROM product_variants pv " +
+            "JOIN products p ON pv.product_id = p.id " +
+            "WHERE pv.stock_qty <= ? " +
+            "ORDER BY pv.stock_qty ASC, p.name ASC " +
+            "LIMIT ? OFFSET ?";
+        int offset = (page - 1) * pageSize;
+        try {
+            PreparedStatement ps = getPreparedStatement(sql);
+            ps.setInt(1, threshold);
+            ps.setInt(2, pageSize);
+            ps.setInt(3, offset);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                java.util.Map<String, Object> row = new java.util.HashMap<>();
+                row.put("id",          rs.getInt("id"));
+                row.put("color",       rs.getString("color"));
+                row.put("size",        rs.getString("size"));
+                row.put("stockQty",    rs.getInt("stock_qty"));
+                row.put("sku",         rs.getString("sku"));
+                row.put("productId",   rs.getInt("product_id"));
+                row.put("productName", rs.getString("product_name"));
+                list.add(row);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+
+    /** Đếm tổng số biến thể hàng tồn kho thấp. */
+    public int countLowStock(int threshold) {
+        String sql = "SELECT COUNT(*) FROM product_variants WHERE stock_qty <= ?";
+        try {
+            PreparedStatement ps = getPreparedStatement(sql);
+            ps.setInt(1, threshold);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) return rs.getInt(1);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return 0;
+    }
 }
+
